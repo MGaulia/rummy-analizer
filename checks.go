@@ -14,3 +14,19 @@ func isValidSequence(input []Card) (result bool) {
 	}
 	return true
 }
+
+func isValidSet(input []Card) (result bool) {
+	number := input[0].Number
+	usedColours := make(map[Colour]bool)
+	for i := 0; i < len(input); i++ {
+		val := input[i]
+		if val.Number != number {
+			return
+		}
+		if usedColours[val.Colour] {
+			return
+		}
+		usedColours[val.Colour] = true
+	}
+	return true
+}
