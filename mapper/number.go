@@ -5,6 +5,8 @@ import (
 	"main/model"
 )
 
+var ErrInvalidNumberInput = errors.New("invalid input, available values: 1-13")
+
 func StringToNumber(input string) (num model.Number, err error) {
 	switch input {
 	case "1":
@@ -34,7 +36,7 @@ func StringToNumber(input string) (num model.Number, err error) {
 	case "13":
 		num = 13
 	default:
-		err = errors.New("invalid input")
+		err = ErrInvalidNumberInput
 	}
 	return
 }

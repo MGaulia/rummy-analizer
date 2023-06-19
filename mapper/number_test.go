@@ -1,7 +1,6 @@
 package mapper
 
 import (
-	"errors"
 	"main/model"
 	"testing"
 )
@@ -25,7 +24,7 @@ func TestStringToNumber(t *testing.T) {
 		{"11", 11, nil},
 		{"12", 12, nil},
 		{"13", 13, nil},
-		{"14", 0, errors.New("invalid input")},
+		{"14", 0, ErrInvalidNumberInput},
 	}
 	for _, test := range tests {
 		got, err := StringToNumber(test.input)
