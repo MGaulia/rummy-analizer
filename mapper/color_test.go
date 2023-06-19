@@ -18,7 +18,7 @@ func TestNumberToColor(t *testing.T) {
 		{"red", 0, ErrInvalidColorInput},
 	}
 	for _, test := range tests {
-		got, err := StringToColor(test.input)
+		got, err := stringToColor(test.input)
 		if got != test.want {
 			t.Errorf("StringToColor(%s) = %d, want %d", test.input, got, test.want)
 		}

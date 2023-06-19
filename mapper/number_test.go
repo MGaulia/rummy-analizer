@@ -27,7 +27,7 @@ func TestStringToNumber(t *testing.T) {
 		{"14", 0, ErrInvalidNumberInput},
 	}
 	for _, test := range tests {
-		got, err := StringToNumber(test.input)
+		got, err := stringToNumber(test.input)
 		if got != model.Number(test.want) {
 			t.Errorf("StringToNumber(%s) = %d, want %d", test.input, got, test.want)
 		}

@@ -7,7 +7,7 @@ import (
 
 var ErrInvalidNumberInput = errors.New("invalid input, available values: 1-13")
 
-func StringToNumber(input string) (num model.Number, err error) {
+func stringToNumber(input string) (num model.Number, err error) {
 	switch input {
 	case "1":
 		num = 1

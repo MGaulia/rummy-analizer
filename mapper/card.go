@@ -17,12 +17,12 @@ func StringToCard(input string) (card model.Card, err error) {
 	input = strings.ToLower(input)
 
 	if tokens := strings.Split(input, " "); len(tokens) == 2 {
-		if c, err := StringToColor(tokens[0]); err != nil {
+		if c, err := stringToColor(tokens[0]); err != nil {
 			return model.Card{}, err
 		} else {
 			card.Colour = c
 		}
-		if n, err := StringToNumber(tokens[1]); err != nil {
+		if n, err := stringToNumber(tokens[1]); err != nil {
 			return model.Card{}, err
 		} else {
 			card.Number = n
