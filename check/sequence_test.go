@@ -14,32 +14,32 @@ func TestIsValidSequence(t *testing.T) {
 		{
 			name: "colour mismatch",
 			input: []model.Card{
-				{Colour: model.COLOR_GREY, Number: 1},
-				{Colour: model.COLOR_BLACK, Number: 2},
+				{Color: model.COLOR_GREY, Number: 1},
+				{Color: model.COLOR_BLACK, Number: 2},
 			},
 		},
 		{
 			name: "number same",
 			input: []model.Card{
-				{Colour: model.COLOR_GREY, Number: 1},
-				{Colour: model.COLOR_GREY, Number: 1},
+				{Color: model.COLOR_GREY, Number: 1},
+				{Color: model.COLOR_GREY, Number: 1},
 			},
 		},
 		{
 			name: "number too big",
 			input: []model.Card{
-				{Colour: model.COLOR_GREY, Number: 1},
-				{Colour: model.COLOR_GREY, Number: 3},
+				{Color: model.COLOR_GREY, Number: 1},
+				{Color: model.COLOR_GREY, Number: 3},
 			},
 		},
 		{
 			name: "true",
 			want: true,
 			input: []model.Card{
-				{Colour: model.COLOR_GREY, Number: 1},
-				{Colour: model.COLOR_GREY, Number: 2},
-				{Colour: model.COLOR_GREY, Number: 3},
-				{Colour: model.COLOR_GREY, Number: 4},
+				{Color: model.COLOR_GREY, Number: 1},
+				{Color: model.COLOR_GREY, Number: 2},
+				{Color: model.COLOR_GREY, Number: 3},
+				{Color: model.COLOR_GREY, Number: 4},
 			},
 		},
 	}

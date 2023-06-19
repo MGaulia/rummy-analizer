@@ -1,6 +1,6 @@
 package model
 
 type Card struct {
-	Colour Color
+	Color  Color
 	Number Number
 }

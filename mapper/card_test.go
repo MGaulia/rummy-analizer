@@ -15,9 +15,9 @@ func TestStringToCard(t *testing.T) {
 		{"very long sentence", model.Card{}, ErrInputLength},
 		{"haha 1", model.Card{}, ErrInvalidColorInput},
 		{"grey 99", model.Card{}, ErrInvalidNumberInput},
-		{"grey 1", model.Card{Colour: model.COLOR_GREY, Number: 1}, nil},
-		{"  grey 1  ", model.Card{Colour: model.COLOR_GREY, Number: 1}, nil},
-		{"GREY 1", model.Card{Colour: model.COLOR_GREY, Number: 1}, nil},
+		{"grey 1", model.Card{Color: model.COLOR_GREY, Number: 1}, nil},
+		{"  grey 1  ", model.Card{Color: model.COLOR_GREY, Number: 1}, nil},
+		{"GREY 1", model.Card{Color: model.COLOR_GREY, Number: 1}, nil},
 	}
 	for _, test := range tests {
 		got, err := StringToCard(test.input)

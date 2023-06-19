@@ -11,10 +11,10 @@ func IsValidSet(input []model.Card) (result bool) {
 		if val.Number != number {
 			return
 		}
-		if usedColours[val.Colour] {
+		if usedColours[val.Color] {
 			return
 		}
-		usedColours[val.Colour] = true
+		usedColours[val.Color] = true
 	}
 	return true
 }

@@ -20,7 +20,7 @@ func StringToCard(input string) (card model.Card, err error) {
 		if c, err := stringToColor(tokens[0]); err != nil {
 			return model.Card{}, err
 		} else {
-			card.Colour = c
+			card.Color = c
 		}
 		if n, err := stringToNumber(tokens[1]); err != nil {
 			return model.Card{}, err

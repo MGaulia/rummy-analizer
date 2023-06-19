@@ -7,7 +7,7 @@ func IsValidSequence(input []model.Card) (result bool) {
 	tocheck := input[0]
 	for i := 1; i < len(input); i++ {
 		val := input[i]
-		if val.Colour != tocheck.Colour {
+		if val.Color != tocheck.Color {
 			return
 		}
 		if val.Number-tocheck.Number != 1 {

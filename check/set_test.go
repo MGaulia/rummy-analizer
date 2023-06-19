@@ -14,25 +14,25 @@ func TestIsValidSet(t *testing.T) {
 		{
 			name: "colour same",
 			input: []model.Card{
-				{Colour: model.COLOR_GREY, Number: 1},
-				{Colour: model.COLOR_GREY, Number: 1},
+				{Color: model.COLOR_GREY, Number: 1},
+				{Color: model.COLOR_GREY, Number: 1},
 			},
 		},
 		{
 			name: "not equal numbers",
 			input: []model.Card{
-				{Colour: model.COLOR_GREY, Number: 1},
-				{Colour: model.COLOR_BLACK, Number: 2},
+				{Color: model.COLOR_GREY, Number: 1},
+				{Color: model.COLOR_BLACK, Number: 2},
 			},
 		},
 		{
 			name: "valid",
 			want: true,
 			input: []model.Card{
-				{Colour: model.COLOR_GREY, Number: 1},
-				{Colour: model.COLOR_BLACK, Number: 1},
-				{Colour: model.COLOR_GREEN, Number: 1},
-				{Colour: model.COLOR_PURPLE, Number: 1},
+				{Color: model.COLOR_GREY, Number: 1},
+				{Color: model.COLOR_BLACK, Number: 1},
+				{Color: model.COLOR_GREEN, Number: 1},
+				{Color: model.COLOR_PURPLE, Number: 1},
 			},
 		},
 	}
