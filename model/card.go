@@ -1,4 +1,4 @@
-package models
+package model
 
 type Card struct {
 	Colour Color

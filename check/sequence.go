@@ -1,9 +1,9 @@
-package checks
+package check
 
-import "main/models"
+import "main/model"
 
 // IsValidSequence checks if the given cards are a valid sequence
-func IsValidSequence(input []models.Card) (result bool) {
+func IsValidSequence(input []model.Card) (result bool) {
 	tocheck := input[0]
 	for i := 1; i < len(input); i++ {
 		val := input[i]
