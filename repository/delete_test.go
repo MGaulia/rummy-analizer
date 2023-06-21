@@ -1,4 +1,4 @@
-package logic
+package repository
 
 import (
 	"main/model"
