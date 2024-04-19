@@ -5,7 +5,7 @@ import (
 	"main/model"
 )
 
-var ErrInvalidColorInput = errors.New("invalid input, available values: grey, black, green, purple")
+var ErrInvalidColorInput = errors.New("invalid color, available values: grey, black, green, purple")
 
 func stringToColor(input string) (color model.Color, err error) {
 	switch input {
