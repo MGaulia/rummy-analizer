@@ -15,12 +15,12 @@ func TestNumberToColor(t *testing.T) {
 		{"black", model.COLOR_BLACK, nil},
 		{"green", model.COLOR_GREEN, nil},
 		{"purple", model.COLOR_PURPLE, nil},
-		{"red", 0, ErrInvalidColorInput},
+		{"red", "", ErrInvalidColorInput},
 	}
 	for _, test := range tests {
 		got, err := stringToColor(test.input)
 		if got != test.want {
-			t.Errorf("StringToColor(%s) = %d, want %d", test.input, got, test.want)
+			t.Errorf("StringToColor(%s) = %s, want %s", test.input, got, test.want)
 		}
 		if err != nil && err.Error() != test.wantErr.Error() {
 			t.Errorf("StringToColor(%s) = %s, want %s", test.input, err, test.wantErr)

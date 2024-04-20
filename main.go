@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"main/combinations"
 	"main/mapper"
 	"main/model"
 	"os"
@@ -12,6 +13,7 @@ import (
 func main() {
 	var table []model.Card
 	var input string
+	fmt.Println("Available colors: grey, black, green, purple")
 	for {
 		reader := bufio.NewReader(os.Stdin)
 		fmt.Print("Enter text: ")
@@ -22,6 +24,10 @@ func main() {
 			fmt.Println(err)
 		} else {
 			table = append(table, card)
+			fmt.Println("check four set: ", combinations.IsFourSetCombination(table))
+			fmt.Println("check three set: ", combinations.IsThreeSetCombination(table))
+			fmt.Println("check three sequence: ", combinations.IsThreeSequenceCombination(table))
+			fmt.Println("check four sequence: ", combinations.IsFourSequenceCombination(table))
 			printTable(table)
 		}
 	}
