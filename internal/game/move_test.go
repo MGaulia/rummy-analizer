@@ -251,3 +251,14 @@ func TestSearchFindsJokerRelease(t *testing.T) {
 		t.Fatalf("release search %+v", got)
 	}
 }
+
+func TestReleaseCannotReturnToReorderedOriginalSet(t *testing.T) {
+	original := []Piece{mp("red", Red, 7), mp("blue", Blue, 7), mj("j", Black, 7)}
+	rack := []Piece{mp("black7", Black, 7), mp("black8", Black, 8), mp("black9", Black, 9)}
+	before := Position{Table: [][]Piece{original}, Rack: rack}
+	final := [][]Piece{{original[1], original[0], original[2]}, rack}
+	move := Move{Table: final, Releases: []JokerRelease{{Table: [][]Piece{{original[0], original[1], rack[0]}}, Freed: []string{"j"}}}}
+	if got := ValidateMove(before, Rules{Edition: 4}, Turn{}, move); got.Valid || got.Code != "joker_reuse" {
+		t.Fatalf("reordering original set must not prove new-set reuse: %+v", got)
+	}
+}
