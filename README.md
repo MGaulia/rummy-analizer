@@ -24,6 +24,11 @@ Malformed input reports an error without adding a tile. End input with Ctrl-D
 (Unix) or Ctrl-Z followed by Enter (Windows). Piped input and a final line without
 a newline are supported.
 
+A session accepts at most 13 parsed tiles. A fourteenth tile ends the process
+with an error before it is appended; input is never silently truncated. Blank
+and malformed lines do not count toward this limit. This bounds the current
+single-collection CLI, not future table input or the domain analyzer API.
+
 After the example above, the output includes:
 
 ```text

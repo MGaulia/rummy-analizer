@@ -16,7 +16,8 @@ import (
 const usage = "Usage: rummy-analizer [-color-aliases label=color,...]\nEnter one tile per line: <color> <number>, or joker.\nColors: black, blue, orange, red. Checks whether one collection can form a meld, not its displayed order."
 
 // Run processes one growing collection, not a table. Input errors are printed
-// without adding a tile; I/O and argument errors are returned to the caller.
+// without adding a tile. A fourteenth parsed tile ends the session with an
+// error before being added. I/O and argument errors are also returned.
 func Run(args []string, input io.Reader, output io.Writer) error {
 	flags := flag.NewFlagSet("rummy-analizer", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
@@ -57,6 +58,10 @@ func Run(args []string, input io.Reader, output io.Writer) error {
 				return writeErr
 			}
 			continue
+		}
+		// This CLI checks one collection, so retaining more tiles cannot help.
+		if len(tiles) == game.MaxNumber {
+			return fmt.Errorf("single-collection input is limited to %d tiles; start a new process for another collection", game.MaxNumber)
 		}
 		tiles = append(tiles, tile)
 		result := game.AnalyzeMeld(tiles)
