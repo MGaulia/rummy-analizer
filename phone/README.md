@@ -38,7 +38,8 @@ target, not verified handset compatibility or the final product minimum.
 
 1. Run `bash scripts/build-phone.sh` with Go and Python installed on that Mac.
    The generated `phone/web/engine` directory is ignored; regenerate it from
-   reviewed source, and copy the matching Go runtime (the script does both).
+   reviewed source. The script copies the matching Go runtime and BSD license;
+   the app exposes the license locally under Open-source licenses.
 2. Open `phone/ios/RummyAssistant.xcodeproj` in Xcode. The blue `web` folder
    reference must include all web assets, including the generated engine.
 3. Select the `RummyAssistant` scheme. For a simulator, run without a signing
@@ -129,3 +130,11 @@ python3 -m unittest discover -s scripts -p 'test_photo_evaluation.py' -v
 The evaluator's two synthetic unit fixtures verify metric arithmetic and input
 integrity, not recognition. Actual phone latency, memory, accuracy, occlusion
 coverage, and offline end-to-end behavior remain required measurements.
+
+Current rulebook-backed engine improvements include chained release/reuse and
+initial-role ambiguity handling. A verified move reaching the exhaustive relaxed
+partition bound proves optimality, and a zero bound proves no move. Other
+unresolved temporary-loose-tile cases stay incomplete. See
+[proof boundaries](../docs/joker-transitions.md). The owner confirmed no Mac build
+machine and no real-photo dataset are available yet; native/recognition
+acceptance remains blocked by those actual prerequisites, not network access.

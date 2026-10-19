@@ -25,8 +25,10 @@ server, inference API, photo upload, or remote solver is permitted.
 
 Rules reference: booklet D-2600-1236-0041 (120819), linked in docs/rules.md.
 PR #9's selected profile includes joker replacement and illustrated releases by
-restructuring. Recheck the actual booklet before claiming full transition-rule
-coverage. Do not silently mix profiles or invent another house rule.
+restructuring. The actual booklet was downloaded and its illustrations visually
+checked after network publication; see docs/joker-transitions.md for the source
+hash, regressions, chained certificates and remaining proof boundaries. Do not
+silently mix profiles or invent another house rule.
 
 Acceptance needs real representative photos and a physical-phone end-to-end run
 with networking disabled and all assets local. Synthetic tests, desktop runs,
@@ -34,3 +36,13 @@ WebAssembly builds, and mock predictions alone do not establish that acceptance.
 Do not commit or upload private photos. Model/runtime licenses, reproducible
 training/export, actual device/OS performance, and ambiguity correction are part
 of the remaining acceptance work. Device/model/latency targets are not fixed.
+
+## Integration status and acceptance prerequisites
+
+The owner selected iPhone first. The initial source integration targets iOS 17+
+using native camera/import/Vision proposals and the bundled Go/Wasm engine; this
+is not a measured final minimum device/OS or an accepted model choice. The local
+interface and actual Go bridge are tested on desktop; native compilation, real
+recognition, physical-device memory/latency, and the end-to-end offline workflow
+are unverified. The owner confirmed there is no Mac build machine or real-photo
+dataset yet. PRs #10/#11/#12 contain the new work, dependent on #9; #12 is a draft.

@@ -1,5 +1,48 @@
 # Implementation status
 
+## Current state after network publication (2026-10-19)
+
+- Published policy is enforced for api.github.com and rummikub.com; actual API
+  reads/writes and the official PDF download now work. No network action remains.
+- Open, unmerged review chain: [#9](https://github.com/MGaulia/rummy-analizer/pull/9)
+  -> [#10](https://github.com/MGaulia/rummy-analizer/pull/10)
+  -> [#11](https://github.com/MGaulia/rummy-analizer/pull/11)
+  -> [draft #12](https://github.com/MGaulia/rummy-analizer/pull/12).
+  Bases are the preceding feature branches. Owner reviews/merges; after squash
+  or rebase integration, rebase dependents onto actual merged commits, retarget
+  main, and inspect the diff. No GitHub PR has been merged by this task.
+- Official PDF D-2600-1236-0041 (120819), pages 3-4, visually inspected. All four
+  release illustrations (including all three group-replacement alternatives)
+  are encoded for both editions. The opening policy matches page 1. Source hash
+  and exact semantics are in docs/joker-transitions.md.
+- Engine: initial joker ambiguity, retained-joker replacement, chained release/
+  reuse, bounded checkpoint graph, and rigorous relaxed-partition proof bounds.
+  The zero bound proves absence; a verified move matching the bound proves the
+  maximum rack-tile count. Unresolved temporary-loose-tile transitions remain
+  explicitly incomplete; the valid-table checkpoint format is sufficient, not
+  proven complete for every possible manipulation. No false no-move claim.
+- 576 numbered oracle cases plus 31 nonempty one-table-joker rack subsets using
+  independent wildcard substitution/partitioning. Four-joker expanded-edition,
+  table-only joker reuse, invalid certificates, identity, and cancellation tests
+  also pass. See the commands and exact tested checkpoints below.
+- Native iPhone source, real photo accuracy, and device acceptance remain UNRUN.
+  Owner confirmed **no Mac build machine** and **no real dataset** are available.
+  Those prerequisites block compiling/validating the native integration and
+  selecting/evaluating the recognizer. #12 remains a draft.
+- Local bundle now ships Go's BSD license text from the matching toolchain and
+  displays it offline. Phone status text explains limits without internal codes.
+
+The remaining acceptance work is not a completed photo-to-move phone product.
+Before continuing, obtain a Mac/Xcode/iPhone with authorized build/signing access
+and consented representative table/rack photos with ground truth. Run the native
+build, evaluate local recognition, then perform the full network-disabled device
+workflow. Preserve explicit joker search limitations while those are unresolved.
+
+## Earlier checkpoints and historical failures
+
+The sections below preserve earlier observations. Former API/PDF denials and
+"no PR created" entries are historical; the current PR/access state is above.
+
 ## Observed starting state (2026-10-19)
 
 - Live main: a0caeb94ae18c67fb331bfb8ff561fc516012937.
@@ -176,3 +219,49 @@ Continue with the explicit missing requirements above. Refresh live main/PRs
 before resuming, preserve these branches, and keep every PR unmerged for owner
 review. Main was rechecked at a0caeb94ae18c67fb331bfb8ff561fc516012937; #9 still
 points to cc8ce4f58fc9f9194b7f46ced698e5f0c1354816 and remains the only open PR.
+
+## Verification after published access and rulebook review
+
+Source/branch checkpoints (Go 1.27.2 linux/amd64):
+
+| Unit | Commit | Source tree |
+| --- | --- | --- |
+| Rulebook-backed engine (#10) | d2ebc415831a0ed5a7cee6707d5985d83b1c48d0 | 88349feb862fd75e33952b1a6be13326a52d147d |
+| Integrated CLI/Wasm (#11) | 39d440d8d47f9798170e6b8e96300496a600cb78 | 6ef761a1976be9a65a80e039beff184573019d16 |
+| Integrated phone code (#12) | f5b69a5267a3dd52961d4101dd6e16603363a002 | 7cf2a46289ccb6a9c120234fb4d05d0c0443e680 |
+| Offline notices/status UI (#12) | 546e7764286ac22a917150c5f143e43d762584e4 | 818489d1fb78dfd992ebc14501001cf1cee967eb |
+
+Actual checks:
+- `bash scripts/check.sh` passed on the combined clean f5b69a5 commit: uncached
+  tests, formatting/whitespace, vet, races, executable build, and original/new
+  CLI behavior. Engine/interface scripts also passed separately on the source
+  incorporated in their listed commits. Existing generated bundle/bytecode
+  artifacts appeared untracked on the older branches and were not committed.
+- `bash scripts/build-phone.sh` and `node scripts/check-phone-engine.cjs` passed:
+  actual Go/Wasm solve, SVG, cancellation/retained-best replay, and tight table-
+  joker bound through JSON. The later bundle includes/tests the Go BSD notice.
+- `node scripts/check-photo-state.cjs`, two evaluator arithmetic/integrity tests
+  (`python3 -m unittest discover -s scripts -p test_photo_evaluation.py -v`), and
+  `python3 scripts/check-phone-ui.py` passed again on 546e776. That UI check uses
+  synthetic observations, actual Go/Wasm, no external requests, and checks raw
+  report isolation, confirmation/invalidation, rendering, plain status and notice.
+- Existing parser/inventory fuzz runs are recorded above; these components were
+  unchanged in the joker follow-up. No new fuzz or native/device result is claimed.
+- The unbound-role and retained-second-joker regressions were observed failing
+  before their fixes. The chained-reuse regression failed before `reused` stages
+  existed; the independent witness finder now returns a verified staged path.
+  The relaxed-bound examples failed under the former blanket-incomplete policy
+  and now prove the requested optimum/absence. Four-joker search initially hit
+  its work limit; rejecting impossible template lengths and skipping non-improving
+  witness work lets that regression complete under the same bound.
+- `go test ./internal/game -run '^$' -bench BenchmarkSearchRearrangement -benchmem
+  -benchtime=1s`: 93,552 ns/op, 141,833 B/op, 2,094 allocs/op on AMD EPYC 9V74.
+  This host differs from the earlier AMD EPYC 7763; this is not a controlled
+  speedup comparison or phone measurement.
+
+The owner confirmed there is no Mac build machine and no real-photo dataset.
+Native compilation, recognition evaluation, simulator/device runs, and offline
+phone acceptance remain unrun. Temporary-loose-tile certificate completeness
+also remains an explicit engine limitation; unresolved bounds stay incomplete.
+Open PR bodies are updated with these limits and dependencies. #12 stays draft.
+Main and #9 were rechecked unchanged; no PR was merged, force-pushed, or deployed.
