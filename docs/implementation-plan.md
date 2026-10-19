@@ -9,7 +9,8 @@
   GCC 14.2.0. PR #9 baseline and fuzz validation in progress.
 - Git reads work. GitHub REST/GraphQL and official booklet download currently
   return proxy 403; network additions saved to configuration draft. Open-PR
-  metadata and illustrated rulebook review await working access.
+  metadata was subsequently read through the public GitHub web pages; illustrated
+  rulebook review still awaits working access.
 
 ## Remaining milestones
 
@@ -74,3 +75,60 @@ push is not an opened PR. Desktop/mobile/browser/device results stay separate.
 - `bash scripts/check.sh` passed including tests/vet/races/build/legacy CLI.
   New structured-command executable checks are being incorporated into it.
 - Go 1.27.2 linux/amd64 remains the toolchain; this is desktop validation only.
+
+## iPhone correction and native adapter slice
+
+- Application/bridge branch pushed at 59c17d6e76d1743feb6c887442cd4e5daf9687b3.
+  Intended PR base: codex/offline-assistant-moves. API access still blocks PRs.
+- Added a functional local web interface using actual bundled Go/Wasm, separate
+  table/rack sessions, raw observations/candidates, explicit per-tile value,
+  meld/order correction, exclusion/addition, completeness confirmation, settings,
+  cancellation, and exact rendered solutions. Browser import is manual annotation.
+- Desktop offline UI integration passed with synthetic observations and the
+  actual engine; no requests left the in-process asset origin. This is explicitly
+  NOT recognition accuracy evidence. The 390px rendering was visually inspected;
+  tile confirmation contrast and final diagram sizing were improved.
+- iOS project/source adds real camera/PHPicker import, orientation normalization,
+  bounded local Vision rectangles/text proposals, glyph-color suggestions, and
+  a WKWebView bridge with bundled bytes. No native Swift build/device execution
+  is possible here: no Swift/Xcode, macOS SDK, simulator, or attached iPhone.
+- Recognition is an unmeasured candidate pipeline, including limited text-only
+  joker proposals. Real consented photos/ground truth and iPhone evaluation are
+  required before choosing/tuning the final vision model or claiming accuracy.
+- During integration review, reproduced a release-certificate bug: reordering
+  the same physical meld was incorrectly accepted as a new set. Added regression,
+  observed failure against the earlier implementation, then passed after checking
+  physical membership independently of ordering/roles.
+- See phone/README.md for reproducible bundle, desktop checks, and unexecuted
+  macOS/iPhone build/acceptance steps. The Xcode project is not a verified app.
+
+## Validation and concrete remaining requirements
+
+Latest combined local checks passed:
+- `bash scripts/check.sh --fuzz`: tests, vet, races, build, legacy and structured
+  executable checks. Inventory fuzz: 199,846 executions; parser fuzz: 228,795.
+- `bash scripts/build-phone.sh`; `node scripts/check-phone-engine.cjs`;
+  `node scripts/check-photo-state.cjs`; `python3 scripts/check-phone-ui.py`.
+- `python3 -m unittest discover -s scripts -p test_photo_evaluation.py -v`:
+  two evaluator-arithmetic/input-integrity tests passed (not recognition).
+- Node v24.19.0, Python 3.12.14, Chromium 154.0.8037.57, Go 1.27.2 linux/amd64.
+- Local recognition evaluation now checks source checksums and separates declared
+  real/synthetic samples, but no real sample or physical iPhone was available.
+
+Remaining requirements that this Linux workspace cannot supply:
+1. Apply network settings for api.github.com and rummikub.com. Public GitHub web
+   pages independently confirmed #9 is the only open PR and remains unmerged.
+   API access is required to open PRs. Inspect the official booklet, finish complete joker
+   operational rules/search coverage, and open the prepared dependency PRs.
+2. A Mac with Xcode/iOS SDK (initial integration target iOS 17) to compile and
+   run the native project. No Swift build success or simulator result is claimed.
+3. Consented representative real table/rack photos with ground truth, including
+   actual joker faces, for local recognition evaluation/model selection. Current
+   Vision/color/grouping proposals are unmeasured and not accepted recognition.
+4. An iPhone and existing signing access for physical-device camera/import,
+   correction, cancellation, memory/latency, and network-disabled end-to-end
+   acceptance. No minimum handset or performance claim is established.
+
+Until those are supplied, the completed work is engine/CLI/rendering and tested
+portable correction integration plus native integration source, not the complete
+photo-to-move phone product. Do not relabel any of these blockers as completion.

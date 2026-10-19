@@ -251,3 +251,32 @@ func TestSearchFindsJokerRelease(t *testing.T) {
 		t.Fatalf("release search %+v", got)
 	}
 }
+
+func TestReleaseCannotReturnToReorderedOriginalSet(t *testing.T) {
+	original := []Piece{mp("red", Red, 7), mp("blue", Blue, 7), mj("j", Black, 7)}
+	rack := []Piece{mp("black7", Black, 7), mp("black8", Black, 8), mp("black9", Black, 9)}
+	before := Position{Table: [][]Piece{original}, Rack: rack}
+	final := [][]Piece{{original[1], original[0], original[2]}, rack}
+	move := Move{Table: final, Releases: []JokerRelease{{Table: [][]Piece{{original[0], original[1], rack[0]}}, Freed: []string{"j"}}}}
+	if got := ValidateMove(before, Rules{Edition: 4}, Turn{}, move); got.Valid || got.Code != "joker_reuse" {
+		t.Fatalf("reordering original set must not prove new-set reuse: %+v", got)
+	}
+}
+
+func TestNodeLimitKeepsVerifiedBest(t *testing.T) {
+	before := Position{Rack: []Piece{mp("r10", Red, 10), mp("b10", Blue, 10), mp("k10", Black, 10), mp("o2", Orange, 2), mp("r5", Red, 5), mp("k8", Black, 8)}}
+	found := false
+	for limit := 100; limit <= 5000; limit += 100 {
+		got := Search(context.Background(), before, Rules{Edition: 4}, Turn{}, SearchOptions{MaxNodes: limit})
+		if got.Status == FeasibleIncomplete {
+			found = true
+			if got.Nodes > limit || len(got.Verified.Played) != 3 || !ValidateMove(before, Rules{Edition: 4}, Turn{}, *got.Move).Valid {
+				t.Fatalf("bad retained best %+v", got)
+			}
+			break
+		}
+	}
+	if !found {
+		t.Fatal("fixture did not exercise a limit after finding a feasible move")
+	}
+}
