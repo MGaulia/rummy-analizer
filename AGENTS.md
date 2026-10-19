@@ -2,7 +2,9 @@
 
 ## Scope and structure
 
-This is a single-user Go CLI, not a public library or service. Preserve `go run .`.
+This is a personal offline Rummikub assistant with a Go CLI development interface.
+Preserve `go run .`. See docs/product-spec.md and docs/implementation-plan.md
+for the accepted product scope and current milestone status.
 Read README.md and docs/architecture.md for the current scope; consult
 [development checks](docs/development.md) before publishing changes.
 Keep dependencies directed `main -> internal/cli -> internal/game`.

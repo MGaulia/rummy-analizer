@@ -45,3 +45,24 @@ reported role is one valid interpretation, not a claim about image confidence.
 Table validity is not move legality. A move additionally needs the original
 position, selected rules, player opening/draw state, and physical tile accounting.
 The current single-collection text CLI remains available through `go run .`.
+
+## Transition checks and search coverage
+
+`ValidateMove` verifies original/final positions, exact physical accounting,
+opening/draw state, and joker release/reuse checkpoints. Initial unspecified
+roles remain ambiguous until bound; explicit roles cannot reset without release.
+Checkpoints support chained release/reuse and preparation rearrangements.
+
+`Search` enumerates arbitrary final table partitions, including rack jokers,
+and independently validates candidate transitions. It first seeks a single
+release certificate, then a bounded graph of release/reuse checkpoints. It
+returns a proven optimum when a verified move reaches an exhaustively computed
+relaxed partition upper bound, or the absolute rack-size bound. An exhausted
+zero relaxed bound proves no move even with table jokers. A larger unresolved
+bound or resource limit produces an incomplete result, never a false proof.
+
+The official PDF is now accessible and all four release illustrations were
+visually reviewed and encoded as regressions for both editions. See
+[joker transitions and proof boundaries](joker-transitions.md) for the exact
+source hash, certificate semantics, independent oracle coverage, resource limits,
+and remaining temporary-loose-tile coverage limitation.
