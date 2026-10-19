@@ -48,23 +48,21 @@ The current single-collection text CLI remains available through `go run .`.
 
 ## Transition checks and search coverage
 
-`ValidateMove` verifies original/final positions, occurrence conservation, exact
-rack additions, opening/draw state, and explicit joker release stages. A stage
-leaves a valid table while named original table jokers are held. Those jokers
-must all be reused on the same turn in new sets; stage rack additions cannot be
-returned to the rack. Nested extensions/contractions that retain a joker's role
-and meld kind do not require release. This is a sufficient certificate format,
-not yet a complete operational encoding of all booklet illustrations. Other
-joker manipulations are rejected as needing a witness, not declared impossible.
-The official PDF was inaccessible in this runtime; final profile verification
-and broader joker transition completeness remain outstanding.
+`ValidateMove` verifies original/final positions, exact physical accounting,
+opening/draw state, and joker release/reuse checkpoints. Initial unspecified
+roles remain ambiguous until bound; explicit roles cannot reset without release.
+Checkpoints support chained release/reuse and preparation rearrangements.
 
-`Search` enumerates complete group/run templates and physical partitions. It
-can split, combine, and rearrange numbered table tiles without preserving old
-meld boundaries. Rack jokers may fill any template slot. Node budgets include
-candidate generation; context cancellation is checked throughout. Stable
-first-enumerated solutions break primary-objective ties. Every returned move is
-revalidated separately. For tables without jokers, exhaustive completion proves
-optimality or no move. Table-joker certificates are incomplete in scope, so
-results remain incomplete unless a verified move plays the entire rack (the
-absolute upper bound). Resource exhaustion is never reported as no move.
+`Search` enumerates arbitrary final table partitions, including rack jokers,
+and independently validates candidate transitions. It first seeks a single
+release certificate, then a bounded graph of release/reuse checkpoints. It
+returns a proven optimum when a verified move reaches an exhaustively computed
+relaxed partition upper bound, or the absolute rack-size bound. An exhausted
+zero relaxed bound proves no move even with table jokers. A larger unresolved
+bound or resource limit produces an incomplete result, never a false proof.
+
+The official PDF is now accessible and all four release illustrations were
+visually reviewed and encoded as regressions for both editions. See
+[joker transitions and proof boundaries](joker-transitions.md) for the exact
+source hash, certificate semantics, independent oracle coverage, resource limits,
+and remaining temporary-loose-tile coverage limitation.
