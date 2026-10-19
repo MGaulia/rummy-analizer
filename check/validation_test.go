@@ -1,9 +1,10 @@
 package check
 
 import (
-	"main/model"
 	"reflect"
 	"testing"
+
+	"github.com/MGaulia/rummy-analizer/model"
 )
 
 func TestValidationBoundaries(t *testing.T) {

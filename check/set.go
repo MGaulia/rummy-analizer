@@ -1,6 +1,6 @@
 package check
 
-import "main/model"
+import "github.com/MGaulia/rummy-analizer/model"
 
 // IsValidSet reports whether cards contain three or four equal numbers in
 // distinct colors. Input order does not matter and cards are never modified.

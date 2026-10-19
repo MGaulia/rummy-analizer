@@ -1,6 +1,6 @@
 package check
 
-import "main/model"
+import "github.com/MGaulia/rummy-analizer/model"
 
 // IsValidSequence reports whether cards form a same-color run of at least three
 // distinct numbers from 1 to 13. Runs cannot wrap from 13 to 1.

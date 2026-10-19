@@ -2,32 +2,30 @@ package mapper
 
 import (
 	"errors"
-	"main/model"
 	"strings"
+
+	"github.com/MGaulia/rummy-analizer/model"
 )
 
-var ErrInputLength = errors.New("invalid input length, must be 5-8 characters")
+var ErrInputFormat = errors.New("invalid input, expected <color> <number>")
+
+// ErrInputLength is retained for callers using the old error name.
+// Deprecated: use ErrInputFormat. Input is validated by fields, not byte length.
+var ErrInputLength = ErrInputFormat
 
 // StringToCard parses a card from a string
-func StringToCard(input string) (card model.Card, err error) {
-	input = strings.TrimSpace(input)
-	if len(input) < 5 || len(input) > 8 {
-		return model.Card{}, ErrInputLength
+func StringToCard(input string) (model.Card, error) {
+	fields := strings.Fields(input)
+	if len(fields) != 2 {
+		return model.Card{}, ErrInputFormat
 	}
-	input = strings.ToLower(input)
-
-	if tokens := strings.Split(input, " "); len(tokens) == 2 {
-		if c, err := stringToColor(tokens[0]); err != nil {
-			return model.Card{}, err
-		} else {
-			card.Color = c
-		}
-		if n, err := stringToNumber(tokens[1]); err != nil {
-			return model.Card{}, err
-		} else {
-			card.Number = n
-		}
+	color, err := stringToColor(strings.ToLower(fields[0]))
+	if err != nil {
+		return model.Card{}, err
 	}
-
-	return
+	number, err := stringToNumber(fields[1])
+	if err != nil {
+		return model.Card{}, err
+	}
+	return model.Card{Color: color, Number: number}, nil
 }
