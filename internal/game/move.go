@@ -187,7 +187,7 @@ func ValidateMove(before Position, rules Rules, turn Turn, move Move) MoveReport
 		// A released joker must be used in a new set, not simply put back into
 		// exactly its original physical meld with an unchanged role.
 		for id := range held {
-			if sameMeld(findMeld(original.Resolved, id), findMeld(after.Table, id)) {
+			if samePhysicalMeld(findMeld(original.Resolved, id), findMeld(after.Table, id)) {
 				return fail("joker_reuse", "released joker must be used in a new set on this turn")
 			}
 		}
@@ -258,6 +258,24 @@ func retainedJokers(before, after [][]Piece, freed map[string]bool) bool {
 			if !sub && !super {
 				return false
 			}
+		}
+	}
+	return true
+}
+
+// Reordering a group or changing wildcard roles alone does not make a new
+// physical set for purposes of the release/reuse certificate.
+func samePhysicalMeld(a, b []Piece) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	ids := map[string]bool{}
+	for _, p := range a {
+		ids[p.ID] = true
+	}
+	for _, p := range b {
+		if !ids[p.ID] {
+			return false
 		}
 	}
 	return true
