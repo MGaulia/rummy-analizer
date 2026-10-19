@@ -45,4 +45,8 @@ is not a measured final minimum device/OS or an accepted model choice. The local
 interface and actual Go bridge are tested on desktop; native compilation, real
 recognition, physical-device memory/latency, and the end-to-end offline workflow
 are unverified. The owner confirmed there is no Mac build machine or real-photo
-dataset yet. PRs #10/#11/#12 contain the new work, dependent on #9; #12 is a draft.
+dataset yet. PRs #9–#11 are merged into main; #12 targets main and remains a draft.
+The owner authorized a static GitHub Pages Safari preview of #12 for manual
+photo annotation and on-phone solver testing. It performs no browser recognition,
+does not persist photos/readings, and does not yet support offline reopening.
+Publishing that preview does not satisfy native or recognition acceptance.

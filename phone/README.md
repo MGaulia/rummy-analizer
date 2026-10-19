@@ -31,6 +31,37 @@ identity, raw/corrected value isolation, exact occurrence rendering, and result
 invalidation when inputs change. Browser-only imports require manual annotation;
 no browser recognizer is claimed.
 
+## Safari preview
+
+The owner authorized publishing the draft #12 browser interface on GitHub Pages.
+This does not merge #12 or accept its native integration. Build from a clean,
+committed checkout with the same Go/Python prerequisites as above:
+
+```sh
+bash scripts/build-safari-preview.sh /tmp/rummy-safari-preview
+```
+
+Use an empty output directory. Publish only its contents to the `gh-pages`
+branch root, and configure Pages to deploy that branch. No workflow is needed.
+The generated `preview-build.json` records the source commit/tree, Go version,
+and deployed asset hashes. No photos, credentials, or native project are included.
+
+In iPhone Safari, open the HTTPS Pages URL on any network. Choose an edition,
+then use **Choose photo** separately for table and rack. Browser imports have no
+recognizer: tap each tile to add it, enter color/number or joker, and confirm it.
+For table tiles assign a meld number and preserve the displayed order. Confirm
+each complete reading before **Check table** or **Find move**. An empty table
+photo is allowed. Photos and solving stay in the browser. Reloading clears the
+readings; offline reopening is not supported. The native **Take photo** buttons
+are omitted from this preview. Safari's file picker may offer its own camera.
+
+For a small first test, photograph an empty table and a separate rack with red
+10, blue 10, and black 10. Choose the four-player edition and leave the opening
+requirement enabled. After entering and confirming all three rack tiles, the
+solver should show a 30-point opening that plays three tiles. Record the iPhone
+model, iOS version, preview source shown on the page, result, and any errors.
+This tests manual correction and the actual solver, not recognition accuracy.
+
 ## Build the iOS integration
 
 Requires a Mac with Xcode 15+ and iOS 17+ SDK. iOS 17 is an initial integration
