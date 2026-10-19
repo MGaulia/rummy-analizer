@@ -1,53 +1,73 @@
 # Rummy analyzer
 
-A small Go foundation for a **Rummikub** analyzer. It currently parses numbered
-tiles and checks whether a single collection can form a valid group or run.
-Photo recognition, whole-table validation, jokers, and move recommendations are
-planned, but are not implemented yet.
+A small, dependency-free Go CLI and rules foundation for **Rummikub**.
+It checks whether a single collection of numbered tiles **can form** a group or
+run after rearrangement. It does not validate displayed order, a whole table,
+or a legal move. Jokers are modeled but their meld rules remain unsupported.
 
 ## Run
 
-Requires Go 1.18 or newer. There are no third-party dependencies.
+Requires Go 1.18 or newer.
 
 ```sh
 go run .
+printf 'blue 3\nblue 1\nblue 2\n' | go run .
 ```
 
-Enter one tile per line as `<color> <number>`. The current project color labels
-are `grey`, `black`, `green`, and `purple`; numbers are `1` through `13`.
-Color input is case-insensitive, and extra spaces or tabs are accepted.
-These legacy labels will need mapping to the physical set's colors for photos.
+Enter one tile per line as `<color> <number>`, or `joker`. Canonical colors are
+`black`, `blue`, `orange`, and `red`; numbers are `1` through `13`. Color input is
+case-insensitive. Extra whitespace is allowed; signs and leading zeros are not.
 
-The CLI accumulates tiles into **one group/run** and prints its validity after
-each tile. Start a fresh process to check another group. Empty lines are ignored;
-invalid lines print an error without adding a tile. End input with Ctrl-D (Unix)
-or Ctrl-Z followed by Enter (Windows).
+The CLI accumulates **one collection** and prints its feasibility after each
+tile. Start a fresh process to check another collection. Blank lines are ignored.
+Malformed input reports an error without adding a tile. End input with Ctrl-D
+(Unix) or Ctrl-Z followed by Enter (Windows). Piped input and a final line without
+a newline are supported.
 
-Input can also be piped; the final line does not need a newline:
-
-```sh
-printf 'grey 1\ngrey 2\ngrey 3\n' | go run .
-```
-
-After the third tile, the output includes:
+After the example above, the output includes:
 
 ```text
-[grey 1, grey 2, grey 3]
-Valid group/run: true
+[blue 3, blue 1, blue 2]
+Can form group/run: true
 ```
 
-## Packages
+This is not an assertion that the displayed order is correct. Invalid collections
+include an explanatory reason; duplicate reports use one-based input positions.
+A joker-containing collection prints `Can form group/run: unsupported`, not a
+claim that it is impossible to play.
 
-- `model`: numbered tiles, colors, and number bounds. `Card` is the existing type
-  name retained for compatibility.
-- `mapper`: text parsing with explicit format, color, and number errors.
-- `check`: allocation-free group/run validation for any supported length.
-- `combinations`: compatibility helpers for exactly three or four tiles.
-- `repository`: copy-based deletion of **all** matching tiles. This is not yet a
-  physical-tile inventory API for a move solver.
+### Explicit color aliases
 
-See [Rummikub rules and scope](docs/rules.md) for supported rules and the next
-steps toward photo validation and move search.
+Legacy `grey`, `green`, and `purple` labels have no assumed physical-color
+mapping. Prefer canonical colors. For a custom label, explicitly choose its
+meaning, for example:
+
+```sh
+printf 'myblue 1\nmyblue 2\nmyblue 3\n' | go run . -color-aliases myblue=blue
+```
+
+Multiple mappings are comma-separated. Aliases are case-insensitive; conflicting
+aliases and attempts to reassign canonical colors or `joker` are rejected.
+Aliases normalize to canonical tile values, so two labels for the same color do
+not create distinct colors. See `go run . -h` for usage.
+
+## Structure
+
+- `internal/game`: tile values, duplicate-safe inventory, and meld analysis.
+- `internal/cli`: text parsing, explicit color aliases, formatting, and I/O.
+- `main.go`: process entry point only; `go run .` remains supported.
+
+`Inventory` has value semantics. `Consume` removes one copy; `ConsumeAll` consumes
+exactly the requested list (including its duplicate counts), or returns the
+original state unchanged on failure. Neither removes every matching value.
+Construction validates representation and at most two copies of each value,
+including two jokers. Check combined known table+rack multiplicity, not only each
+collection independently. Inventory counts alone do not establish move legality.
+
+`AnalyzeMeld` returns a meld kind or a structured issue with an issue code and
+zero-based tile references where applicable. `CanFormMeld`, `CanFormGroup`, and
+`CanFormRun` are boolean conveniences backed by that same rule implementation.
+Use `AnalyzeMeld` when unsupported input must be distinguished from invalid input.
 
 ## Development
 
@@ -55,29 +75,20 @@ steps toward photo validation and move search.
 go test ./...
 go vet ./...
 go test -race ./...
-go test ./combinations -run '^$' -bench . -benchmem
-go test ./mapper -run '^$' -fuzz FuzzStringToCard -fuzztime 10s
+go test ./internal/game -run '^$' -bench . -benchmem
+go test ./internal/game -run '^$' -fuzz FuzzInventoryConsumption -fuzztime 10s
+go test ./internal/cli -run '^$' -fuzz FuzzParseTile -fuzztime 10s
 ```
 
-Malformed input always returns an error and a zero-value tile. `ErrInputFormat`
-replaces the former character-count error; `ErrInputLength` remains an alias for
-source compatibility. The module path now matches this repository:
+No CI workflow or third-party dependency is required. See
+[rules and scope](docs/rules.md) and [architecture and migration](docs/architecture.md).
+
+## Compatibility decision
+
+This is a single-user application, not a supported public Go library. The old
+`model`, `mapper`, `check`, `combinations`, and `repository` packages have been
+removed; their public import paths and card-style constants are not retained.
+The obsolete `Delete`/`RemoveAll` behavior is not part of the game API. Existing
+text input must use canonical colors or an explicit alias; output now says
+`Can form group/run` rather than `Valid group/run`. The module path stays
 `github.com/MGaulia/rummy-analizer`.
-
-## Tile/inventory foundation
-
-`internal/game` adds canonical `Tile` values, explicit jokers, and a bounded
-`Inventory` with value semantics. `Consume` removes one copy; `ConsumeAll` is
-atomic. Both leave the original inventory unchanged. Construction rejects more
-than two copies of any value, including jokers. This checks multiplicity, not
-whole-table or move legality; validate combined known table+rack inventory.
-
-The existing CLI and public packages remain unchanged in this foundation step.
-Its legacy color labels are **not** automatically mapped to the new canonical
-black/blue/orange/red identifiers. The next refactor will move the CLI onto the
-new domain with explicit input aliases. Jokers can be represented/count-checked
-but their meld/retrieval rules remain unsupported. Counts intentionally do not
-identify physical copies or photo positions; add snapshot-local IDs at that
-boundary when it exists. No remove-all operation is added to the new domain.
-The old `repository.Delete` is left unchanged only until the following refactor
-removes the obsolete package; do not use it to consume one tile.
