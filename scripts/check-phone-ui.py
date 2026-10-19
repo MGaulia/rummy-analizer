@@ -33,6 +33,7 @@ with sync_playwright() as p:
     page.on('pageerror', lambda error: errors.append(str(error)))
     page.goto('https://rummy.test/')
     page.wait_for_function("document.getElementById('status').textContent.includes('Local engine ready')")
+    assert 'Redistributions in binary form' in page.locator('#licenses').text_content()
     page.select_option('#edition','4')
     page.evaluate('payload => acceptNativePhoto(payload)', {'zone':'table','source':'table-fixture','image':photo,'observations':[]})
     page.get_by_role('button',name='Confirm complete table reading',exact=True).click()
@@ -48,6 +49,8 @@ with sync_playwright() as p:
     page.get_by_role('button',name='Confirm complete rack reading',exact=True).click()
     page.get_by_role('button',name='Find move',exact=True).click()
     page.wait_for_function("document.getElementById('status').textContent.includes('maximum rack tiles played')")
+    assert 'primary upper bound' not in page.locator('#status').inner_text()
+    assert '3 rack tiles' in page.locator('#status').inner_text()
     assert page.locator('#result [data-piece-id]').count() == 3
     assert page.locator('#result [data-played="true"]').count() == 3
     assert 'Joker as' in page.locator('#result').inner_html()

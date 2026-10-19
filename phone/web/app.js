@@ -12,6 +12,7 @@ let currentJob = null;
 let nextJob = 0;
 let revision = 0;
 const $ = id => document.getElementById(id);
+$('licenses').textContent=globalThis.RUMMY_GO_LICENSE||'License text is missing from this build.';
 function status(text, error=false) { $('status').textContent=text; $('status').classList.toggle('error',error); }
 function invalidate() { revision++; $('result').replaceChildren(); if(currentJob) rummyCancel(currentJob); }
 function node(tag, text, className) { const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(className)e.className=className;return e; }
@@ -102,7 +103,22 @@ async function execute(operation){
     if(startRevision!==revision){status('Input changed; discarded the earlier result.');return;}
     if(response.error){const issues=response.position?.issues?.map(i=>i.message).join('; ');throw new Error(issues||response.error)}
     const messages={optimal:'Verified move · maximum rack tiles played',feasible_incomplete:'Verified move · search incomplete; a better move may exist',no_move:'Complete search · no legal move on this turn',incomplete:'Search incomplete · no verified move found',invalid_input:'Invalid input'};
-    if(response.search){status(messages[response.search.status]+(response.search.reason?` (${response.search.reason})`:''))}else{status('Confirmed table is valid.')}
+    if(response.search){
+      const search=response.search, reason=search.reason||'';
+      let message=messages[search.status]||'Search result needs review';
+      if(search.verified)message+=` · ${search.verified.played.length} rack tiles`;
+      if(search.status==='incomplete'||search.status==='feasible_incomplete'){
+        if(reason.includes('canceled'))message+='. Search cancelled.';
+        else if(reason.includes('deadline'))message+='. Time limit reached.';
+        else if(reason.includes('node_limit'))message+='. Work limit reached.';
+        if(reason.includes('table_joker_transition'))message+='. Some joker rearrangements remain unverified.';
+        if(reason.includes('witness_state_limit'))message+='. Joker search reached its memory limit.';
+        if(Number.isInteger(search.upper_bound))message+=` At most ${search.upper_bound} rack tiles could be played.`;
+      }
+      if(reason.includes('drawing ended'))message='You already drew this turn. Wait for your next turn.';
+      if(reason==='rack is empty')message='Your rack is empty.';
+      status(message);
+    }else{status('Confirmed table is valid.')}
     $('result').replaceChildren();
     if(response.svg){$('result').append(node('p','Scroll sideways to see the full table and rack.','notice'));const parsed=new DOMParser().parseFromString(response.svg,'image/svg+xml');$('result').append(document.importNode(parsed.documentElement,true));}
   }catch(error){status(String(error),true)}finally{currentJob=null;$('cancel').disabled=true;$('solve').disabled=false;$('validate').disabled=false;}
