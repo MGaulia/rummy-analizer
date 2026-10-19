@@ -65,14 +65,14 @@ func TestExplicitAliases(t *testing.T) {
 	}
 }
 
-func TestRunArgumentsAndUnsupportedInput(t *testing.T) {
+func TestRunArgumentsAndJokerInput(t *testing.T) {
 	for _, tc := range []struct {
 		args        []string
 		input, want string
 	}{
 		{[]string{"-h"}, "", "Usage:"},
 		{[]string{"-color-aliases", "grey=blue"}, "grey 1\ngrey 2\ngrey 3", "[blue 1, blue 2, blue 3]\nCan form group/run: true"},
-		{nil, "joker", "Can form group/run: unsupported"},
+		{nil, "joker", "Can form group/run: false"},
 		{nil, "blue 7\nred 7\nblue 7", "tile 3 repeats tile 1"},
 		{nil, "blue 1\nred 2\nblue 3", "neither one shared number nor one shared color"},
 		{nil, "blue 1\nblue 2\nblue 4", "consecutive numbers"},

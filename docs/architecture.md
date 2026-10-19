@@ -18,7 +18,7 @@ unverified physical mappings.
 independent, so a future search can branch without sharing mutable counts.
 `Consume(tile)` removes one occurrence; `ConsumeAll(tiles)` removes the exact
 requested multiplicities atomically. There is no remove-every-match operation.
-A full 106-tile set is representable. A partial inventory is valid too: it need
+Both 106-tile and 160-tile editions are representable. A partial inventory is valid too: it need
 not include unseen tiles. Combined table+rack counts must obey the same bounds.
 Counts do not track where a tile is or which physical copy it is. Add snapshot-
 local IDs at a photo or move-explanation boundary when those features exist.
@@ -32,24 +32,25 @@ Duplicate reports reference both the repeated tile and its first occurrence.
 The analyzer does not sort or modify input; it uses O(n) time and constant scratch
 space. All boolean conveniences call the same analyzer.
 
-Representation errors and unsupported jokers are checked in input order before
-size and arrangement checks. The result contains the first issue, not an exhaustive
-list. A well-formed joker yields `unsupported_joker`, not an assertion that a joker
-meld is impossible. A malformed joker yields `invalid_tile` when encountered.
-The CLI renders indices as one-based positions and unsupported as a distinct
-status. An exact duplicate in a numbered meld also covers a repeated group color
-or a repeated run number; gaps and mixed collections have separate issue codes.
+Jokers are now supported. Representation errors precede size and arrangement
+checks. A successful result supplies concrete numbered roles, a represented-value
+score, and an ambiguity flag. A role does not change a joker's physical tile value.
+Boolean group/run checks use the same resolver with a kind filter, since a joker
+collection can support both kinds. Analysis uses fixed scratch arrays.
 
-Two different contracts are intentionally **not implemented** yet:
+`AnalyzeLayout` preserves adjacency; runs may ascend or descend but cannot be
+arbitrarily permuted or wrap. `Piece.ID` identifies a physical occurrence within a
+snapshot, including duplicate values. `Piece.As` optionally constrains a table
+joker's current role. Rack pieces cannot carry roles. `ValidatePosition` checks
+all displayed melds and known inventory together; its report never aliases input.
+An empty table is allowed. Empty melds, duplicate IDs, unknown editions, invalid
+tiles, and excess copies are rejected. It does not invent unseen opponent tiles.
 
-- **Layout/table validation** must preserve group boundaries and decide whether
-  displayed run order is valid; it must also check total known inventory.
-- **Move validation** must compare an original state and proposed result, conserve
-  table tiles, consume only available rack tiles, and account for turn context
-  such as the initial meld and joker reuse. A valid final table alone is not enough.
-
-Do not add placeholder APIs that report success for those unimplemented checks.
-The CLI is still one growing collection, not a table editor.
+The four- and six-player editions share meld rules but have different inventory
+limits. `Rules.OpeningRequired` is independent of `Turn.Opened`; `DefaultRules`
+enables the official opening. Move validation must enforce opening and turn state,
+conserve every physical table tile, and consume only identified rack pieces.
+Whole-table validity alone does not establish a legal move.
 
 ## Migration from the old packages
 
@@ -75,8 +76,8 @@ input remain supported.
 
 ## Next feature boundary
 
-Start table validation with manually supplied structured tiles, then move search,
+Use structured table validation for move search,
 then a photo adapter feeding the same representation. Keep uncertain image
 readings separate from confirmed tile values. Define the search objective and
 report whether a result is optimal, merely feasible, incomplete/timed out, or a
-proven absence of moves. None of those search statuses exist in this meld-only API.
+proven absence of moves. Search statuses belong to the search layer, not meld analysis.

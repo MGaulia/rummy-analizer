@@ -67,8 +67,8 @@ printf 'myblue 1\nmyblue 2\nmyblue 3' | "$tmp/rummy-analizer" -color-aliases myb
 expect_output "$tmp/out" '[blue 1, blue 2, blue 3]'
 expect_output "$tmp/out" 'Can form group/run: true'
 expect_empty "$tmp/err"
-printf 'joker' | "$tmp/rummy-analizer" >"$tmp/out" 2>"$tmp/err"
-expect_output "$tmp/out" 'Can form group/run: unsupported'
+printf 'blue 1\njoker\nblue 3' | "$tmp/rummy-analizer" >"$tmp/out" 2>"$tmp/err"
+expect_output "$tmp/out" 'Can form group/run: true'
 expect_empty "$tmp/err"
 for argument in -unknown extra; do
   status=0

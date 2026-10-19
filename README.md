@@ -1,9 +1,9 @@
 # Rummy analyzer
 
 A small, dependency-free Go CLI and rules foundation for **Rummikub**.
-It checks whether a single collection of numbered tiles **can form** a group or
-run after rearrangement. It does not validate displayed order, a whole table,
-or a legal move. Jokers are modeled but their meld rules remain unsupported.
+The CLI checks whether one collection **can form** a group or run, including
+jokers. The game package also validates whole-table layouts and edition-specific
+known inventory. Move search and photo input are separate feature layers.
 
 ## Run
 
@@ -38,8 +38,8 @@ Can form group/run: true
 
 This is not an assertion that the displayed order is correct. Invalid collections
 include an explanatory reason; duplicate reports use one-based input positions.
-A joker-containing collection prints `Can form group/run: unsupported`, not a
-claim that it is impossible to play.
+Jokers can fill missing numbers or colors. A joker by itself is too short to
+form a meld; it no longer reports an unsupported rule.
 
 ### Explicit color aliases
 
@@ -65,14 +65,18 @@ not create distinct colors. See `go run . -h` for usage.
 `Inventory` has value semantics. `Consume` removes one copy; `ConsumeAll` consumes
 exactly the requested list (including its duplicate counts), or returns the
 original state unchanged on failure. Neither removes every matching value.
-Construction validates representation and at most two copies of each value,
-including two jokers. Check combined known table+rack multiplicity, not only each
+`NewInventoryForEdition` selects the four-player pool (two copies, two jokers)
+or six-player pool (three copies, four jokers). `NewInventory` is the standard
+four-player convenience. Check combined table+rack multiplicity, not only each
 collection independently. Inventory counts alone do not establish move legality.
 
 `AnalyzeMeld` returns a meld kind or a structured issue with an issue code and
 zero-based tile references where applicable. `CanFormMeld`, `CanFormGroup`, and
 `CanFormRun` are boolean conveniences backed by that same rule implementation.
-Use `AnalyzeMeld` when unsupported input must be distinguished from invalid input.
+`AnalyzeLayout` additionally checks displayed adjacency and optional joker
+roles. `ValidatePosition` checks meld boundaries, snapshot-local physical IDs,
+and combined table/rack counts. It returns concrete joker roles and marks
+ambiguous interpretations. Opening restrictions belong to moves, not tables.
 
 ## Development
 

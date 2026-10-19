@@ -54,7 +54,7 @@ func TestRunCollectionLimitCountsAliasesAndJokers(t *testing.T) {
 	if err == nil {
 		t.Fatal("fourteenth parsed tile was accepted")
 	}
-	if !strings.Contains(output.String(), "Can form group/run: unsupported") {
+	if !strings.Contains(output.String(), "Can form group/run: false") {
 		t.Fatal("joker status within the limit was lost")
 	}
 	if strings.Contains(output.String(), "red 13") {
