@@ -39,12 +39,16 @@ committed checkout with the same Go/Python prerequisites as above:
 
 ```sh
 bash scripts/build-safari-preview.sh /tmp/rummy-safari-preview
+python3 scripts/check-safari-preview.py /tmp/rummy-safari-preview
 ```
 
 Use an empty output directory. Publish only its contents to the `gh-pages`
 branch root, and configure Pages to deploy that branch. No workflow is needed.
 The generated `preview-build.json` records the source commit/tree, Go version,
 and deployed asset hashes. No photos, credentials, or native project are included.
+The package check needs the optional desktop UI dependencies listed above and
+checks manual file import/correction and solving at the nested Pages URL path.
+It runs desktop Chromium at a phone viewport, not Safari or an iPhone.
 
 In iPhone Safari, open the HTTPS Pages URL on any network. Choose an edition,
 then use **Choose photo** separately for table and rack. Browser imports have no
