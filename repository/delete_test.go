@@ -68,10 +68,3 @@ func TestDeleteDoesNotAliasInput(t *testing.T) {
 		}
 	}
 }
-
-func TestRemoveAllMatchesDelete(t *testing.T) {
-	input := []model.Card{{Color: model.COLOR_GREY, Number: 1}, {Color: model.COLOR_GREY, Number: 1}}
-	if got := RemoveAll(input, input[0]); !reflect.DeepEqual(got, Delete(input, input[0])) {
-		t.Fatal("remove-all behavior changed")
-	}
-}

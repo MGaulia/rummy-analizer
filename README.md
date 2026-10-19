@@ -78,5 +78,6 @@ black/blue/orange/red identifiers. The next refactor will move the CLI onto the
 new domain with explicit input aliases. Jokers can be represented/count-checked
 but their meld/retrieval rules remain unsupported. Counts intentionally do not
 identify physical copies or photo positions; add snapshot-local IDs at that
-boundary when it exists. `repository.Delete` remains a deprecated alias for the
-explicitly named `RemoveAll`; do not use it to consume one tile.
+boundary when it exists. No remove-all operation is added to the new domain.
+The old `repository.Delete` is left unchanged only until the following refactor
+removes the obsolete package; do not use it to consume one tile.
