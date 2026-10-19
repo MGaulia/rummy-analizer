@@ -1,0 +1,20 @@
+{
+  "table": [
+    [
+      {"id":"b1","tile":{"color":"blue","number":1}},
+      {"id":"b2","tile":{"color":"blue","number":2}},
+      {"id":"b3","tile":{"color":"blue","number":3}}
+    ],
+    [
+      {"id":"r1","tile":{"color":"red","number":1}},
+      {"id":"r2","tile":{"color":"red","number":2}},
+      {"id":"r3","tile":{"color":"red","number":3}}
+    ]
+  ],
+  "rack": [
+    {"id":"o1","tile":{"color":"orange","number":1}},
+    {"id":"o2","tile":{"color":"orange","number":2}},
+    {"id":"o3","tile":{"color":"orange","number":3}},
+    {"id":"j","tile":{"joker":true}}
+  ]
+}

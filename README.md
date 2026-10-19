@@ -101,3 +101,32 @@ The obsolete `Delete`/`RemoveAll` behavior is not part of the game API. Existing
 text input must use canonical colors or an explicit alias; output now says
 `Can form group/run` rather than `Valid group/run`. The module path stays
 `github.com/MGaulia/rummy-analizer`.
+
+## Positions, legal moves, and exact diagrams
+
+The original `go run .` collection input remains supported. New commands require
+an explicit pool edition and accept identified JSON positions from stdin:
+
+```sh
+go run . validate --edition=6 < testdata/positions/rearrangement.json
+go run . solve --edition=4 --opened < testdata/positions/rearrangement.json
+go run . solve --edition=4 --opening-required=false --format=svg \
+  < testdata/positions/rearrangement.json > /tmp/final-table.svg
+```
+
+`solve` defaults to a rack-only 30-point opening, 200,000 work nodes, and a
+5-second deadline. `--opened` is separate player history; disabling opening
+skips its restrictions entirely. `--drawn` ends the turn. `--max-nodes` and
+`--time-limit` bound search; incomplete results never mean no move. JSON output
+contains the independently verified move, played occurrence IDs, final position,
+search status/reason/work, and an exact SVG. `--format=svg` requires a renderable
+result. `check-move` reads `{"position":{...},"move":{"table":[...]}}`, with
+optional release certificates in the move. See docs/rules.md for the current
+explicit table-joker transition coverage limit. An invalid request/move exits
+with an error; a valid incomplete/no-move search is a normal structured result.
+
+The offline phone integration uses this same Go boundary. Build its local
+WebAssembly bundle with `bash scripts/build-phone.sh`, and exercise actual engine
+execution/cancellation with `node scripts/check-phone-engine.cjs`. See
+[product scope](docs/product-spec.md) and [live milestones](docs/implementation-plan.md).
+Desktop/Wasm validation alone does not establish an offline iPhone product.

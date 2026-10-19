@@ -13,12 +13,15 @@ import (
 	"github.com/MGaulia/rummy-analizer/internal/game"
 )
 
-const usage = "Usage: rummy-analizer [-color-aliases label=color,...]\nEnter one tile per line: <color> <number>, or joker.\nColors: black, blue, orange, red. Checks whether one collection can form a meld, not its displayed order."
+const usage = "Usage: rummy-analizer [-color-aliases label=color,...]\nCommands: validate, solve, check-move (each requires --edition=4|6).\nEnter one tile per line: <color> <number>, or joker.\nColors: black, blue, orange, red. Checks whether one collection can form a meld, not its displayed order."
 
 // Run processes one growing collection, not a table. Input errors are printed
 // without adding a tile. A fourteenth parsed tile ends the session with an
 // error before being added. I/O and argument errors are also returned.
 func Run(args []string, input io.Reader, output io.Writer) error {
+	if len(args) > 0 && (args[0] == "validate" || args[0] == "solve" || args[0] == "check-move") {
+		return runPosition(args[0], args[1:], input, output)
+	}
 	flags := flag.NewFlagSet("rummy-analizer", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
 	aliases := flags.String("color-aliases", "", "explicit comma-separated label=color mappings")

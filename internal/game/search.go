@@ -47,6 +47,9 @@ func (b *searchBudget) tick() bool {
 		return false
 	}
 	b.nodes++
+	if b.nodes%2048 == 0 {
+		searchYield()
+	}
 	return true
 }
 
