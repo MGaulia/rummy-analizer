@@ -63,3 +63,20 @@ Malformed input always returns an error and a zero-value tile. `ErrInputFormat`
 replaces the former character-count error; `ErrInputLength` remains an alias for
 source compatibility. The module path now matches this repository:
 `github.com/MGaulia/rummy-analizer`.
+
+## Tile/inventory foundation
+
+`internal/game` adds canonical `Tile` values, explicit jokers, and a bounded
+`Inventory` with value semantics. `Consume` removes one copy; `ConsumeAll` is
+atomic. Both leave the original inventory unchanged. Construction rejects more
+than two copies of any value, including jokers. This checks multiplicity, not
+whole-table or move legality; validate combined known table+rack inventory.
+
+The existing CLI and public packages remain unchanged in this foundation step.
+Its legacy color labels are **not** automatically mapped to the new canonical
+black/blue/orange/red identifiers. The next refactor will move the CLI onto the
+new domain with explicit input aliases. Jokers can be represented/count-checked
+but their meld/retrieval rules remain unsupported. Counts intentionally do not
+identify physical copies or photo positions; add snapshot-local IDs at that
+boundary when it exists. `repository.Delete` remains a deprecated alias for the
+explicitly named `RemoveAll`; do not use it to consume one tile.
