@@ -57,6 +57,11 @@ with sync_playwright() as p:
     assert page.locator('#result svg').count()==0
     page.get_by_role('button',name='Find move',exact=True).click()
     assert 'confirmation' in page.locator('#status').inner_text()
+    # Manual additions/corrections must not contaminate raw recognizer metrics.
+    page.evaluate("sessions.rack.add({x:0,y:0,width:.1,height:.1})")
+    report=page.evaluate("rummyObservationReport()")
+    assert len(report['rack']['observations'])==3
+    assert report['rack']['observations'][0]['candidates'][0]['tile']['number']==10
     assert not errors, errors
     assert all(url.startswith('https://rummy.test/') for url in requests)
     browser.close()

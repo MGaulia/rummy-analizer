@@ -12,12 +12,12 @@
       if (!['table', 'rack'].includes(zone) || !source) throw new Error('Photo needs a zone and source identity');
       this.zone = zone; this.source = source; this.confirmed = false;
       this.observations = observations.map((o, i) => ({
-        id: `${zone}-${source.slice(0, 20)}-${i}`, raw: JSON.parse(JSON.stringify(o)), correction: null, excluded: false
+        id: `${zone}-${source.slice(0, 20)}-${i}`, raw: JSON.parse(JSON.stringify(o)), manual: false, correction: null, excluded: false
       }));
     }
     add(rect) {
       const id = `${this.zone}-${this.source.slice(0, 20)}-${this.observations.length}`;
-      this.observations.push({id, raw: {rect, candidates: [], text: ''}, correction: null, excluded: false});
+      this.observations.push({id, raw: {rect, candidates: [], text: ''}, manual: true, correction: null, excluded: false});
       this.confirmed = false; return id;
     }
     correct(id, tile, meld, order) {

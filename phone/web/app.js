@@ -6,7 +6,7 @@ const recognizers = {table:null, rack:null};
 // Developer-only local diagnostics: raw observations, never photos or corrections.
 window.rummyObservationReport = () => Object.fromEntries(['table','rack'].filter(zone => sessions[zone]).map(zone => [zone, {
   source:sessions[zone].source, zone, recognizer:recognizers[zone],
-  observations:sessions[zone].observations.map(o => JSON.parse(JSON.stringify(o.raw)))
+  observations:sessions[zone].observations.filter(o => !o.manual).map(o => JSON.parse(JSON.stringify(o.raw)))
 }]));
 let currentJob = null;
 let nextJob = 0;
