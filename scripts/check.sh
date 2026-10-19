@@ -80,6 +80,17 @@ for argument in -unknown extra; do
   expect_empty "$tmp/out"
 done
 
+printf 'Checking structured position commands and exact rendering...\n'
+"$tmp/rummy-analizer" solve --edition=4 --opened <testdata/positions/rearrangement.json >"$tmp/out" 2>"$tmp/err"
+expect_output "$tmp/out" '"status": "optimal"'
+expect_output "$tmp/out" 'data-piece-id='
+expect_output "$tmp/out" 'Joker as'
+expect_empty "$tmp/err"
+"$tmp/rummy-analizer" validate --edition=6 --format=svg <testdata/positions/rearrangement.json >"$tmp/out" 2>"$tmp/err"
+expect_output "$tmp/out" '<svg'
+expect_output "$tmp/out" 'Remaining rack'
+expect_empty "$tmp/err"
+
 if [[ $fuzz == true ]]; then
   printf 'Running bounded inventory and parser fuzz checks...\n'
   go test -mod=readonly ./internal/game -run '^$' -fuzz '^FuzzInventoryConsumption$' -fuzztime=10s -parallel=2

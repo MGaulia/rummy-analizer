@@ -56,3 +56,21 @@ push is not an opened PR. Desktop/mobile/browser/device results stay separate.
 - Full joker-transition profile remains incomplete pending booklet review;
   engine documents the sufficient witness scope and does not return false proofs.
 - Target platform clarified by owner: iPhone first. No Xcode/macOS/iPhone here.
+
+## Application and portable phone-engine slice
+
+- Engine branch pushed: codex/offline-assistant-moves at
+  1724da9128e19079b7be450afcec59762e5aecc6; PR opening remains blocked by API
+  policy. Intended base: codex/editions-jokers-table (#9).
+- Dependent branch: codex/offline-assistant-interface. Adds strict bounded JSON,
+  validate/solve/check-move commands, required edition and default opening flags,
+  deterministic exact SVGs, and the shared application boundary.
+- Renderer data/escaping/uniqueness tests passed. The rearrangement fixture SVG
+  was rendered in Chromium and visually inspected: numbered groups, explicit
+  joker role, all four rack additions, and an empty remaining rack were correct.
+- Actual Go/Wasm bundle ran in Node: legal joker opening, exact rendering,
+  asynchronous cancellation, and independent validation of retained best result
+  passed. The worker yields periodically for cancellation events. No mock engine.
+- `bash scripts/check.sh` passed including tests/vet/races/build/legacy CLI.
+  New structured-command executable checks are being incorporated into it.
+- Go 1.27.2 linux/amd64 remains the toolchain; this is desktop validation only.
