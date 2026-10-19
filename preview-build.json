@@ -1,0 +1,15 @@
+{
+  "source_commit": "7f9d357f974ec18d40d0357f8ebc8d3c501a212c",
+  "source_tree": "f23a8aa23b62e12723de6772acab5a29d5701c5a",
+  "go_version": "go version go1.27.2 linux/amd64",
+  "files_sha256": {
+    "index.html": "4cfc395688c8347c8c124fd0bb9dd7eb445b9606a42ce0f9dd629ad7e6831467",
+    "style.css": "54cbc5470e42855ba53fd3c4abc1bd92beae2cf3dae066bd976fe3e86ebc6c25",
+    "engine.js": "892fc8486f86102c65014a3fb2df05219581804c03b871a2085d45d91dfbf627",
+    "photo-state.js": "ae0291c9e7e3dce0c4af54e2fd8c91561c547bf67535e3d5c42438f98c4c8711",
+    "app.js": "73b22ed2cb1d3b4b4c06383a7f65911d4dafae5cdea4bb634b6bdf842aba78a4",
+    "engine/wasm_exec.js": "0c949f4996f9a89698e4b5c586de32249c3b69b7baadb64d220073cc04acba14",
+    "engine/wasm_data.js": "2d648d0e4a4c96fdac1cf22a11f2c789507fdd8e330e13682ea57c6ffa8b6eab",
+    "engine/GO-LICENSE.txt": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad"
+  }
+}
