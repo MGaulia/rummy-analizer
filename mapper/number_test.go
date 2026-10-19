@@ -1,8 +1,10 @@
 package mapper
 
 import (
-	"main/model"
+	"errors"
 	"testing"
+
+	"github.com/MGaulia/rummy-analizer/model"
 )
 
 func TestStringToNumber(t *testing.T) {
@@ -11,6 +13,14 @@ func TestStringToNumber(t *testing.T) {
 		want    int
 		wantErr error
 	}{
+		{"", 0, ErrInvalidNumberInput},
+		{"0", 0, ErrInvalidNumberInput},
+		{"-1", 0, ErrInvalidNumberInput},
+		{"+1", 0, ErrInvalidNumberInput},
+		{"01", 0, ErrInvalidNumberInput},
+		{"1.0", 0, ErrInvalidNumberInput},
+		{"one", 0, ErrInvalidNumberInput},
+		{"99999999999999999999999999", 0, ErrInvalidNumberInput},
 		{"1", 1, nil},
 		{"2", 2, nil},
 		{"3", 3, nil},
@@ -31,8 +41,8 @@ func TestStringToNumber(t *testing.T) {
 		if got != model.Number(test.want) {
 			t.Errorf("StringToNumber(%s) = %d, want %d", test.input, got, test.want)
 		}
-		if err != nil && err.Error() != test.wantErr.Error() {
-			t.Errorf("StringToNumber(%s) = %s, want %s", test.input, err, test.wantErr)
+		if !errors.Is(err, test.wantErr) {
+			t.Errorf("StringToNumber(%q) error = %v, want %v", test.input, err, test.wantErr)
 		}
 	}
 }

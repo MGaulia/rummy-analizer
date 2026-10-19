@@ -1,6 +1,6 @@
 package check
 
-import "main/model"
+import "github.com/MGaulia/rummy-analizer/model"
 
 // colorBit returns a distinct bit for each supported color, or zero for an
 // invalid color. This keeps validation allocation-free.

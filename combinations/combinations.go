@@ -3,8 +3,8 @@
 package combinations
 
 import (
-	"main/check"
-	"main/model"
+	"github.com/MGaulia/rummy-analizer/check"
+	"github.com/MGaulia/rummy-analizer/model"
 )
 
 // IsThreeSetCombination reports whether cards form a three-card set.

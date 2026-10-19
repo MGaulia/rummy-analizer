@@ -1,10 +1,10 @@
 package repository
 
 import (
-	"main/model"
+	"reflect"
 	"testing"
 
-	"reflect"
+	"github.com/MGaulia/rummy-analizer/model"
 )
 
 func TestDelete(t *testing.T) {
@@ -14,6 +14,18 @@ func TestDelete(t *testing.T) {
 		todelete model.Card
 		want     []model.Card
 	}{
+		{name: "nil input"},
+		{
+			name:     "remove all matching copies",
+			input:    []model.Card{{Color: model.COLOR_GREY, Number: 1}, {Color: model.COLOR_BLACK, Number: 2}, {Color: model.COLOR_GREY, Number: 1}},
+			todelete: model.Card{Color: model.COLOR_GREY, Number: 1},
+			want:     []model.Card{{Color: model.COLOR_BLACK, Number: 2}},
+		},
+		{
+			name:     "all removed returns nil",
+			input:    []model.Card{{Color: model.COLOR_GREY, Number: 1}},
+			todelete: model.Card{Color: model.COLOR_GREY, Number: 1},
+		},
 		{
 			name: "delete success",
 			input: []model.Card{
@@ -42,5 +54,17 @@ func TestDelete(t *testing.T) {
 				t.Errorf("Delete() = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestDeleteDoesNotAliasInput(t *testing.T) {
+	input := []model.Card{{Color: model.COLOR_GREY, Number: 1}, {Color: model.COLOR_BLACK, Number: 2}}
+	for _, target := range []model.Card{input[0], {Color: model.COLOR_GREEN, Number: 3}} {
+		before := append([]model.Card(nil), input...)
+		result := Delete(input, target)
+		result[0].Number = 13
+		if !reflect.DeepEqual(input, before) {
+			t.Fatal("mutating the result changed the input")
+		}
 	}
 }

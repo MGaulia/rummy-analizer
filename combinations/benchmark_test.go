@@ -1,8 +1,9 @@
 package combinations
 
 import (
-	"main/model"
 	"testing"
+
+	"github.com/MGaulia/rummy-analizer/model"
 )
 
 var benchmarkResult bool

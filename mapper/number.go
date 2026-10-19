@@ -2,41 +2,18 @@ package mapper
 
 import (
 	"errors"
-	"main/model"
+	"strconv"
+
+	"github.com/MGaulia/rummy-analizer/model"
 )
 
 var ErrInvalidNumberInput = errors.New("invalid number, available values: 1-13")
 
-func stringToNumber(input string) (num model.Number, err error) {
-	switch input {
-	case "1":
-		num = model.NUMBER_ACE
-	case "2":
-		num = model.NUMBER_TWO
-	case "3":
-		num = model.NUMBER_THREE
-	case "4":
-		num = model.NUMBER_FOUR
-	case "5":
-		num = model.NUMBER_FIVE
-	case "6":
-		num = model.NUMBER_SIX
-	case "7":
-		num = model.NUMBER_SEVEN
-	case "8":
-		num = model.NUMBER_EIGHT
-	case "9":
-		num = model.NUMBER_NINE
-	case "10":
-		num = model.NUMBER_TEN
-	case "11":
-		num = model.NUMBER_JACK
-	case "12":
-		num = model.NUMBER_QUEEN
-	case "13":
-		num = model.NUMBER_KING
-	default:
-		err = ErrInvalidNumberInput
+func stringToNumber(input string) (model.Number, error) {
+	number, err := strconv.Atoi(input)
+	// Keep the original canonical decimal syntax: no signs or leading zeros.
+	if err != nil || number < int(model.MinNumber) || number > int(model.MaxNumber) || strconv.Itoa(number) != input {
+		return 0, ErrInvalidNumberInput
 	}
-	return
+	return model.Number(number), nil
 }

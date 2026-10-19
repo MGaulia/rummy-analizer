@@ -1,8 +1,9 @@
 package check
 
 import (
-	"main/model"
 	"testing"
+
+	"github.com/MGaulia/rummy-analizer/model"
 )
 
 func TestIsValidSequence(t *testing.T) {

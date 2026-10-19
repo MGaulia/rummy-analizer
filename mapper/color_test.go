@@ -1,11 +1,13 @@
 package mapper
 
 import (
-	"main/model"
+	"errors"
 	"testing"
+
+	"github.com/MGaulia/rummy-analizer/model"
 )
 
-func TestNumberToColor(t *testing.T) {
+func TestStringToColor(t *testing.T) {
 	tests := []struct {
 		input   string
 		want    model.Color
@@ -22,8 +24,8 @@ func TestNumberToColor(t *testing.T) {
 		if got != test.want {
 			t.Errorf("StringToColor(%s) = %s, want %s", test.input, got, test.want)
 		}
-		if err != nil && err.Error() != test.wantErr.Error() {
-			t.Errorf("StringToColor(%s) = %s, want %s", test.input, err, test.wantErr)
+		if !errors.Is(err, test.wantErr) {
+			t.Errorf("StringToColor(%q) error = %v, want %v", test.input, err, test.wantErr)
 		}
 	}
 }
