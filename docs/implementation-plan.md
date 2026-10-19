@@ -30,10 +30,50 @@
   also pass. See the commands and exact tested checkpoints below.
 - Native iPhone source, real photo accuracy, and device acceptance remain UNRUN.
   Owner confirmed **no Mac build machine** and **no real dataset** are available.
+  The owner now has an iPhone available for the manual Safari preview test.
   Those prerequisites block compiling/validating the native integration and
   selecting/evaluating the recognizer. #12 remains a draft.
 - Local bundle now ships Go's BSD license text from the matching toolchain and
   displays it offline. Phone status text explains limits without internal codes.
+
+## Safari preview publication checkpoint (2026-10-19)
+
+- Owner authorized a Pages preview while keeping #12 unmerged. Tested source:
+  `7f9d357f974ec18d40d0357f8ebc8d3c501a212c`; clean source tree:
+  `f23a8aa23b62e12723de6772acab5a29d5701c5a`.
+- Toolchain: Go 1.27.2 linux/amd64, Node v24.19.0, Python 3.12.14,
+  desktop Chromium 154.0.8037.57. Commands run from the repository root with
+  `/workspace/.rummy-tools/go/bin` first in PATH and the existing workspace
+  GOCACHE/GOPATH (`GOWORK=off`):
+
+  ```sh
+  bash scripts/check.sh
+  bash scripts/build-safari-preview.sh /workspace/rummy-review/safari-preview-publish
+  node scripts/check-phone-engine.cjs
+  node scripts/check-photo-state.cjs
+  python3 scripts/check-phone-ui.py
+  python3 scripts/check-safari-preview.py /workspace/rummy-review/safari-preview-publish
+  ```
+
+- All commands passed. Repository tests/vet/races/build/CLI smoke passed. The
+  final package check imported two distinct synthetic PNG files through the
+  file inputs, manually entered a red/blue/black 10 rack, confirmed an empty
+  table, and checked the actual Go/Wasm 30-point opening and exact three-tile
+  rendering at a nested Pages path. No upload or remote solver requests occurred.
+  These are desktop Chromium checks, not Safari or recognition accuracy evidence.
+- Published only ten static package files to `gh-pages` at
+  `383f66c17baad35a9d31bd4c8a0225f706fa882d`. No source, native project, photos,
+  credentials, or CI workflow is included. `preview-build.json` records the
+  exact source commit/tree, Go version, and individual asset SHA256 hashes.
+- Blocker: `POST /repos/MGaulia/rummy-analizer/pages` with `build_type=legacy`
+  and source `gh-pages:/` returned HTTP 403, `Resource not accessible by
+  integration`. The integration can push code but cannot enable Pages. Owner
+  must select **Settings → Pages → Deploy from a branch → gh-pages → / (root)**
+  and save. Expected URL: `https://mgaulia.github.io/rummy-analizer/`; deployment
+  and public HTTP/Safari execution are not yet confirmed. No live-site claim.
+- Preview instructions explicitly say manual tile entry, local photos/solver,
+  reload loses readings, and no supported offline reopening. Native camera
+  buttons are omitted. #12 remains a draft; native/recognition blockers remain.
 
 The remaining acceptance work is not a completed photo-to-move phone product.
 Before continuing, obtain a Mac/Xcode/iPhone with authorized build/signing access

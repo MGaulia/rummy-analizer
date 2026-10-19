@@ -33,6 +33,15 @@ no browser recognizer is claimed.
 
 ## Safari preview
 
+Preview files are ready on `gh-pages`. Enabling the Pages site through this
+session's GitHub integration returned HTTP 403, `Resource not accessible by
+integration`; the site is not confirmed live. The repository owner can finish
+the one-time setup at
+[Settings → Pages](https://github.com/MGaulia/rummy-analizer/settings/pages):
+choose **Deploy from a branch**, branch **gh-pages**, folder **/ (root)**, and
+**Save**. Wait for GitHub's deployment to finish and use the URL it reports
+(expected: `https://mgaulia.github.io/rummy-analizer/`). No source merge is needed.
+
 The owner authorized publishing the draft #12 browser interface on GitHub Pages.
 This does not merge #12 or accept its native integration. Build from a clean,
 committed checkout with the same Go/Python prerequisites as above:
