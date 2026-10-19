@@ -145,3 +145,35 @@ func FuzzInventoryConsumption(f *testing.F) {
 		}
 	})
 }
+
+// ConsumeAll means every requested occurrence, not every matching value in the
+// inventory. This is the regression that distinguishes it from old RemoveAll.
+func TestConsumeAllUsesRequestedMultiplicities(t *testing.T) {
+	tile, other := numbered(Black, 7), numbered(Blue, 3)
+	inventory, err := NewInventory([]Tile{tile, tile, other})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for copies := 0; copies <= 3; copies++ {
+		request := make([]Tile, copies)
+		for i := range request {
+			request[i] = tile
+		}
+		result, err := inventory.ConsumeAll(request)
+		if copies > 2 {
+			if !errors.Is(err, ErrTileNotFound) || result != inventory {
+				t.Fatal("excess request did not preserve original state")
+			}
+			continue
+		}
+		if err != nil {
+			t.Fatal(err)
+		}
+		count, _ := result.Count(tile)
+		otherCount, _ := result.Count(other)
+		originalCount, _ := inventory.Count(tile)
+		if count != 2-copies || otherCount != 1 || originalCount != 2 {
+			t.Fatalf("requested %d: count=%d other=%d original=%d", copies, count, otherCount, originalCount)
+		}
+	}
+}

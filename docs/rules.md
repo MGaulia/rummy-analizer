@@ -3,7 +3,7 @@
 The target game is standard Rummikub. Rule reference:
 [official English instructions](https://rummikub.com/wp-content/uploads/2019/12/2600-English.pdf).
 
-The `check` package validates **one group of numbered tiles**:
+The `internal/game` meld analyzer validates **one collection of numbered tiles**:
 
 - A group has three or four tiles of the same number, with distinct colors.
 - A run has three to thirteen distinct consecutive numbers of one color.
@@ -13,25 +13,26 @@ Input order does not matter: the API checks whether the supplied tiles can form
 one group/run, without rearranging or mutating the caller's slice. A future photo
 validator must separately check the displayed order if that is required.
 
-`check.IsCombination` handles all supported lengths. The four functions in
-`combinations` retain their names and exact three/four-tile length requirements,
-but use the same rule implementation. Validation takes O(n) time and constant
-space, without heap allocations or generated tables.
+`game.AnalyzeMeld` handles all supported lengths and returns a meld kind or a
+structured issue. `CanFormMeld`, `CanFormGroup`, and `CanFormRun` share that
+implementation. Validation takes O(n) time and constant space without heap
+allocations or generated tables. The old fixed-size wrappers have been removed.
 
-Empty or short groups, invalid values, and duplicate tiles within a group are
-rejected. Unlike the old generated tables, all color orderings work for groups,
-and wrapping runs are rejected. The old `Card` type, number constant names, and
-grey/black/green/purple color identifiers remain compatible with existing callers;
-these four color labels are project identifiers, not a mapping of the physical
-set's printed colors. Photo recognition will need an explicit color mapping.
+Empty or short collections, invalid values, and duplicate tiles within a meld
+are rejected. All color orderings work for groups; wrapping runs are rejected.
+Canonical colors are black, blue, orange, and red. Legacy grey/green/purple labels
+are not physical mappings; text adapters require explicit aliases. Well-formed
+jokers are represented explicitly and return an unsupported status rather than
+being treated as numbered tiles or ordinary invalid melds.
 
 ## Scope and next steps
 
-This is not a full table validator or a move solver. Jokers are not yet modeled;
-the API must not be treated as a validator for joker-containing groups.
+This is not a full table validator or a move solver. Jokers can be represented
+and counted, but their meld/retrieval rules remain unsupported.
 
 The standard set has two copies of each numbered tile and two jokers. A future
-table validator must check both groups and total inventory. Duplicate physical
+table validator must check both groups and total known inventory. The current
+`Inventory` enforces copy counts but not table layout or turn legality. Duplicate physical
 copies may appear in separate groups and must not be collapsed into one tile.
 
 For move recommendations, track whether the player has completed the 30-point
