@@ -45,3 +45,26 @@ reported role is one valid interpretation, not a claim about image confidence.
 Table validity is not move legality. A move additionally needs the original
 position, selected rules, player opening/draw state, and physical tile accounting.
 The current single-collection text CLI remains available through `go run .`.
+
+## Transition checks and search coverage
+
+`ValidateMove` verifies original/final positions, occurrence conservation, exact
+rack additions, opening/draw state, and explicit joker release stages. A stage
+leaves a valid table while named original table jokers are held. Those jokers
+must all be reused on the same turn in new sets; stage rack additions cannot be
+returned to the rack. Nested extensions/contractions that retain a joker's role
+and meld kind do not require release. This is a sufficient certificate format,
+not yet a complete operational encoding of all booklet illustrations. Other
+joker manipulations are rejected as needing a witness, not declared impossible.
+The official PDF was inaccessible in this runtime; final profile verification
+and broader joker transition completeness remain outstanding.
+
+`Search` enumerates complete group/run templates and physical partitions. It
+can split, combine, and rearrange numbered table tiles without preserving old
+meld boundaries. Rack jokers may fill any template slot. Node budgets include
+candidate generation; context cancellation is checked throughout. Stable
+first-enumerated solutions break primary-objective ties. Every returned move is
+revalidated separately. For tables without jokers, exhaustive completion proves
+optimality or no move. Table-joker certificates are incomplete in scope, so
+results remain incomplete unless a verified move plays the entire rack (the
+absolute upper bound). Resource exhaustion is never reported as no move.
