@@ -21,11 +21,12 @@ type SearchOptions struct {
 }
 
 type SearchResult struct {
-	Status   SearchStatus `json:"status"`
-	Reason   string       `json:"reason,omitempty"`
-	Nodes    int          `json:"nodes"`
-	Move     *Move        `json:"move,omitempty"`
-	Verified *MoveReport  `json:"verified,omitempty"`
+	Status     SearchStatus `json:"status"`
+	Reason     string       `json:"reason,omitempty"`
+	Nodes      int          `json:"nodes"`
+	UpperBound *int         `json:"upper_bound,omitempty"`
+	Move       *Move        `json:"move,omitempty"`
+	Verified   *MoveReport  `json:"verified,omitempty"`
 }
 
 type searchBudget struct {
@@ -54,8 +55,10 @@ func (b *searchBudget) tick() bool {
 // table tiles are mandatory; rack pieces may be omitted. There is no limit on
 // table rearrangement. Jokers fill any numbered template slot, retaining ID.
 // Every candidate passes the separate transition validator before acceptance.
-// Table-joker certificates are sufficient but not complete for the booklet;
-// unless the rack is emptied, this is explicitly an incomplete search scope.
+// Table-joker certificates are sufficient but not complete for the booklet.
+// An exhaustive relaxed partition search still proves the primary optimum if
+// its upper bound matches the best verified move, and absence if no partition
+// can play a rack tile. Otherwise unresolved transitions remain incomplete.
 func Search(ctx context.Context, before Position, rules Rules, turn Turn, options SearchOptions) SearchResult {
 	report := ValidatePosition(before, rules.Edition)
 	if !report.Valid {
@@ -78,14 +81,13 @@ func Search(ctx context.Context, before Position, rules Rules, turn Turn, option
 		return result
 	}
 	before = ClonePosition(before)
-	before.Table = report.Resolved
 	opening := rules.NeedsOpening(turn)
 	pool := []Piece{}
 	required := 0
 	tableJokers := []string{}
 	fixed := [][]Piece{}
 	if opening {
-		fixed = before.Table
+		fixed = report.Resolved
 	} else {
 		for _, meld := range before.Table {
 			for _, p := range meld {
@@ -98,12 +100,21 @@ func Search(ctx context.Context, before Position, rules Rules, turn Turn, option
 		required = len(pool)
 	}
 	pool = append(pool, before.Rack...)
-	best := 0
-	// Cache release certificates by played rack subset. They do not depend on
-	// final arrangement; ValidateMove still checks each candidate's actual reuse.
-	certificates := map[string][]JokerRelease{}
-	certTried := map[string]bool{}
+	best, partitionUpperBound := 0, 0
+	witnessLimited := false
 	walkPartitions(pool, required, budget, func(table [][]Piece) bool {
+		candidatePlayed := -required
+		for _, meld := range table {
+			candidatePlayed += len(meld)
+		}
+		if candidatePlayed > partitionUpperBound {
+			partitionUpperBound = candidatePlayed
+		}
+		// A tie cannot improve the primary objective or replace the stable
+		// first verified tie-break. Keep the relaxed bound, skip witness work.
+		if candidatePlayed <= best {
+			return false
+		}
 		move := Move{Table: append(append([][]Piece{}, fixed...), table...)}
 		checked := ValidateMove(before, rules, turn, move)
 		if !checked.Valid && checked.Code == "joker_witness_required" {
@@ -125,50 +136,43 @@ func Search(ctx context.Context, before Position, rules Rules, turn Turn, option
 				}
 				ignored[id] = true
 			}
-			key := ""
-			for _, p := range before.Rack {
-				if present[p.ID] {
-					key += "1"
-				} else {
-					key += "0"
-				}
-			}
-			for _, id := range freed {
-				key += "/" + id
-			}
-			if !certTried[key] {
-				certTried[key] = true
-				// Free the changed table jokers by a valid table restructuring,
-				// then reuse them in the proposed final sets.
-				stagePool := []Piece{}
-				for _, meld := range before.Table {
-					for _, p := range meld {
-						remove := false
-						for _, id := range freed {
-							remove = remove || p.ID == id
-						}
-						if !remove {
-							stagePool = append(stagePool, p)
-						}
+			// Free the changed table jokers by a valid table restructuring,
+			// then reuse them in the proposed final sets.
+			stagePool := []Piece{}
+			for _, meld := range before.Table {
+				for _, p := range meld {
+					remove := false
+					for _, id := range freed {
+						remove = remove || p.ID == id
 					}
-				}
-				n := len(stagePool)
-				for _, p := range before.Rack {
-					if present[p.ID] {
+					if !remove {
 						stagePool = append(stagePool, p)
 					}
 				}
-				walkPartitions(stagePool, n, budget, func(stage [][]Piece) bool {
-					trial := Move{Table: move.Table, Releases: []JokerRelease{{Table: stage, Freed: freed}}}
-					if !ValidateMove(before, rules, turn, trial).Valid {
-						return false
-					}
-					certificates[key] = []JokerRelease{{Table: ClonePosition(Position{Table: stage}).Table, Freed: append([]string(nil), freed...)}}
-					return true
-				})
 			}
-			move.Releases = certificates[key]
+			n := len(stagePool)
+			for _, p := range before.Rack {
+				if present[p.ID] {
+					stagePool = append(stagePool, p)
+				}
+			}
+			walkPartitions(stagePool, n, budget, func(stage [][]Piece) bool {
+				trial := Move{Table: move.Table, Releases: []JokerRelease{{Table: stage, Freed: freed}}}
+				if !ValidateMove(before, rules, turn, trial).Valid {
+					return false
+				}
+				move.Releases = []JokerRelease{{Table: ClonePosition(Position{Table: stage}).Table, Freed: append([]string(nil), freed...)}}
+				return true
+			})
 			checked = ValidateMove(before, rules, turn, move)
+			if !checked.Valid && budget.stopped == "" {
+				stages, limited := findJokerStages(before, rules, turn, move.Table, budget)
+				witnessLimited = witnessLimited || limited
+				if stages != nil {
+					move.Releases = stages
+					checked = ValidateMove(before, rules, turn, move)
+				}
+			}
 		}
 		if checked.Valid && len(checked.Played) > best {
 			best = len(checked.Played)
@@ -180,17 +184,26 @@ func Search(ctx context.Context, before Position, rules Rules, turn Turn, option
 		return best == len(before.Rack)
 	})
 	result.Nodes = budget.nodes
+	if budget.stopped == "" {
+		bound := partitionUpperBound
+		result.UpperBound = &bound
+	}
 	if best == len(before.Rack) {
+		bound := len(before.Rack)
+		result.UpperBound = &bound
 		result.Status = Optimal
 		result.Reason = "all rack tiles played; primary upper bound reached"
 		return result
 	}
 	reason := budget.stopped
-	if len(tableJokers) > 0 {
+	if len(tableJokers) > 0 && best < partitionUpperBound {
 		if reason != "" {
 			reason += "; "
 		}
 		reason += "table_joker_transition_coverage_incomplete"
+		if witnessLimited {
+			reason += "; joker_witness_state_limit"
+		}
 	}
 	if reason != "" {
 		result.Reason = reason
@@ -246,8 +259,20 @@ func walkPartitions(pool []Piece, required int, budget *searchBudget, visit func
 }
 
 func enumerateMelds(pool []Piece, used []bool, anchor int, budget *searchBudget, visit func([]Piece, []int) bool) bool {
+	available := 0
+	for _, taken := range used {
+		if !taken {
+			available++
+		}
+	}
+	if available < 3 {
+		return false
+	}
 	colors := []Color{Black, Blue, Orange, Red}
 	apply := func(roles []Tile) bool {
+		if len(roles) > available {
+			return false
+		}
 		if !budget.tick() {
 			return false
 		}
@@ -324,7 +349,7 @@ func enumerateMelds(pool []Piece, used []bool, anchor int, budget *searchBudget,
 	}
 	for _, c := range colors {
 		for start := 1; start <= 11; start++ {
-			for end := start + 2; end <= 13; end++ {
+			for end := start + 2; end <= 13 && end-start+1 <= available; end++ {
 				roles := []Tile{}
 				for n := start; n <= end; n++ {
 					roles = append(roles, Tile{Color: c, Number: n})

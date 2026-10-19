@@ -11,8 +11,9 @@ type Move struct {
 }
 
 type JokerRelease struct {
-	Table [][]Piece `json:"table"`
-	Freed []string  `json:"freed"`
+	Table  [][]Piece `json:"table"`
+	Freed  []string  `json:"freed,omitempty"`
+	Reused []string  `json:"reused,omitempty"`
 }
 
 type MoveReport struct {
@@ -37,49 +38,14 @@ func ValidateMove(before Position, rules Rules, turn Turn, move Move) MoveReport
 	if turn.Drawn {
 		return fail("turn_ended", "drawing ends the turn")
 	}
-	known := map[string]Piece{}
+	state := physicalTableChecker(before, rules.Edition)
 	tableIDs := map[string]bool{}
 	for _, meld := range before.Table {
 		for _, p := range meld {
-			known[p.ID] = p
 			tableIDs[p.ID] = true
 		}
 	}
-	for _, p := range before.Rack {
-		known[p.ID] = p
-	}
-	// Validate each complete physical state; absent rack pieces remain on rack,
-	// absent original table pieces must be specifically held table jokers.
-	state := func(table [][]Piece, held map[string]bool) (Position, string) {
-		seen := map[string]bool{}
-		for _, meld := range table {
-			for _, p := range meld {
-				old, ok := known[p.ID]
-				if !ok || p.Tile != old.Tile {
-					return Position{}, "invented or changed physical tile: " + p.ID
-				}
-				if seen[p.ID] || held[p.ID] {
-					return Position{}, "duplicate physical tile: " + p.ID
-				}
-				seen[p.ID] = true
-			}
-		}
-		for id := range tableIDs {
-			if !seen[id] && !held[id] {
-				return Position{}, "missing table tile: " + id
-			}
-		}
-		result := Position{Table: table}
-		for _, p := range before.Rack {
-			if !seen[p.ID] {
-				result.Rack = append(result.Rack, p)
-			}
-		}
-		if report := ValidatePosition(result, rules.Edition); !report.Valid {
-			return Position{}, fmt.Sprint(report.Issues)
-		}
-		return result, ""
-	}
+
 	after, problem := state(move.Table, nil)
 	if problem != "" {
 		return fail("tile_accounting", problem)
@@ -105,10 +71,10 @@ func ValidateMove(before Position, rules Rules, turn Turn, move Move) MoveReport
 		if len(move.Releases) != 0 {
 			return fail("opening_manipulation", "opening cannot release table jokers")
 		}
-		for _, old := range original.Resolved {
+		for _, old := range before.Table {
 			found := false
 			for _, meld := range after.Table {
-				if sameMeld(old, meld) {
+				if sameInitialMeld(old, meld) {
 					found = true
 					break
 				}
@@ -137,61 +103,27 @@ func ValidateMove(before Position, rules Rules, turn Turn, move Move) MoveReport
 		if openingScore < 30 {
 			return fail("opening_score", "opening must total at least 30 represented points")
 		}
+
 	} else {
-		held := map[string]bool{}
-		previous := original.Resolved
-		used := map[string]bool{}
-		for _, release := range move.Releases {
-			if len(release.Freed) == 0 {
-				return fail("joker_release", "a release must free at least one table joker")
-			}
-			for _, id := range release.Freed {
-				p, ok := known[id]
-				if !ok || !tableIDs[id] || p.Tile.Kind != Joker || held[id] {
-					return fail("joker_release", "release must name an unreleased original table joker")
-				}
-				held[id] = true
-			}
-			stage, err := state(release.Table, held)
-			if err != "" {
-				return fail("joker_release", err)
-			}
-			resolved := ValidatePosition(stage, rules.Edition).Resolved
-			if !retainedJokers(previous, resolved, held) {
-				return fail("joker_release", "a retained joker changed without release evidence")
-			}
-			present := map[string]bool{}
-			for _, meld := range resolved {
-				for _, p := range meld {
-					present[p.ID] = true
-					if !tableIDs[p.ID] {
-						used[p.ID] = true
-					}
-				}
-			}
-			for id := range used {
-				if !present[id] {
-					return fail("joker_release", "a played rack tile cannot be returned to the rack")
-				}
-			}
-			previous = resolved
+		replay, code, message := replayJokerStages(before, rules.Edition, move.Releases)
+		if code != "" {
+			return fail(code, message)
 		}
-		if !retainedJokers(previous, after.Table, held) {
+		if !retainedJokers(replay.Table, after.Table, replay.Held) {
 			return fail("joker_witness_required", "changed table joker needs a valid release stage before reuse")
 		}
-		for id := range used {
+		for id := range replay.UsedRack {
 			if remaining[id] {
 				return fail("joker_release", "release-stage rack tile was not retained")
 			}
 		}
-		// A released joker must be used in a new set, not simply put back into
-		// exactly its original physical meld with an unchanged role.
-		for id := range held {
-			if samePhysicalMeld(findMeld(original.Resolved, id), findMeld(after.Table, id)) {
+		for id := range replay.Held {
+			if samePhysicalMeld(replay.Sources[id], findMeld(after.Table, id)) {
 				return fail("joker_reuse", "released joker must be used in a new set on this turn")
 			}
 		}
 	}
+
 	return MoveReport{Valid: true, Played: played, OpeningScore: openingScore, After: after}
 }
 
@@ -222,9 +154,35 @@ func sameMeld(a, b []Piece) bool {
 	return true
 }
 
-// Retention allows adding/removing endpoints or group members while retaining
-// the joker's concrete role and a nested physical meld. More complex changes
-// require an explicit release certificate instead of assuming final validity.
+// An unspecified original role may take any interpretation consistent with
+// its displayed set. Once specified at a checkpoint, it remains fixed until
+// release. Equal numbered physical copies can substitute without resetting it.
+func bindRetainedRoles(old, next []Piece) ([]Piece, bool) {
+	bound := clonePieces(old)
+	for i, p := range bound {
+		if p.Tile.Kind != Joker {
+			continue
+		}
+		for _, q := range next {
+			if p.ID == q.ID {
+				if q.As == nil {
+					return nil, false
+				}
+				if p.As != nil && *p.As != *q.As {
+					return nil, false
+				}
+				role := *q.As
+				bound[i].As = &role
+				break
+			}
+		}
+	}
+	return bound, analyzePieces(bound).Valid()
+}
+func sameInitialMeld(old, next []Piece) bool {
+	bound, ok := bindRetainedRoles(old, next)
+	return ok && sameMeld(bound, next)
+}
 func retainedJokers(before, after [][]Piece, freed map[string]bool) bool {
 	for _, old := range before {
 		for _, j := range old {
@@ -232,28 +190,38 @@ func retainedJokers(before, after [][]Piece, freed map[string]bool) bool {
 				continue
 			}
 			next := findMeld(after, j.ID)
-			if len(next) == 0 {
+			bound, ok := bindRetainedRoles(old, next)
+			if !ok || len(next) == 0 {
 				return false
 			}
-			if analyzePieces(old).Kind != analyzePieces(next).Kind {
+			nextAnalysis := analyzePieces(next)
+			var tiles [MaxNumber]Tile
+			var roles [MaxNumber]*Tile
+			for i, p := range bound {
+				tiles[i] = p.Tile
+				roles[i] = p.As
+			}
+			oldAnalysis := analyzeMeld(tiles[:len(bound)], roles[:len(bound)], true, nextAnalysis.Kind)
+			if !oldAnalysis.Valid() {
 				return false
 			}
-			oldSet, newSet := map[string]bool{}, map[string]bool{}
-			for _, p := range old {
-				oldSet[p.ID] = true
+			oldSet, newSet := map[Tile]int{}, map[Tile]int{}
+			for i, p := range old {
+				if p.ID != j.ID {
+					oldSet[oldAnalysis.Roles[i]]++
+				}
 			}
-			for _, p := range next {
-				newSet[p.ID] = true
-				if p.ID == j.ID && !samePiece(j, p) {
-					return false
+			for i, p := range next {
+				if p.ID != j.ID {
+					newSet[nextAnalysis.Roles[i]]++
 				}
 			}
 			sub, super := true, true
-			for id := range oldSet {
-				sub = sub && newSet[id]
+			for key, count := range oldSet {
+				sub = sub && newSet[key] >= count
 			}
-			for id := range newSet {
-				super = super && oldSet[id]
+			for key, count := range newSet {
+				super = super && oldSet[key] >= count
 			}
 			if !sub && !super {
 				return false
@@ -279,4 +247,125 @@ func samePhysicalMeld(a, b []Piece) bool {
 		}
 	}
 	return true
+}
+
+// Every checkpoint conserves physical occurrences. Only held original table
+// jokers may be absent; unused rack pieces remain on the rack.
+func physicalTableChecker(before Position, edition Edition) func([][]Piece, map[string]bool) (Position, string) {
+	known, tableIDs := map[string]Piece{}, map[string]bool{}
+	for _, meld := range before.Table {
+		for _, p := range meld {
+			known[p.ID] = p
+			tableIDs[p.ID] = true
+		}
+	}
+	for _, p := range before.Rack {
+		known[p.ID] = p
+	}
+	return func(table [][]Piece, held map[string]bool) (Position, string) {
+		seen := map[string]bool{}
+		for _, meld := range table {
+			for _, p := range meld {
+				old, ok := known[p.ID]
+				if !ok || p.Tile != old.Tile {
+					return Position{}, "invented or changed physical tile: " + p.ID
+				}
+				if seen[p.ID] || held[p.ID] {
+					return Position{}, "duplicate physical tile: " + p.ID
+				}
+				seen[p.ID] = true
+			}
+		}
+		for id := range tableIDs {
+			if !seen[id] && !held[id] {
+				return Position{}, "missing table tile: " + id
+			}
+		}
+		position := Position{Table: table}
+		for _, p := range before.Rack {
+			if !seen[p.ID] {
+				position.Rack = append(position.Rack, p)
+			}
+		}
+		report := ValidatePosition(position, edition)
+		if !report.Valid {
+			return Position{}, fmt.Sprint(report.Issues)
+		}
+		position.Table = report.Resolved
+		return position, ""
+	}
+}
+
+type jokerReplay struct {
+	Table    [][]Piece
+	Held     map[string]bool
+	UsedRack map[string]bool
+	Sources  map[string][]Piece
+}
+
+// Replay is shared by the independent validator and witness search. A stage
+// can release, reuse, or prepare a rearrangement while retaining concrete roles.
+func replayJokerStages(before Position, edition Edition, stages []JokerRelease) (jokerReplay, string, string) {
+	replay := jokerReplay{Table: ClonePosition(before).Table, Held: map[string]bool{}, UsedRack: map[string]bool{}, Sources: map[string][]Piece{}}
+	tableIDs := map[string]bool{}
+	for _, meld := range before.Table {
+		for _, p := range meld {
+			tableIDs[p.ID] = true
+		}
+	}
+	state := physicalTableChecker(before, edition)
+	for _, stage := range stages {
+		mentioned := map[string]bool{}
+		for _, id := range stage.Reused {
+			if mentioned[id] || !replay.Held[id] {
+				return replay, "joker_release", "reuse must name a held joker exactly once"
+			}
+			mentioned[id] = true
+			delete(replay.Held, id)
+		}
+		for _, id := range stage.Freed {
+			source := findMeld(replay.Table, id)
+			if mentioned[id] || replay.Held[id] || len(source) == 0 {
+				return replay, "joker_release", "release must name an available original table joker exactly once"
+			}
+			valid := false
+			for _, p := range source {
+				valid = valid || (p.ID == id && p.Tile.Kind == Joker && tableIDs[id])
+			}
+			if !valid {
+				return replay, "joker_release", "only original table jokers may be held"
+			}
+			mentioned[id] = true
+			replay.Held[id] = true
+			replay.Sources[id] = clonePieces(source)
+		}
+		position, problem := state(stage.Table, replay.Held)
+		if problem != "" {
+			return replay, "joker_release", problem
+		}
+		if !retainedJokers(replay.Table, position.Table, replay.Held) {
+			return replay, "joker_release", "a retained joker changed without release evidence"
+		}
+		for _, id := range stage.Reused {
+			if samePhysicalMeld(replay.Sources[id], findMeld(position.Table, id)) {
+				return replay, "joker_reuse", "released joker must be reused in a new physical set"
+			}
+		}
+		present := map[string]bool{}
+		for _, meld := range position.Table {
+			for _, p := range meld {
+				present[p.ID] = true
+				if !tableIDs[p.ID] {
+					replay.UsedRack[p.ID] = true
+				}
+			}
+		}
+		for id := range replay.UsedRack {
+			if !present[id] {
+				return replay, "joker_release", "a played rack tile cannot be returned to the rack"
+			}
+		}
+		replay.Table = position.Table
+	}
+	return replay, "", ""
 }
