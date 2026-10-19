@@ -47,7 +47,7 @@ func NewParser(aliases map[string]game.Color) (Parser, error) {
 }
 
 // ParseTile returns a zero Tile on every error. Joker syntax is accepted as a
-// representation; the game validator explicitly reports unsupported rules.
+// representation; game validation separately checks its meld role.
 func (p Parser) ParseTile(input string) (game.Tile, error) {
 	fields := strings.Fields(input)
 	if len(fields) == 1 && strings.EqualFold(fields[0], "joker") {

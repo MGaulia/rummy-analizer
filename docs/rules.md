@@ -1,46 +1,47 @@
-# Rummikub validation
+# Rules profile and validation
 
-The target game is standard Rummikub. Rule reference:
-[official English instructions](https://rummikub.com/wp-content/uploads/2019/12/2600-English.pdf).
+Source: [official English Rummikub booklet, D-2600-1236-0041 120819](https://rummikub.com/wp-content/uploads/2019/12/2600-English.pdf),
+read October 19, 2026, including the joker illustrations. This profile does not
+silently mix in older, more restrictive joker house rules.
 
-The `internal/game` meld analyzer validates **one collection of numbered tiles**:
+## Selected rules
 
-- A group has three or four tiles of the same number, with distinct colors.
-- A run has three to thirteen distinct consecutive numbers of one color.
-- Numbers are 1–13. Runs cannot wrap: 12–13–1 and 13–1–2 are invalid.
+- Edition 4: 106 tiles, two copies of each numbered value and two jokers.
+- Edition 6: 160 tiles, three copies of each numbered value and four jokers.
+- Both pools use four colors, numbers 1–13. Groups have three or four distinct
+  colors with one number; runs have consecutive numbers of one color, no wrapping.
+- Jokers stand for numbered tiles, including during a 30-point rack-only opening.
+- Existing table manipulation is available on subsequent turns after opening.
+- Later rearrangement may use any table tiles, but must end with legitimate
+  melds, all previous table tiles retained, and at least one rack tile played.
+- A joker can be freed by replacement or restructuring, including using table
+  tiles. It must be reused in a valid new set on the same turn. The rack-tile
+  requirement is per turn, not a requirement for every joker's new set.
+- Drawing ends the turn. A retained joker has a 30-point end-of-game penalty.
 
-Input order does not matter: the API checks whether the supplied tiles can form
-one group/run, without rearranging or mutating the caller's slice. A future photo
-validator must separately check the displayed order if that is required.
+Disabling `OpeningRequired` is an explicit house rule: skip the opening phase
+entirely and allow table manipulation immediately. It does not disable other
+move rules. Edition selects the pool, not the current number of players.
 
-`game.AnalyzeMeld` handles all supported lengths and returns a meld kind or a
-structured issue. `CanFormMeld`, `CanFormGroup`, and `CanFormRun` share that
-implementation. Validation takes O(n) time and constant space without heap
-allocations or generated tables. The old fixed-size wrappers have been removed.
+## Implemented API contracts
 
-Empty or short collections, invalid values, and duplicate tiles within a meld
-are rejected. All color orderings work for groups; wrapping runs are rejected.
-Canonical colors are black, blue, orange, and red. Legacy grey/green/purple labels
-are not physical mappings; text adapters require explicit aliases. Well-formed
-jokers are represented explicitly and return an unsupported status rather than
-being treated as numbered tiles or ordinary invalid melds.
+`AnalyzeMeld` checks unordered feasibility including multiple jokers. Its
+concrete witness preserves input indexing, not displayed order. `CanFormGroup`
+and `CanFormRun` can both be true for the same wildcard collection. Analysis
+chooses a highest-scoring interpretation and marks alternatives as ambiguous.
 
-## Scope and next steps
+`AnalyzeLayout` checks actual adjacency, allowing ascending or descending runs.
+That direction convention avoids rejecting a valid run viewed from the other
+side of a table; nonconsecutive permutations still fail. Explicit joker roles
+are checked, and unspecified roles are resolved. A joker remains a joker in
+inventory, whatever numbered role it takes in a meld.
 
-This is not a full table validator or a move solver. Jokers can be represented
-and counted, but their meld/retrieval rules remain unsupported.
+`ValidatePosition` keeps group boundaries, validates snapshot-local physical IDs,
+and checks combined known table/rack inventory. A partial inventory is allowed;
+unseen tiles are not invented. The 13-tile limit applies to a single meld, not to
+the complete table or rack. Results are independent of opening state. Every
+reported role is one valid interpretation, not a claim about image confidence.
 
-The standard set has two copies of each numbered tile and two jokers. A future
-table validator must check both groups and total known inventory. The current
-`Inventory` enforces copy counts but not table layout or turn legality. Duplicate physical
-copies may appear in separate groups and must not be collapsed into one tile.
-
-For move recommendations, track whether the player has completed the 30-point
-initial meld. That opening uses rack tiles only. Later turns may rearrange table
-tiles, but must leave every tile in a valid group/run. Joker retrieval and reuse
-also require explicit rules in the solver.
-
-Photo recognition should produce grouped tiles and flag uncertain readings for
-correction. Then validate the table before searching with the player's rack.
-Define "best move" explicitly (for example, most rack tiles played). Search must
-distinguish a proven lack of moves from a time limit or unsupported input.
+Table validity is not move legality. A move additionally needs the original
+position, selected rules, player opening/draw state, and physical tile accounting.
+The current single-collection text CLI remains available through `go run .`.

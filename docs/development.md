@@ -11,7 +11,7 @@ The script resolves the project root, prints the current commit and worktree
 status, and checks formatting, working/staged/HEAD whitespace, uncached tests,
 vet, races, and an executable built in a temporary directory. Smoke checks cover
 help, invalid arguments and exit status, stdout/stderr separation, piped input
-without a final newline, input-error recovery, aliases, and unsupported jokers.
+without a final newline, input-error recovery, aliases, and a joker-containing run.
 It does not stage, commit, push, format files in place, install dependencies, or
 configure CI. Build and smoke artifacts are cleaned up; Go uses its normal caches.
 Worktree edits are tested as they stand, so include status/diff information when

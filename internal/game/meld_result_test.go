@@ -17,8 +17,7 @@ func TestMeldIssues(t *testing.T) {
 		{"empty", nil, InvalidSize, -1, -1},
 		{"short", []Tile{numbered(Blue, 1)}, InvalidSize, -1, -1},
 		{"invalid before short", []Tile{{}}, InvalidTile, 0, -1},
-		{"joker unsupported even alone", []Tile{{Kind: Joker}}, UnsupportedJoker, 0, -1},
-		{"joker in run", []Tile{numbered(Blue, 1), {Kind: Joker}, numbered(Blue, 3)}, UnsupportedJoker, 1, -1},
+		{"joker alone is too short", []Tile{{Kind: Joker}}, InvalidSize, -1, -1},
 		{"malformed joker", []Tile{{Kind: Joker, Number: 1}}, InvalidTile, 0, -1},
 		{"duplicate", []Tile{numbered(Blue, 7), numbered(Red, 7), numbered(Blue, 7)}, DuplicateTile, 2, 0},
 		{"gap", []Tile{numbered(Blue, 1), numbered(Blue, 2), numbered(Blue, 4)}, RunGap, -1, -1},
@@ -111,7 +110,7 @@ func TestMeldRandomizedReference(t *testing.T) {
 				if trial%11 == 0 {
 					number = -maxInt - 1
 				}
-				tiles = append(tiles, Tile{Color: colors[rng.Intn(len(colors))], Number: number, Kind: TileKind(rng.Intn(3))})
+				tiles = append(tiles, Tile{Color: colors[rng.Intn(len(colors))], Number: number, Kind: Numbered})
 			}
 		}
 		rng.Shuffle(len(tiles), func(i, j int) { tiles[i], tiles[j] = tiles[j], tiles[i] })

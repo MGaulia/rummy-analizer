@@ -36,7 +36,7 @@ func Run(args []string, input io.Reader, output io.Writer) error {
 	if err != nil {
 		return err
 	}
-	if _, err := fmt.Fprintln(output, "Available colors: black, blue, orange, red (or configured aliases); joker rules unsupported"); err != nil {
+	if _, err := fmt.Fprintln(output, "Available colors: black, blue, orange, red (or configured aliases); jokers supported"); err != nil {
 		return err
 	}
 	scanner := bufio.NewScanner(input)
@@ -66,9 +66,6 @@ func Run(args []string, input io.Reader, output io.Writer) error {
 		tiles = append(tiles, tile)
 		result := game.AnalyzeMeld(tiles)
 		status := strconv.FormatBool(result.Valid())
-		if result.Issue.Code == game.UnsupportedJoker {
-			status = "unsupported"
-		}
 		if _, err := fmt.Fprintf(output, "%s\nCan form group/run: %s\n", formatTiles(tiles), status); err != nil {
 			return err
 		}
@@ -105,8 +102,10 @@ func issueMessage(issue game.ValidationIssue) string {
 		return "a meld needs 3-13 tiles (an equal-number group has at most 4)"
 	case game.InvalidTile:
 		return fmt.Sprintf("tile %d has an invalid representation", issue.TileIndex+1)
-	case game.UnsupportedJoker:
-		return fmt.Sprintf("tile %d is a joker; joker meld rules are not implemented", issue.TileIndex+1)
+	case game.InvalidRole:
+		return "a joker role must be a valid numbered tile"
+	case game.InvalidOrder:
+		return "a displayed run must be consecutive in one direction"
 	case game.DuplicateTile:
 		return fmt.Sprintf("tile %d repeats tile %d; duplicates cannot share one meld", issue.TileIndex+1, issue.RelatedIndex+1)
 	case game.RunGap:
