@@ -2,6 +2,7 @@ package cli
 
 import (
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/MGaulia/rummy-analizer/internal/game"
@@ -45,31 +46,53 @@ func TestParseTile(t *testing.T) {
 	}
 }
 
+// referenceParseTile uses a literal number vocabulary, not the production
+// parser's integer conversion or Tile.Validate. It checks the requested value
+// and error category, including valid input that must not be rejected.
+func referenceParseTile(input string) (game.Tile, error) {
+	fields := strings.Fields(input)
+	if len(fields) == 1 && strings.EqualFold(fields[0], "joker") {
+		return game.Tile{Kind: game.Joker}, nil
+	}
+	if len(fields) != 2 {
+		return game.Tile{}, ErrInputFormat
+	}
+	var color game.Color
+	switch strings.ToLower(fields[0]) {
+	case "black":
+		color = game.Black
+	case "blue":
+		color = game.Blue
+	case "orange":
+		color = game.Orange
+	case "red":
+		color = game.Red
+	default:
+		return game.Tile{}, ErrColor
+	}
+	for index, token := range []string{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13"} {
+		if fields[1] == token {
+			return game.Tile{Color: color, Number: index + 1}, nil
+		}
+	}
+	return game.Tile{}, ErrNumber
+}
+
 func FuzzParseTile(f *testing.F) {
-	for _, input := range []string{"blue 1", "orange\t13", "blue1", "red  2", "", "blue +1", "JOKER"} {
+	for _, color := range []string{"black", "blue", "orange", "red"} {
+		for _, number := range []string{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13"} {
+			f.Add(color + " " + number)
+			f.Add("\u2003" + strings.ToUpper(color) + "\t" + number + "\r\n")
+		}
+	}
+	for _, input := range []string{"blue1", "", "blue +1", "blue 01", "blue 14", "unknown 1", "JOKER", "joker 1", "blue 1 extra"} {
 		f.Add(input)
 	}
 	f.Fuzz(func(t *testing.T, input string) {
-		card, err := (Parser{}).ParseTile(input)
-		if err != nil {
-			if card != (game.Tile{}) {
-				t.Fatalf("error returned a partial tile: %v", card)
-			}
-			return
-		}
-		if err := card.Validate(); err != nil {
-			t.Fatalf("parser produced invalid tile: %+v", card)
-		}
-		if card.Kind == game.Joker {
-			return
-		}
-		if card.Number < game.MinNumber || card.Number > game.MaxNumber {
-			t.Fatalf("accepted invalid number: %v", card)
-		}
-		switch card.Color {
-		case game.Blue, game.Black, game.Red, game.Orange:
-		default:
-			t.Fatalf("accepted invalid color: %v", card)
+		want, wantErr := referenceParseTile(input)
+		got, err := (Parser{}).ParseTile(input)
+		if got != want || !errors.Is(err, wantErr) {
+			t.Fatalf("ParseTile(%q) = %+v, %v; want %+v, %v", input, got, err, want, wantErr)
 		}
 	})
 }

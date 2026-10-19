@@ -52,13 +52,13 @@ func TestInventoryConsumesOnlyOneCopy(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	count, _ := result.Count(tile)
-	original, _ := inventory.Count(tile)
+	count := checkedCount(t, result, tile)
+	original := checkedCount(t, inventory, tile)
 	if count != 1 || original != 2 || result.Len() != 2 || !reflect.DeepEqual(tiles, before) {
 		t.Fatalf("wrong removal or mutation: count=%d original=%d len=%d", count, original, result.Len())
 	}
 	tiles[0] = numbered(Red, 13)
-	if count, _ := inventory.Count(tile); count != 2 {
+	if count := checkedCount(t, inventory, tile); count != 2 {
 		t.Fatal("inventory aliases input")
 	}
 }
@@ -98,9 +98,25 @@ func TestInventoryFailuresAreAtomic(t *testing.T) {
 	}
 }
 
+func checkedCount(t *testing.T, inventory Inventory, tile Tile) int {
+	t.Helper()
+	count, err := inventory.Count(tile)
+	if err != nil {
+		t.Fatalf("Count(%+v): %v", tile, err)
+	}
+	return count
+}
+
 func FuzzInventoryConsumption(f *testing.F) {
+	f.Add([]byte{}, []byte{})
 	f.Add([]byte{0, 0, 1, 52}, []byte{0, 52})
 	f.Add([]byte{0}, []byte{0, 0})
+	f.Add([]byte{0, 0, 0}, []byte{})
+	var fullSet []byte
+	for value := byte(0); value < 53; value++ {
+		fullSet = append(fullSet, value, value)
+	}
+	f.Add(fullSet, fullSet)
 	f.Fuzz(func(t *testing.T, have, remove []byte) {
 		pool := standardTiles()
 		decode := func(data []byte) []Tile {
@@ -111,15 +127,37 @@ func FuzzInventoryConsumption(f *testing.F) {
 			return tiles
 		}
 		tiles := decode(have)
-		inventory, err := NewInventory(tiles)
-		if err != nil {
-			return
-		}
+		before := append([]Tile{}, tiles...)
+		// Establish constructor acceptance independently, before calling it.
 		want := make(map[Tile]int)
+		overfull := false
 		for _, tile := range tiles {
 			want[tile]++
+			overfull = overfull || want[tile] > 2
 		}
+		inventory, err := NewInventory(tiles)
+		if !reflect.DeepEqual(tiles, before) {
+			t.Fatal("constructor mutated input")
+		}
+		if overfull {
+			if !errors.Is(err, ErrTooManyCopies) || inventory != (Inventory{}) {
+				t.Fatalf("overfull inventory: got %+v, %v", inventory, err)
+			}
+			return
+		}
+		if err != nil || inventory.Len() != len(tiles) {
+			t.Fatalf("valid constructor input: len=%d, err=%v", inventory.Len(), err)
+		}
+		// Check absent values too, not just the values present in the input.
+		for i := 0; i < 53; i++ {
+			tile := pool[2*i]
+			if got := checkedCount(t, inventory, tile); got != want[tile] {
+				t.Fatalf("constructor Count(%+v) = %d, want %d", tile, got, want[tile])
+			}
+		}
+		original := inventory
 		request := decode(remove)
+		requestBefore := append([]Tile{}, request...)
 		possible := true
 		for _, tile := range request {
 			if want[tile] == 0 {
@@ -129,18 +167,22 @@ func FuzzInventoryConsumption(f *testing.F) {
 			want[tile]--
 		}
 		got, err := inventory.ConsumeAll(request)
+		if inventory != original || !reflect.DeepEqual(request, requestBefore) {
+			t.Fatal("consumption mutated caller state")
+		}
 		if !possible {
 			if !errors.Is(err, ErrTileNotFound) || got != inventory {
-				t.Fatal("failed removal mutated state")
+				t.Fatal("failed removal did not return the original state")
 			}
 			return
 		}
 		if err != nil || got.Len() != len(tiles)-len(request) {
-			t.Fatalf("valid removal: %v", err)
+			t.Fatalf("valid removal: len=%d, err=%v", got.Len(), err)
 		}
-		for tile, expected := range want {
-			if count, _ := got.Count(tile); count != expected {
-				t.Fatal("wrong multiplicity")
+		for i := 0; i < 53; i++ {
+			tile := pool[2*i]
+			if count := checkedCount(t, got, tile); count != want[tile] {
+				t.Fatalf("remaining Count(%+v) = %d, want %d", tile, count, want[tile])
 			}
 		}
 	})
@@ -169,9 +211,9 @@ func TestConsumeAllUsesRequestedMultiplicities(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		count, _ := result.Count(tile)
-		otherCount, _ := result.Count(other)
-		originalCount, _ := inventory.Count(tile)
+		count := checkedCount(t, result, tile)
+		otherCount := checkedCount(t, result, other)
+		originalCount := checkedCount(t, inventory, tile)
 		if count != 2-copies || otherCount != 1 || originalCount != 2 {
 			t.Fatalf("requested %d: count=%d other=%d original=%d", copies, count, otherCount, originalCount)
 		}
