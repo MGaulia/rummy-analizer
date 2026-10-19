@@ -73,7 +73,7 @@ push is not an opened PR. Desktop/mobile/browser/device results stay separate.
   asynchronous cancellation, and independent validation of retained best result
   passed. The worker yields periodically for cancellation events. No mock engine.
 - `bash scripts/check.sh` passed including tests/vet/races/build/legacy CLI.
-  New structured-command executable checks are being incorporated into it.
+  Structured-command executable checks were then incorporated and passed.
 - Go 1.27.2 linux/amd64 remains the toolchain; this is desktop validation only.
 
 ## iPhone correction and native adapter slice
@@ -132,3 +132,47 @@ Remaining requirements that this Linux workspace cannot supply:
 Until those are supplied, the completed work is engine/CLI/rendering and tested
 portable correction integration plus native integration source, not the complete
 photo-to-move phone product. Do not relabel any of these blockers as completion.
+
+## Final review checkpoints
+
+All branches are pushed without modifying main or merging any GitHub PR.
+
+| Review unit | Latest engine/application checkpoint | Intended base |
+| --- | --- | --- |
+| Physical moves/search | b8396fcae760836cae6385fdafc2a70b73cfd77e | #9 / codex/editions-jokers-table |
+| CLI/render/Wasm | 45bc1d010b98184e16b227f9fcc681f67ca33214 | codex/offline-assistant-moves |
+| Photo correction/iPhone integration candidate | 03cd6a06355d1658d1435e8265ce975c4e69daf8 | codex/offline-assistant-interface |
+
+Source trees: engine `9533b422bf58d0154a937f73d299315b8e5e43f5`, interface
+`e2a8162875d49e6ab095d388186bc4bf8604ab04`, combined
+`f8335961ec67407f805c9aeb0290470192ccd10e`.
+
+The combined full repository check, bundle build, actual Node/Wasm tests,
+photo-state tests, two evaluator tests, and desktop offline UI integration ran
+successfully on clean commit 33bdf0c3f6543d4b333f1d9b8773e2ca71d9ec01 (tree
+bd19247e25aaf303c8d8bdc64c813df647af44c5). The dependency integration merge
+fd6cbb61e35b5ac4e945c3ea69f74c1ff086eb4b has that identical tree. Engine and
+interface checkpoints also passed their complete repository scripts separately.
+The subsequent 03cd6a0 change only isolates manually added observations from raw
+recognizer reports; photo-state and offline UI checks passed again on those
+exact files before committing. Go code and bundled engine inputs did not change.
+
+Fresh native Swift, simulator, real-photo recognition, and physical-device tests
+remain UNRUN. No official-PDF visual inspection occurred because its destination
+is blocked. All passed checks above are local, not hosted CI or phone results.
+
+PR creation was attempted with the completed body and explicit base/head:
+`gh pr create --repo MGaulia/rummy-analizer --head codex/offline-assistant-moves
+--base codex/editions-jokers-table ... --body-file /workspace/rummy-review/moves.md`.
+It failed: `Post https://api.github.com/graphql: Forbidden`. Runtime policy
+still reports enforced `allowed_hosts: []`; the saved API/rulebook draft additions
+have not taken effect. No new PR was created, and there is no PR URL to report.
+Complete proposed descriptions are retained locally in `/workspace/rummy-review/`
+(`moves.md`, `interface.md`, `iphone.md`). Open the phone integration PR as a draft
+until its native build and actual acceptance checks run. No token request is
+needed: injected Git access already supports the successful branch pushes.
+
+Continue with the explicit missing requirements above. Refresh live main/PRs
+before resuming, preserve these branches, and keep every PR unmerged for owner
+review. Main was rechecked at a0caeb94ae18c67fb331bfb8ff561fc516012937; #9 still
+points to cc8ce4f58fc9f9194b7f46ced698e5f0c1354816 and remains the only open PR.
