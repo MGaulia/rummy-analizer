@@ -2,22 +2,31 @@ package check
 
 import "main/model"
 
-// IsValidSequence checks if the given cards are a valid sequence
-func IsValidSequence(input []model.Card) (result bool) {
-	tocheck := input[0]
-	var numbers []model.Number
-	for i := 0; i < len(input); i++ {
-		val := input[i]
-		if val.Color != tocheck.Color {
-			return
-		}
-		numbers = append(numbers, val.Number)
-		tocheck = val
+// IsValidSequence reports whether cards form a same-color run of at least three
+// distinct numbers from 1 to 13. Runs cannot wrap from 13 to 1.
+// Input order does not matter and cards are never modified.
+func IsValidSequence(cards []model.Card) bool {
+	if len(cards) < 3 || len(cards) > int(model.MaxNumber) {
+		return false
 	}
-	for i := 0; i < len(numbers)-1; i++ {
-		if numbers[i+1]-numbers[i] != 1 {
-			return
+	color := cards[0].Color
+	if colorBit(color) == 0 {
+		return false
+	}
+	var seen [model.MaxNumber + 1]bool
+	minimum, maximum := model.MaxNumber, model.Number(0)
+	for _, card := range cards {
+		number := card.Number
+		if card.Color != color || number < model.MinNumber || number > model.MaxNumber || seen[number] {
+			return false
+		}
+		seen[number] = true
+		if number < minimum {
+			minimum = number
+		}
+		if number > maximum {
+			maximum = number
 		}
 	}
-	return true
+	return int(maximum-minimum)+1 == len(cards)
 }

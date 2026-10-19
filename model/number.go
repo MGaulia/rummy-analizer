@@ -2,6 +2,14 @@ package model
 
 type Number int
 
+// MinNumber and MaxNumber bound the numbered tiles in Rummikub.
+const (
+	MinNumber Number = 1
+	MaxNumber Number = 13
+)
+
+// Legacy card-style names remain for source compatibility. In Rummikub these
+// are simply the numbers 1–13; 1 never follows 13 in a run.
 const (
 	NUMBER_ACE   = 1
 	NUMBER_TWO   = 2

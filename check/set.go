@@ -2,19 +2,23 @@ package check
 
 import "main/model"
 
-// IsValidSet checks if the given cards are a valid set
-func IsValidSet(input []model.Card) (result bool) {
-	number := input[0].Number
-	usedColours := make(map[model.Color]bool)
-	for i := 0; i < len(input); i++ {
-		val := input[i]
-		if val.Number != number {
-			return
+// IsValidSet reports whether cards contain three or four equal numbers in
+// distinct colors. Input order does not matter and cards are never modified.
+func IsValidSet(cards []model.Card) bool {
+	if len(cards) < 3 || len(cards) > 4 {
+		return false
+	}
+	number := cards[0].Number
+	if number < model.MinNumber || number > model.MaxNumber {
+		return false
+	}
+	var colors uint8
+	for _, card := range cards {
+		bit := colorBit(card.Color)
+		if card.Number != number || bit == 0 || colors&bit != 0 {
+			return false
 		}
-		if usedColours[val.Color] {
-			return
-		}
-		usedColours[val.Color] = true
+		colors |= bit
 	}
 	return true
 }
