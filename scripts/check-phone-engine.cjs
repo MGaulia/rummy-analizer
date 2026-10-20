@@ -34,6 +34,25 @@ require(path.resolve(__dirname, '../phone/web/engine/wasm_exec.js'));
   const verified=JSON.parse(await rummyExecute('verify',JSON.stringify({operation:'check-move',settings:{edition:4,opening_required:false},position:{table:[],rack},move:cancelled.search.move})));
   assert.equal(verified.move.valid,true);
  }
- console.log('Go/Wasm: actual solve, exact SVG, cancellation and retained-best validation passed.');
+ // Both searches exceed one Go/Wasm yield. The replacement cancels the older
+ // request, then awaiting that request guarantees its cleanup has completed.
+ // Its cleanup must not remove the replacement's cancellation entry. Keep the
+ // node limit small so a broken cancel finishes with node_limit, not a hang.
+ const replacementRequest={operation:'solve',settings:{edition:4,opening_required:false},position:{table:[],rack},max_nodes:16384};
+ const replacementJSON=JSON.stringify(replacementRequest);
+ const first=rummyExecute('replacement',replacementJSON);
+ const second=rummyExecute('replacement',replacementJSON);
+ const replaced=JSON.parse(await first);
+ rummyCancel('replacement');
+ const replacement=JSON.parse(await second);
+ for(const [name,result] of [['replaced',replaced],['replacement',replacement]]){
+  assert.ok(['incomplete','feasible_incomplete'].includes(result.search.status),`${name}: ${result.search.status}`);
+  assert.match(result.search.reason,/canceled/,`${name} must remain cancellable after the older request completes`);
+  if(result.search.move){
+   const checked=JSON.parse(await rummyExecute(`verify-${name}`,JSON.stringify({operation:'check-move',settings:replacementRequest.settings,position:replacementRequest.position,move:result.search.move})));
+   assert.equal(checked.move.valid,true);
+  }
+ }
+ console.log('Go/Wasm: actual solve, exact SVG, cancellation, same-ID replacement ownership and retained-best validation passed.');
  process.exit(0);
 })().catch(error=>{console.error(error);process.exit(1)});
