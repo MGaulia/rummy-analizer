@@ -15,6 +15,20 @@ const photoRequests = {table:0,rack:0};
 const $ = id => document.getElementById(id);
 $('licenses').textContent=(globalThis.RUMMY_GO_LICENSE||'License text is missing from this build.')+
   (globalThis.RUMMY_READER_LICENSES?'\n\n'+globalThis.RUMMY_READER_LICENSES:'');
+if(window.webkit?.messageHandlers?.photo)$('reading-help').hidden=true;
+$('save-report').onclick=()=>{
+  const photos=rummyObservationReport();
+  for(const zone of Object.keys(photos))photos[zone].image=images[zone].src;
+  if(!Object.keys(photos).length){status('Choose a photo before saving a reading report.',true);return;}
+  const report={version:1,kind:'rummy-photo-reading-report',
+    preview_source:document.querySelector('meta[name="rummy-preview-source"]')?.content||null,
+    browser:navigator.userAgent,photos};
+  const url=URL.createObjectURL(new Blob([JSON.stringify(report)],{type:'application/json'}));
+  const link=node('a');link.href=url;link.download='rummy-reading-report.json';
+  document.body.append(link);link.click();link.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
+  status('Saved a reading report on this device. It includes your photos; share it only if you choose.');
+};
 function status(text, error=false) { $('status').textContent=text; $('status').classList.toggle('error',error); }
 function invalidate() { revision++; $('result').replaceChildren(); if(currentJob) rummyCancel(currentJob); }
 function node(tag, text, className) { const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(className)e.className=className;return e; }
@@ -37,6 +51,7 @@ for(const zone of ['table','rack']){
       const request=++photoRequests[zone];
       const cancelled=()=>photoRequests[zone]!==request;
       sessions[zone]=null;images[zone]=null;invalidate();
+      $('save-report').disabled=!sessions.table&&!sessions.rack;
       $(zone+'-photo').replaceChildren(node('p','Reading this photo locally…','notice'));
       const bytes=await file.arrayBuffer();
       const hash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(n=>n.toString(16).padStart(2,'0')).join('');
@@ -64,6 +79,7 @@ window.acceptNativePhoto=async payload=>{
     const image=new Image();image.src=payload.image;await image.decode();
     recognizers[zone]=payload.recognizer||null;
     sessions[zone]=new PhotoSession(zone,source,payload.observations||[]);images[zone]=image;
+    $('save-report').disabled=false;
     invalidate();drawPhoto(zone);
     status(payload.notice||'Review every tile, its color, and the table meld boundaries. Tap the photo to add missed tiles.');
   }catch(error){status(String(error),true);}

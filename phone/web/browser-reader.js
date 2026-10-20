@@ -73,8 +73,21 @@
       cuts.push(box.x+box.width);
       for (let i = 0; i < count; i++) tiles.push({x:cuts[i],y:box.y,width:cuts[i+1]-cuts[i],height:box.height});
     }
-    if (tiles.length > MAX_TILES) throw new Error('Too many possible tiles. Crop closer to the table or rack, then try again.');
-    return tiles;
+    // Ink can enclose another ivory region (notably a joker's face and digit
+    // holes). Keep the physical tile outline, never an interior as a new tile.
+    // This compares geometry only; neighboring copies of a value stay distinct.
+    const distinct = [];
+    for (const box of tiles.sort((a,b)=>b.width*b.height-a.width*a.height)) {
+      const nested = distinct.some(outer => {
+        const area=box.width*box.height;
+        const overlap=Math.max(0,Math.min(box.x+box.width,outer.x+outer.width)-Math.max(box.x,outer.x))*
+          Math.max(0,Math.min(box.y+box.height,outer.y+outer.height)-Math.max(box.y,outer.y));
+        return outer.width*outer.height>area*1.35 && overlap>area*.94;
+      });
+      if (!nested) distinct.push(box);
+    }
+    if (distinct.length > MAX_TILES) throw new Error('Too many possible tiles. Crop closer to the table or rack, then try again.');
+    return distinct;
   }
 
   function group(boxes) {
@@ -95,8 +108,8 @@
   }
 
   function glyph(image, box) {
-    const x0 = Math.round(box.x+box.width*.12), y0 = Math.round(box.y+box.height*.1);
-    const width = Math.max(1,Math.round(box.width*.76)), height = Math.max(1,Math.round(box.height*.52));
+    const x0 = Math.round(box.x+box.width*.08), y0 = Math.round(box.y+box.height*.07);
+    const width = Math.max(1,Math.round(box.width*.84)), height = Math.max(1,Math.round(box.height*.58));
     const mask = new Uint8Array(width*height), counts = {black:0,blue:0,orange:0,red:0};
     for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
       const i = ((y+y0)*image.width+x+x0)*4;
@@ -115,18 +128,56 @@
       largest.area/(largest.width*largest.height) < .55;
     const x = Math.min(...parts.map(p=>p.x)), y = Math.min(...parts.map(p=>p.y));
     const right = Math.max(...parts.map(p=>p.x+p.width)), bottom = Math.max(...parts.map(p=>p.y+p.height));
-    const canvas = document.createElement('canvas'), scale = 120/Math.max(1,bottom-y), padding = 20;
-    canvas.width = Math.ceil((right-x)*scale)+padding*2; canvas.height = 120+padding*2;
-    const context = canvas.getContext('2d'); context.fillStyle = '#fff';context.fillRect(0,0,canvas.width,canvas.height);
-    const source = document.createElement('canvas');source.width=right-x;source.height=bottom-y;
-    const pixels = source.getContext('2d').createImageData(source.width,source.height);
-    for (let sy = y; sy < bottom; sy++) for (let sx = x; sx < right; sx++) {
-      const i = ((sy-y)*source.width+sx-x)*4, value = mask[sy*width+sx] ? 0 : 255;
-      pixels.data[i]=pixels.data[i+1]=pixels.data[i+2]=value;pixels.data[i+3]=255;
+    function crop(left,top,end,base) {
+      const canvas=document.createElement('canvas'),scale=120/Math.max(1,base-top),padding=20;
+      canvas.width=Math.ceil((end-left)*scale)+padding*2;canvas.height=160;
+      const context=canvas.getContext('2d');context.fillStyle='#fff';context.fillRect(0,0,canvas.width,canvas.height);
+      const source=document.createElement('canvas');source.width=end-left;source.height=base-top;
+      const pixels=source.getContext('2d').createImageData(source.width,source.height);
+      for (let sy=top;sy<base;sy++) for(let sx=left;sx<end;sx++) {
+        const i=((sy-top)*source.width+sx-left)*4,value=mask[sy*width+sx]?0:255;
+        pixels.data[i]=pixels.data[i+1]=pixels.data[i+2]=value;pixels.data[i+3]=255;
+      }
+      source.getContext('2d').putImageData(pixels,0,0);
+      context.drawImage(source,padding,padding,canvas.width-padding*2,120);
+      return canvas;
     }
-    source.getContext('2d').putImageData(pixels,0,0);
-    context.drawImage(source,padding,padding,canvas.width-padding*2,120);
-    return {canvas,color,possibleJoker};
+    const tallest=Math.max(...parts.map(p=>p.height)), digitBoxes=[];
+    for (const part of parts.filter(p=>p.height>=tallest*.6).sort((a,b)=>a.x-b.x)) {
+      const previous=digitBoxes[digitBoxes.length-1];
+      if (previous && part.x<=previous.right+1) previous.right=Math.max(previous.right,part.x+part.width);
+      else digitBoxes.push({left:part.x,right:part.x+part.width});
+    }
+    // Two tall, separated glyphs are evidence against a one-digit OCR result.
+    // Touching glyphs are left unconstrained, rather than inventing a split.
+    const digitCount=digitBoxes.length===2?2:
+      (digitBoxes.length===1 && (right-x)/(bottom-y)<.85?1:0);
+    return {canvas:crop(x,y,right,bottom),color,possibleJoker,digitCount,
+      digits:digitCount===2?digitBoxes.map(p=>crop(p.left,y,p.right,bottom)):[]};
+  }
+
+  function recognize(module,api,canvas,modes) {
+    const encoded=canvas.toDataURL('image/png').split(',')[1];
+    module.FS.writeFile('/input',Uint8Array.from(atob(encoded),c=>c.charCodeAt(0)));
+    try {
+      if(api.SetImageFile(1,0)!==0)throw new Error('The number crop could not be decoded.');
+      return modes.map(mode=>{
+        api.SetVariable('tessedit_pageseg_mode',mode);api.Recognize(null);
+        return {mode,text:api.GetUTF8Text().trim(),confidence:api.MeanTextConf()/100};
+      });
+    } finally {module.FS.unlink('/input');}
+  }
+
+  function selectNumber(readings,digitCount,character=false) {
+    const pattern=character?/^[0-9]$/:/^(?:[1-9]|1[0-3])$/;
+    const valid=readings.filter(r=>pattern.test(r.text) && r.confidence>=.3 &&
+      (!digitCount || r.text.length===digitCount));
+    const counts=new Map();
+    for(const r of valid)counts.set(r.text,(counts.get(r.text)||0)+1);
+    const ranked=[...counts].sort((a,b)=>b[1]-a[1]);
+    if(!ranked.length || (ranked.length>1 && ranked[0][1]===ranked[1][1]))return null;
+    const number=ranked[0][0];
+    return {text:number,confidence:Math.max(...valid.filter(r=>r.text===number).map(r=>r.confidence))};
   }
 
   function ready() {
@@ -159,31 +210,33 @@
     for (let i = 0; i < boxes.length; i++) {
       if (cancelled()) throw new Error('Photo reading was replaced.');
       const box=boxes[i], ink=glyph(pixels,box);
-      let text='', confidence=0, candidates=[];
+      let text='', candidates=[], ocrReadings=[], digitReadings=[], digitCount=ink?.digitCount||0;
       if (!ink) {text='Unreadable tile face';}
       else if (ink.possibleJoker) {text='Possible joker face';candidates=[{tile:{joker:true},confidence:.5}];}
       else {
-        const encoded=ink.canvas.toDataURL('image/png').split(',')[1];
-        module.FS.writeFile('/input',Uint8Array.from(atob(encoded),c=>c.charCodeAt(0)));
-        if (api.SetImageFile(1,0)!==0) throw new Error('The number crop could not be decoded.');
-        api.SetVariable('tessedit_pageseg_mode','7');
-        api.Recognize(null);text=api.GetUTF8Text().trim();confidence=api.MeanTextConf()/100;
-        if (!/^(?:[1-9]|1[0-3])$/.test(text) || confidence<.45) {
-          api.SetVariable('tessedit_pageseg_mode','13');
-          api.Recognize(null);
-          const alternate=api.GetUTF8Text().trim(), score=api.MeanTextConf()/100;
-          if (/^(?:[1-9]|1[0-3])$/.test(alternate) && (score>confidence || !text)) {text=alternate;confidence=score;}
+        ocrReadings=recognize(module,api,ink.canvas,['7','13']);
+        let chosen=selectNumber(ocrReadings,digitCount);
+        if (!chosen && digitCount===2) {
+          digitReadings=ink.digits.map(canvas=>recognize(module,api,canvas,['10','13']));
+          const digits=digitReadings.map(readings=>selectNumber(readings,1,true));
+          if(digits.every(Boolean))chosen=selectNumber([{text:digits.map(d=>d.text).join(''),
+            confidence:Math.min(...digits.map(d=>d.confidence))}],2);
+        } else if (!chosen) {
+          ocrReadings.push(...recognize(module,api,ink.canvas,['8']));
+          chosen=selectNumber(ocrReadings,digitCount);
         }
-        module.FS.unlink('/input');
-        if (/^(?:[1-9]|1[0-3])$/.test(text) && confidence>=.3 && ink.color) {
-          candidates=[{tile:{color:ink.color,number:Number(text)},confidence}];
+        text=[...new Set(ocrReadings.map(r=>r.text).filter(Boolean))].join(' / ');
+        if(chosen && ink.color) {
+          candidates=[{tile:{color:ink.color,number:Number(chosen.text)},confidence:chosen.confidence}];
+        } else if(text) {
+          text='Uncertain or partial OCR: '+text;
         }
       }
       observations.push({rect:{x:box.x/canvas.width,y:box.y/canvas.height,width:box.width/canvas.width,height:box.height/canvas.height},
-        text:text||'Uncertain number or color',candidates,suggestedMeld:box.suggestedMeld,suggestedOrder:box.suggestedOrder});
+        text:text||'Uncertain number or color',candidates,ocrReadings,digitReadings,digitCount,suggestedMeld:box.suggestedMeld,suggestedOrder:box.suggestedOrder});
       progress(`Reading tiles on this device… ${i+1} of ${boxes.length}`);await pause();
     }
-    return {observations,recognizer:{name:'local-ivory-tiles-tesseract',pipelineRevision:1,coreVersion:'6.1.2',
+    return {observations,recognizer:{name:'local-ivory-tiles-tesseract',pipelineRevision:2,coreVersion:'6.1.2',
       modelRevision:'87416418657359cb625c412a48b6e1d6d41c29bd',maxDimension:MAX_DIMENSION},
       notice:`Proposed ${observations.length} tiles locally. Check every value, color, joker, missing tile and meld boundary. Scores are uncalibrated; confirm each tile before continuing.`};
   }

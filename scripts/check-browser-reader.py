@@ -9,13 +9,16 @@ import argparse
 import base64
 import io
 import json
+import hashlib
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 from playwright.sync_api import sync_playwright
 
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('--image', type=Path)
+input_group=parser.add_mutually_exclusive_group()
+input_group.add_argument('--image', type=Path)
+input_group.add_argument('--report', type=Path, help='Rerun raw local photos from an explicitly saved phone reading report')
 parser.add_argument('--zone', choices=['table', 'rack'], default='rack')
 parser.add_argument('--output', type=Path)
 parser.add_argument('--preview-directory', type=Path, help='Check the exact generated Pages package instead of source assets')
@@ -73,13 +76,25 @@ with sync_playwright() as p:
         page.add_script_tag(url='https://rummy.test/recognition/reader-core.js')
         page.add_script_tag(url='https://rummy.test/recognition/reader-data.js')
     read = '''async url => { const image=new Image();image.src=url;await image.decode();return RummyReader.read(image); }'''
-    if args.image:
-        import hashlib
-        data = args.image.read_bytes()
-        uri = 'data:image/'+('png' if args.image.suffix.lower() == '.png' else 'jpeg')+';base64,'+base64.b64encode(data).decode()
-        result = page.evaluate(read, uri)
-        report = {args.image.stem: {'source': hashlib.sha256(data).hexdigest(), 'zone': args.zone, **result}}
-        output = json.dumps(report, indent=2)
+    if args.image or args.report:
+        if args.image:
+            data=args.image.read_bytes()
+            uri='data:image/'+('png' if args.image.suffix.lower()=='.png' else 'jpeg')+';base64,'+base64.b64encode(data).decode()
+            samples={args.image.stem:{'source':hashlib.sha256(data).hexdigest(),'zone':args.zone,'image':uri}}
+        else:
+            report=json.loads(args.report.read_text())
+            assert report['version']==1 and report['kind']=='rummy-photo-reading-report', 'Unknown report format'
+            samples=report['photos']
+        predictions={}
+        for ident,sample in samples.items():
+            assert sample['zone'] in ['table','rack']
+            uri=sample['image']
+            assert uri.startswith('data:image/') and ';base64,' in uri, 'Report must contain local image bytes'
+            data=base64.b64decode(uri.split(';base64,',1)[1],validate=True)
+            assert hashlib.sha256(data).hexdigest()==sample['source'], 'Photo checksum mismatch'
+            result=page.evaluate(read,uri)
+            predictions[ident]={'source':sample['source'],'zone':sample['zone'],**result}
+        output = json.dumps(predictions, indent=2)
         if args.output:
             args.output.write_text(output+'\n')
         else:
@@ -92,12 +107,21 @@ with sync_playwright() as p:
             actual = [o['candidates'][0]['tile'] if o['candidates'] else None for o in result['observations']]
             expected = [{'number': n, 'color': c} for n, c in values]
             assert actual == expected, {'touching': touching, 'expected': expected, 'actual': actual, 'raw': result['observations']}
+        # Spatial suppression must preserve separate physical copies, even when
+        # their values/colors match and their faces touch.
+        data = payload(fixture([(11, 'red'), (11, 'red'), (10, 'black')], touching=True))['buffer']
+        result = page.evaluate(read, 'data:image/png;base64,'+base64.b64encode(data).decode())
+        assert [o['candidates'][0]['tile'] for o in result['observations']] == [
+            {'number': 11, 'color': 'red'}, {'number': 11, 'color': 'red'}, {'number': 10, 'color': 'black'}], result
         # Actual browser import invokes the reader. No injected observations.
         page.locator('#edition').select_option('4')
         page.locator('#table-file').set_input_files(payload(Image.new('RGB', (300, 160), '#f8efdb')))
         page.get_by_role('button', name='Confirm complete table reading', exact=True).click()
-        page.locator('#rack-file').set_input_files(payload(fixture([(10, 'red'), (10, 'blue'), (10, 'black')])))
-        page.locator('#rack-photo .tile-editor').nth(2).wait_for()
+        rack_file = payload(fixture([(10, 'red'), (10, 'blue'), (10, 'black')]))
+        for _ in range(2):
+            page.locator('#rack-file').set_input_files(rack_file)
+            page.locator('#rack-photo .tile-editor').nth(2).wait_for()
+            assert page.locator('#rack-photo .tile-editor').count() == 3, 'Reimporting the same photo appended duplicate readings'
         page.get_by_role('button', name='Find move', exact=True).click()
         assert 'confirmation' in page.locator('#status').inner_text()
         for _ in range(3):
@@ -106,12 +130,41 @@ with sync_playwright() as p:
         page.get_by_role('button', name='Find move', exact=True).click()
         page.wait_for_function("() => document.querySelector('#status').textContent.includes('3 rack tiles')")
         assert page.locator('#result [data-played="true"]').count() == 3
+        # Fault-injection regression, NOT an OCR accuracy measurement: a single
+        # page-segmentation mode reports a confident partial "1" for visible "12".
+        # Other modes still run the actual engine. Image geometry must prevent
+        # the partial reading from silently winning because of its score.
+        data = payload(fixture([(12, 'orange')]))['buffer']
+        result = page.evaluate('''async url => {
+          const {api}=await RummyReader.ready();
+          const set=api.SetVariable.bind(api),text=api.GetUTF8Text.bind(api),score=api.MeanTextConf.bind(api);
+          let mode='';
+          api.SetVariable=(name,value)=>{if(name==='tessedit_pageseg_mode')mode=value;return set(name,value)};
+          api.GetUTF8Text=()=>mode==='7'?'1\\n':text();
+          api.MeanTextConf=()=>mode==='7'?90:score();
+          try {const image=new Image();image.src=url;await image.decode();return await RummyReader.read(image);}
+          finally {api.SetVariable=set;api.GetUTF8Text=text;api.MeanTextConf=score;}
+        }''', 'data:image/png;base64,'+base64.b64encode(data).decode())
+        assert result['observations'][0]['candidates'][0]['tile']['number'] == 12, ('A high-scoring partial digit cannot override two visible digits', result)
         # Figure-like joker art must stay an unconfirmed proposal.
         data = payload(fixture([(8, 'black'), (10, 'black')], joker=True))['buffer']
         result = page.evaluate(read, 'data:image/png;base64,'+base64.b64encode(data).decode())
+        assert len(result['observations']) == 3, ('A light region inside a joker face must not become a second tile', result)
         assert any(o['candidates'] and o['candidates'][0]['tile'].get('joker') for o in result['observations']), result
         assert not page.evaluate('sessions.rack.observations.some(o => !o.correction)'), 'Unexpected state mutation from a separate read'
-        print('Bundled OCR: all 13 numbers/colors in separated and touching synthetic strips, teal ink, possible-joker uncertainty, actual file import, confirmation gate, and real-engine opening passed.')
+        page.locator('#reading-help summary').click()
+        with page.expect_download() as download:
+            page.get_by_role('button', name='Save reading report', exact=True).click()
+        saved=json.loads(Path(download.value.path()).read_text())
+        assert saved['kind']=='rummy-photo-reading-report' and saved['version']==1
+        assert set(saved['photos'])=={'table','rack'}
+        for zone,sample in saved['photos'].items():
+            raw=base64.b64decode(sample['image'].split(',',1)[1])
+            assert hashlib.sha256(raw).hexdigest()==sample['source']
+            assert sample['zone']==zone and 'recognizer' in sample
+            assert all('correction' not in observation for observation in sample['observations'])
+        assert len(saved['photos']['rack']['observations'])==3
+        print('Bundled OCR: all 13 synthetic numbers/colors, touching and identical tiles, nested-joker suppression, high-score truncation fault injection, repeated file import, confirmation, and real-engine opening passed.')
     assert not errors, errors
     assert not console_errors, console_errors
     assert set(requested) <= {'index.html','style.css','engine/wasm_exec.js','engine/wasm_data.js','engine.js','photo-state.js','browser-reader.js','app.js','recognition/reader-core.js','recognition/reader-data.js'}, requested

@@ -1,5 +1,34 @@
 # Implementation status
 
+## Duplicate/partial reading regressions (2026-10-19, owner local date)
+
+- The owner reported two screenshot-confirmed defects with the same example
+  photos: a joker produced a second interior-face detection, and orange 12 was
+  proposed as 1 with score 90. The screenshot/original image bytes remain
+  unavailable to this runner, so exact real-photo reproduction is not claimed.
+- Reproduced the duplicate mechanism before the fix on a face-like synthetic
+  fixture: three physical tiles produced four proposals. Added a separate
+  fault-injection regression for a visible two-digit image with one OCR mode
+  returning partial 1 at score 90; the old selector accepted it. Other OCR modes
+  in that test still use the real bundled engine. This is selection-guard
+  verification, not a recognition accuracy measurement.
+- Reader revision 2 removes spatially contained tile-interior boxes before meld
+  grouping, keeps adjacent identical tile copies, widens the ink crop, compares
+  multiple OCR modes against tall glyph-component count, and uses per-digit OCR
+  or uncertainty for conflicts. No table legality is used to guess a reading.
+  Both regressions now pass, along with all 13 actual synthetic OCR values,
+  touching/identical tiles, repeated imports, confirmation and real-engine solve.
+- Added an explicit local **Photo reading wrong? → Save reading report** export
+  for the original selected photos, raw proposals and build/browser metadata.
+  No corrections are presented as model output. The user chooses whether to
+  share the downloaded JSON; there is no upload, network call or automatic
+  persistence. Local `--report` replay verifies photo hashes and reruns the
+  actual reader. Download contents/hashes are checked by the browser integration.
+- Full source/package verification and deployment details are recorded below
+  after publishing. Printables model artwork remains an independent pending
+  milestone, blocked by the unchanged enforced network policy (the saved domain
+  additions are not active). Native build/device acceptance is still unrun.
+
 ## Browser reading follow-up (2026-10-19, owner local date)
 
 - Owner reported that Safari did not read their tiles and supplied two inline

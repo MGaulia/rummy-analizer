@@ -36,6 +36,7 @@ for name in assets:
     shutil.copyfile(source / name, target)
 index = destination / 'index.html'
 page = index.read_text()
+page = page.replace('<title>', '<meta name="rummy-preview-source" content="' + commit + '">\n<title>', 1)
 notice = '''<section class="preview-note" aria-label="Safari preview instructions">
 <div><h2>Safari test preview</h2><p>Local tile-reading suggestions. Check and confirm every tile.</p></div>
 <details><summary>How to play</summary>

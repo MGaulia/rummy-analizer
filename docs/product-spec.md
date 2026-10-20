@@ -51,8 +51,10 @@ automatic browser tile reading. The browser-reader branch depends on #12 and
 bundles local Tesseract OCR, tile/ink segmentation, color proposals and suggested
 meld rows. Model/runtime downloads happen at build time; CSP still prohibits
 runtime connections, uploads and remote inference. All proposals require explicit
-confirmation. The preview does not persist photos/readings or support offline
-reopening. Synthetic actual-OCR checks do not establish real-photo accuracy,
+confirmation. The preview does not automatically persist photos/readings or
+support offline reopening. An explicit local reading-report download includes
+selected originals, raw proposals and build/browser information for reproducible
+debugging; it never uploads or shares the report automatically. Synthetic actual-OCR checks do not establish real-photo accuracy,
 native acceptance, or measured iPhone memory/latency. The owner's two inline
 examples are visually transcribed but unavailable as original files to the runner.
 

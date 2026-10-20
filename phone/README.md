@@ -102,6 +102,15 @@ tiles, unusual fonts/backgrounds and joker designs can cause missed/wrong values
 Use a clear, upright, close photo and review completeness. Failures retain manual
 entry. The unbundled source page also falls back to manual entry.
 
+Reader revision 2 suppresses spatially nested regions inside a detected tile
+(such as the ivory area enclosed by a joker face). Separate physical tiles with
+identical values stay separate. It checks full-number OCR in multiple modes and
+compares it with visible tall digit components; a partial one-digit result cannot
+override a clearly two-digit image because of its score. Conflicts can use local
+per-digit OCR; unresolved conflicts remain blank for manual correction. Crops
+cover a wider ink area while excluding the lower embossed logo. This improves
+specific regression cases, not a measured general accuracy guarantee.
+
 After building reader assets, run `python3 scripts/check-browser-reader.py`.
 This executes the real bundled OCR on **synthetic** images of all 13 numbers,
 colors, touching strips and a face-like joker, and then imports images through
@@ -119,6 +128,25 @@ python3 scripts/check-browser-reader.py --image /external/table.jpg --zone table
 
 Use an independently annotated manifest with `scripts/evaluate-photos.py` for
 accuracy metrics. Store originals, labels and proposal exports outside Git.
+
+If a photo still produces duplicates or wrong readings in Safari, expand
+**Photo reading wrong?** at the bottom and choose **Save reading report**. The
+download contains the selected original photos, raw proposals, model/build
+revision and browser details; corrections are not mislabeled as recognition.
+Nothing is uploaded. The user can choose whether to share that JSON file for
+debugging. This explicit export is the only added persistence; reloading still
+clears the active session. It is a browser feature, hidden in the native adapter.
+Rerun the actual images from a report locally:
+
+```sh
+python3 scripts/check-browser-reader.py --report /external/rummy-reading-report.json --output /external/rechecked.json
+```
+
+The checker verifies embedded photo hashes and never follows remote image URLs.
+The truncation regression deliberately injects a high-scoring partial output in
+one OCR mode while other modes still run the real engine; this fault injection
+tests the selection guard and is separate from actual-OCR fixture checks. Neither
+that test nor the synthetic images establish accuracy on the owner's photos.
 
 ## Build the iOS integration
 
