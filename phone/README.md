@@ -116,9 +116,11 @@ This executes the real bundled OCR on **synthetic** images of all 13 numbers,
 colors, touching strips and a face-like joker, and then imports images through
 the actual file picker, confirms readings and solves a legal opening. It checks
 that only bundled GET assets were requested and that CSP produced no errors.
-This is not real-photo accuracy or iPhone evidence. The two owner photos are
-visible in chat but their original bytes are not mounted in this workspace, so
-their end-to-end readings have not been evaluated here.
+These generated fixtures are not real-photo accuracy or iPhone evidence. A
+subsequent owner-shared reading report supplied the two original photos for local
+replay: reader revision 3 proposes all 14 manually labeled tiles correctly,
+including the rack's red 11, with exact counts and suggested table melds. This
+two-photo regression is not representative recognition evaluation or a phone run.
 
 To export proposals for an accessible original photo without uploads:
 
@@ -143,10 +145,14 @@ python3 scripts/check-browser-reader.py --report /external/rummy-reading-report.
 ```
 
 The checker verifies embedded photo hashes and never follows remote image URLs.
+Add `--expectations /external/expected.json` to assert an exact private regression.
+The JSON maps each photo key to `source` (SHA256), `zone`, and an ordered `tiles`
+array containing `tile`, `meld` and `order` per occurrence. Label these from the
+photos independently of proposals; keep the report and labels outside Git.
 The truncation regression deliberately injects a high-scoring partial output in
 one OCR mode while other modes still run the real engine; this fault injection
 tests the selection guard and is separate from actual-OCR fixture checks. Neither
-that test nor the synthetic images establish accuracy on the owner's photos.
+that test nor the synthetic images establish general photo accuracy.
 
 ## Build the iOS integration
 

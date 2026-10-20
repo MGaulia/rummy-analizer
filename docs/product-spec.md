@@ -55,8 +55,13 @@ confirmation. The preview does not automatically persist photos/readings or
 support offline reopening. An explicit local reading-report download includes
 selected originals, raw proposals and build/browser information for reproducible
 debugging; it never uploads or shares the report automatically. Synthetic actual-OCR checks do not establish real-photo accuracy,
-native acceptance, or measured iPhone memory/latency. The owner's two inline
-examples are visually transcribed but unavailable as original files to the runner.
+native acceptance, or measured iPhone memory/latency. The owner subsequently
+shared a reading report containing the two original examples. Reader revision 3
+passes exact local replay of their 14 manually labeled tiles, counts and suggested
+melds. This bounded real-photo regression is desktop evidence, not representative
+dataset evaluation or physical-iPhone acceptance. Dominant ink filtering prevents
+cross-color background slivers from contaminating number crops; same-color
+artifacts and other capture conditions remain unmeasured.
 
 The owner requested a Rummikub-style interface: green felt, ivory numbered
 tiles with red/blue/black/orange accents, and wooden rack details. Decorative
@@ -66,9 +71,8 @@ explicit reading confirmation, search coverage messages, and edition/opening
 state remain part of the interface contract.
 The owner additionally requested actual tile artwork for the confirmed table and
 identified <https://www.printables.com/model/130082-multicolor-rummikub-tiles> as
-the desired source. That host is blocked by the current environment network
-policy; page/file/API hosts were saved in the draft and require publication.
-Inspect the model files and license, then render a local tile atlas when those
-assets are accessible. Existing exact diagrams remain in place meanwhile. Do not
+the desired source. Published network access now permits downloading the actual
+model files and inspecting their CC BY-SA 4.0 license. Local atlas rendering is
+in progress; the exact diagrams remain in place until integration is verified. Do not
 claim CSS boxes or generated replacement art are the requested model assets, and
 do not substitute the user's photos for them.

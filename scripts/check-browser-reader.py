@@ -21,8 +21,11 @@ input_group.add_argument('--image', type=Path)
 input_group.add_argument('--report', type=Path, help='Rerun raw local photos from an explicitly saved phone reading report')
 parser.add_argument('--zone', choices=['table', 'rack'], default='rack')
 parser.add_argument('--output', type=Path)
+parser.add_argument('--expectations', type=Path, help='External, manually labeled exact photo regression (source hash, zone and ordered tiles/melds)')
 parser.add_argument('--preview-directory', type=Path, help='Check the exact generated Pages package instead of source assets')
 args = parser.parse_args()
+if args.expectations and not (args.image or args.report):
+    parser.error('--expectations requires --image or --report')
 root = args.preview_directory.resolve() if args.preview_directory else Path(__file__).resolve().parents[1] / 'phone/web'
 font_path = '/usr/share/fonts/truetype/open-sans/OpenSans-ExtraBold.ttf'
 font = ImageFont.truetype(font_path, 70)
@@ -99,6 +102,16 @@ with sync_playwright() as p:
             args.output.write_text(output+'\n')
         else:
             print(output)
+        if args.expectations:
+            expected=json.loads(args.expectations.read_text())
+            assert set(predictions)==set(expected), 'Regression photo set changed'
+            for ident,result in predictions.items():
+                truth=expected[ident]
+                assert result['source']==truth['source'] and result['zone']==truth['zone'], ('Regression source mismatch',ident)
+                actual=[{'tile':o['candidates'][0]['tile'] if o['candidates'] else None,
+                         'meld':o['suggestedMeld'],'order':o['suggestedOrder']} for o in result['observations']]
+                assert actual==truth['tiles'], ('Exact photo regression failed',ident,{'expected':truth['tiles'],'actual':actual})
+            print('Exact external photo regression passed: '+str(len(predictions))+' photos, '+str(sum(len(t['tiles']) for t in expected.values()))+' ordered tiles/melds; source hashes matched.')
     else:
         values = [(n, ['red', 'black', 'blue', 'orange'][(n-1) % 4]) for n in range(1, 14)]
         for touching in [False, True]:
@@ -113,6 +126,16 @@ with sync_playwright() as p:
         result = page.evaluate(read, 'data:image/png;base64,'+base64.b64encode(data).decode())
         assert [o['candidates'][0]['tile'] for o in result['observations']] == [
             {'number': 11, 'color': 'red'}, {'number': 11, 'color': 'red'}, {'number': 10, 'color': 'black'}], result
+        # A tilted tile can let a narrow, dark background streak into the face
+        # crop. Reproduce the cross-color contamination seen in a private photo;
+        # this generated image is a mechanism regression, not that real photo.
+        image = fixture([(11, 'red')])
+        ImageDraw.Draw(image).polygon([(68, 130), (71, 130), (68, 245)], fill='#080808')
+        data = payload(image)['buffer']
+        result = page.evaluate(read, 'data:image/png;base64,'+base64.b64encode(data).decode())
+        assert len(result['observations']) == 1, result
+        assert [c['tile'] for c in result['observations'][0]['candidates']] == [
+            {'number': 11, 'color': 'red'}], ('A dark background streak must not obscure red 11', result)
         # Actual browser import invokes the reader. No injected observations.
         page.locator('#edition').select_option('4')
         page.locator('#table-file').set_input_files(payload(Image.new('RGB', (300, 160), '#f8efdb')))
@@ -164,9 +187,9 @@ with sync_playwright() as p:
             assert sample['zone']==zone and 'recognizer' in sample
             assert all('correction' not in observation for observation in sample['observations'])
         assert len(saved['photos']['rack']['observations'])==3
-        print('Bundled OCR: all 13 synthetic numbers/colors, touching and identical tiles, nested-joker suppression, high-score truncation fault injection, repeated file import, confirmation, and real-engine opening passed.')
+        print('Bundled OCR: all 13 synthetic numbers/colors, touching and identical tiles, cross-color background rejection, nested-joker suppression, high-score truncation fault injection, repeated file import, confirmation, and real-engine opening passed.')
     assert not errors, errors
     assert not console_errors, console_errors
     assert set(requested) <= {'index.html','style.css','engine/wasm_exec.js','engine/wasm_data.js','engine.js','photo-state.js','browser-reader.js','app.js','recognition/reader-core.js','recognition/reader-data.js'}, requested
     browser.close()
-print('All requests were bundled GET assets; no photo upload, external model fetch, remote solver, or CSP violation. Not a real-photo or physical-iPhone accuracy claim.')
+print('All requests were bundled GET assets; no photo upload, external model fetch, remote solver, or CSP violation. Desktop execution; no general accuracy or physical-iPhone acceptance claim.')

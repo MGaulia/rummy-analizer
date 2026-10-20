@@ -111,15 +111,20 @@
     const x0 = Math.round(box.x+box.width*.08), y0 = Math.round(box.y+box.height*.07);
     const width = Math.max(1,Math.round(box.width*.84)), height = Math.max(1,Math.round(box.height*.58));
     const mask = new Uint8Array(width*height), counts = {black:0,blue:0,orange:0,red:0};
+    const labels = {black:1,blue:2,orange:3,red:4};
     for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
       const i = ((y+y0)*image.width+x+x0)*4;
       const color = colorOf(image.data[i],image.data[i+1],image.data[i+2]);
-      if (color) {mask[y*width+x] = 1; counts[color]++;}
+      if (color) {mask[y*width+x] = labels[color]; counts[color]++;}
     }
-    const parts = components(mask,width,height,Math.max(3,width*height*.001));
-    if (!parts.length) return null;
     const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]);
     const color = sorted[0][1] >= 12 && sorted[0][1] > sorted[1][1]*1.4 ? sorted[0][0] : null;
+    // A tilted tile's bounding box can include dark background slivers. Once
+    // one ink color dominates, use that same ink for OCR and digit geometry;
+    // another color must not turn a red "11" into three apparent strokes.
+    for (let i = 0; i < mask.length; i++) mask[i] = color ? Number(mask[i]===labels[color]) : Number(mask[i]!==0);
+    const parts = components(mask,width,height,Math.max(3,width*height*.001));
+    if (!parts.length) return null;
     const largest = [...parts].sort((a,b) => b.area-a.area)[0];
     const aspect = largest.width/largest.height;
     const inside = parts.filter(p => p!==largest && p.x>=largest.x && p.y>=largest.y &&
@@ -236,7 +241,7 @@
         text:text||'Uncertain number or color',candidates,ocrReadings,digitReadings,digitCount,suggestedMeld:box.suggestedMeld,suggestedOrder:box.suggestedOrder});
       progress(`Reading tiles on this device… ${i+1} of ${boxes.length}`);await pause();
     }
-    return {observations,recognizer:{name:'local-ivory-tiles-tesseract',pipelineRevision:2,coreVersion:'6.1.2',
+    return {observations,recognizer:{name:'local-ivory-tiles-tesseract',pipelineRevision:3,coreVersion:'6.1.2',
       modelRevision:'87416418657359cb625c412a48b6e1d6d41c29bd',maxDimension:MAX_DIMENSION},
       notice:`Proposed ${observations.length} tiles locally. Check every value, color, joker, missing tile and meld boundary. Scores are uncalibrated; confirm each tile before continuing.`};
   }

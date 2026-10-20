@@ -1,5 +1,34 @@
 # Implementation status
 
+## Red 11 original-photo regression (2026-10-20 UTC)
+
+- Owner supplied `rummy-reading-report.json` from preview source
+  `744f670966950d5373d1f462a7d36a1a8182af31`. Original images, manual ordered
+  labels and replay artifacts stay outside Git under `/workspace/rummy-review/red11`.
+  The report's browser is desktop Chrome, not an iPhone acceptance run.
+- Replayed the actual photo bytes against revision 2: all nine table tiles and
+  four rack tiles matched; rack red 11 had no proposal. Detection counts were
+  correct (nine table/five rack), including one joker and three table melds.
+  A tilted red tile includes a tall black wood sliver in its rectangular crop.
+  The old mask mixed every ink color, so this streak corrupted OCR and digit
+  counting even though the dominant-color proposal was already red.
+- Reader revision 3 uses the clearly dominant ink color for the OCR mask and
+  component geometry. Ambiguous color remains unresolved. No legality-based
+  guessing, value-based deduplication, or lower confidence threshold was added.
+- Added an actual-OCR synthetic streak regression, observed failing before the
+  fix; existing synthetic numbers/colors, identical touching copies, nested-joker,
+  truncation guard, repeat import, confirmation and real-engine solve checks pass.
+  Added `--expectations` for private hash-bound ordered tile/meld regression.
+  The real report assertion fails against the previous published package and
+  passes against revision 3: all 14 tiles, counts and suggested meld/orders match
+  independent visual labels. These two photos are not a representative dataset.
+- Verification and publication checkpoint follows after the clean source build.
+  #13 remains based on unmerged #12; merge order stays #12 then #13.
+  Native builds/device acceptance remain blocked by no Mac build machine.
+- Independent artwork milestone resumed after network publication: downloaded
+  the requested Printables model and verified its author-provided CC BY-SA 4.0
+  license. Mesh-based atlas proof rendering is running outside the repository.
+
 ## Duplicate/partial reading regressions (2026-10-19, owner local date)
 
 - The owner reported two screenshot-confirmed defects with the same example
