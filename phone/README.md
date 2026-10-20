@@ -35,11 +35,12 @@ OCR reader; its separate actual-pixel checks are documented below.
 
 Open the [Safari preview](https://mgaulia.github.io/rummy-analizer/) on any network.
 GitHub's Pages API confirms a successful build of `gh-pages` commit
-`eb2e7e041e64ab18df5ec187a22dcff67cd1a298`, with HTTPS enforced. The initial
+`75c5e96f0190da8d49e58d5dd8752d98ed02f831`, with HTTPS enforced. The initial
 activation request from this session was denied, but Pages was subsequently
 enabled. The workspace's direct public-URL request is still blocked by its
 pending network configuration; live HTTP and physical Safari execution have not
-been verified here. No source merge was needed; #12 remains an unmerged draft.
+been verified here. No source merge was needed; #12 and its reader follow-up
+#13 remain unmerged drafts. Merge #12 before #13.
 The current preview uses a green felt table, ivory numbered tiles, a wooden
 rack, and the four tile colors. Assets include a source-version query parameter
 to refresh the styling after publication. The design adapts to phone and desktop
@@ -54,6 +55,7 @@ committed checkout with the same Go/Python prerequisites as above:
 bash scripts/build-safari-preview.sh /tmp/rummy-safari-preview
 python3 scripts/check-safari-preview.py /tmp/rummy-safari-preview
 python3 scripts/check-browser-reader.py
+python3 scripts/check-browser-reader.py --preview-directory /tmp/rummy-safari-preview
 ```
 
 Use an empty output directory. Publish only its contents to the `gh-pages`

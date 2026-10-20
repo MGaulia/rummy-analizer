@@ -18,8 +18,9 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--image', type=Path)
 parser.add_argument('--zone', choices=['table', 'rack'], default='rack')
 parser.add_argument('--output', type=Path)
+parser.add_argument('--preview-directory', type=Path, help='Check the exact generated Pages package instead of source assets')
 args = parser.parse_args()
-root = Path(__file__).resolve().parents[1] / 'phone/web'
+root = args.preview_directory.resolve() if args.preview_directory else Path(__file__).resolve().parents[1] / 'phone/web'
 font_path = '/usr/share/fonts/truetype/open-sans/OpenSans-ExtraBold.ttf'
 font = ImageFont.truetype(font_path, 70)
 colors = {'red': '#e00b20', 'black': '#080808', 'blue': '#078b92', 'orange': '#ff6310'}
@@ -68,8 +69,9 @@ with sync_playwright() as p:
     page.on('pageerror', lambda error: errors.append(str(error)))
     page.on('console', lambda message: console_errors.append(message.text) if message.type == 'error' else None)
     page.goto('https://rummy.test/')
-    page.add_script_tag(url='https://rummy.test/recognition/reader-core.js')
-    page.add_script_tag(url='https://rummy.test/recognition/reader-data.js')
+    if not page.evaluate('Boolean(globalThis.TesseractCore && globalThis.RUMMY_READER_MODEL)'):
+        page.add_script_tag(url='https://rummy.test/recognition/reader-core.js')
+        page.add_script_tag(url='https://rummy.test/recognition/reader-data.js')
     read = '''async url => { const image=new Image();image.src=url;await image.decode();return RummyReader.read(image); }'''
     if args.image:
         import hashlib

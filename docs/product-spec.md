@@ -62,8 +62,11 @@ tiles are separate from the confirmed table/rack rendering. Phone layouts stack
 the two photo panels; wider layouts show them side by side. Local processing,
 explicit reading confirmation, search coverage messages, and edition/opening
 state remain part of the interface contract.
-The owner additionally requested actual official tile artwork for the confirmed
-table. Inspection found official product photographs and joker icons, but not a
-complete individual tile-face atlas. The requested source page/asset is pending;
-existing exact diagrams remain in place. Do not claim CSS boxes or generated art
-are the requested official tiles, and do not substitute user photos for that art.
+The owner additionally requested actual tile artwork for the confirmed table and
+identified <https://www.printables.com/model/130082-multicolor-rummikub-tiles> as
+the desired source. That host is blocked by the current environment network
+policy; page/file/API hosts were saved in the draft and require publication.
+Inspect the model files and license, then render a local tile atlas when those
+assets are accessible. Existing exact diagrams remain in place meanwhile. Do not
+claim CSS boxes or generated replacement art are the requested model assets, and
+do not substitute the user's photos for them.

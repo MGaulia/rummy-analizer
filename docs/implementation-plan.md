@@ -31,7 +31,50 @@
   asynchronous question; original tile-art substitution remains pending that
   asset/source. Do not silently replace it with generated/CSS tiles. Continue
   browser reading and publication independently.
-- Final commit/tree, full checks and deployment record follow after publication.
+- Owner supplied the desired source:
+  <https://www.printables.com/model/130082-multicolor-rummikub-tiles>. This
+  supersedes the request for an unspecified official tile-art page. The actual
+  request returned proxy CONNECT HTTP 403. Saved page/file/API domains
+  `printables.com`, `www.printables.com`, `media.printables.com`,
+  `files.printables.com`, `api.printables.com` alongside the existing three
+  allowed hosts. The draft save was confirmed; it requires user save/publication.
+  No token or existing binding was replaced. Blender and OpenSCAD are installed,
+  so local model inspection/rendering can proceed once model assets/license are
+  accessible. Do not invent a license or describe the current SVG as real art.
+- [Draft #13](https://github.com/MGaulia/rummy-analizer/pull/13) is the focused
+  reader change, based on `codex/iphone-photo-correction` (#12). Merge order is
+  #12 then #13; both stay unmerged. Exact tested/published source:
+  `d4aa14e9d1fa2ca8b3bca291423ba7c293f6a82a`; source tree
+  `6c86700bcd265070cd145f7788d960a84f2551d3`. Go 1.27.2 linux/amd64,
+  Node v24.19.0, Python 3.12.14, desktop Chromium 154.0.8037.57. With the existing
+  Go PATH/cache activation, all of these commands passed:
+
+  ```sh
+  bash scripts/check.sh
+  bash scripts/build-safari-preview.sh /workspace/rummy-review/safari-preview-local-reader
+  node scripts/check-phone-engine.cjs
+  node scripts/check-photo-state.cjs
+  python3 scripts/check-phone-ui.py
+  python3 scripts/check-safari-preview.py /workspace/rummy-review/safari-preview-local-reader
+  python3 scripts/check-browser-reader.py
+  python3 scripts/check-browser-reader.py --preview-directory /workspace/rummy-review/safari-preview-local-reader
+  ```
+
+- The final command also checks the actual published package, including its
+  script-loaded OCR/runtime/model bytes, with no mocked recognizer. Its generated
+  images remain explicitly synthetic. Original photo bytes, real-photo accuracy,
+  physical-iPhone execution, memory and latency remain unverified. Recognition
+  proposals never count as confirmed physical tile identities without review.
+- All 14 remote static files exactly match the checked package. Pages commit
+  `75c5e96f0190da8d49e58d5dd8752d98ed02f831` fast-forwards the previous
+  `eb2e7e041e64ab18df5ec187a22dcff67cd1a298`. GitHub's API reports that exact
+  commit `built` with no error. Preview:
+  <https://mgaulia.github.io/rummy-analizer/?v=d4aa14e9d1fa>.
+  Direct public-URL access from this workspace remains blocked by its pending
+  network policy; no live Safari or original-photo success is inferred from the
+  deployment result. Subsequent changes here only add the package-check option
+  and update documentation; the published web/runtime source remains the exact
+  checked source above.
 
 ## Current state after network publication (2026-10-19)
 
