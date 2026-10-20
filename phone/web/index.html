@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#075749">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; img-src 'self' data: blob:; connect-src 'none'; worker-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
-<title>Rummikub · Your table assistant</title>
+<title>Rummikub · Table assistant</title>
 <link rel="stylesheet" href="style.css">
 <script defer src="engine/wasm_exec.js"></script>
 <script defer src="engine/wasm_data.js"></script>
@@ -13,44 +13,51 @@
 <script defer src="photo-state.js"></script>
 <script defer src="browser-reader.js"></script>
 <script defer src="tile-art.js"></script>
+<script defer src="table-view.js"></script>
 <script defer src="app.js"></script>
 </head>
 <body>
 <main>
-<header>
-  <div class="top-bar">
-    <div class="brand"><span class="brand-tile" aria-hidden="true">7<span>●</span></span><div>Rummikub<span class="brand-caption">YOUR TABLE ASSISTANT</span></div></div>
-    <span class="local-badge">PERSONAL · OFFLINE</span>
-  </div>
-  <div class="hero">
-    <div class="hero-copy"><p class="eyebrow">LET’S SET THE TABLE</p><h1>A little help<br>at the table.</h1><p>Check your tiles. Find your move.<br>Keep the game going.</p></div>
-    <div class="hero-rack" aria-hidden="true"><div class="rack-tiles"><svg class="tile-art-decoration" viewBox="1728 0 192 288" focusable="false"><image href="tile-art/tiles-atlas.png" width="2688" height="1152"/></svg><svg class="tile-art-decoration" viewBox="1728 288 192 288" focusable="false"><image href="tile-art/tiles-atlas.png" width="2688" height="1152"/></svg><svg class="tile-art-decoration" viewBox="1728 576 192 288" focusable="false"><image href="tile-art/tiles-atlas.png" width="2688" height="1152"/></svg><svg class="tile-art-decoration" viewBox="2496 864 192 288" focusable="false"><image href="tile-art/tiles-atlas.png" width="2688" height="1152"/></svg></div><div class="wooden-rack"></div><p>Every tile has a place.</p></div>
+<header class="page-header">
+  <div><p class="wordmark">Rummikub</p><h1>Table assistant<span class="title-dot">.</span></h1></div>
+  <div class="header-tiles" aria-hidden="true">
+    <svg class="tile-art-decoration" viewBox="1728 0 192 288" focusable="false"><image href="tile-art/tiles-atlas.png" width="2688" height="1152"/></svg>
+    <svg class="tile-art-decoration" viewBox="1728 288 192 288" focusable="false"><image href="tile-art/tiles-atlas.png" width="2688" height="1152"/></svg>
+    <svg class="tile-art-decoration" viewBox="1728 576 192 288" focusable="false"><image href="tile-art/tiles-atlas.png" width="2688" height="1152"/></svg>
   </div>
 </header>
 <section class="settings" aria-label="Game settings">
-  <label class="edition-field">Your game<select id="edition"><option value="">Choose edition</option><option value="4">4-player · 106 tiles</option><option value="6">6-player · 160 tiles</option></select></label>
-  <div class="rule-options"><label class="check"><input id="opening" type="checkbox" checked>30-point opening required</label><label class="check"><input id="opened" type="checkbox">I opened on an earlier turn</label><label class="check"><input id="drawn" type="checkbox">I already drew this turn</label></div>
+  <label class="edition-field">Players<select id="edition"><option value="4" selected>4 players · 106 tiles</option><option value="6">6 players · 160 tiles</option></select></label>
+  <div class="rule-options">
+    <label class="check"><input id="opening" type="checkbox" checked>30-point opening required</label>
+    <label class="check" id="opened-option"><input id="opened" type="checkbox">I have opened</label>
+  </div>
 </section>
 <div class="photo-grid">
-  <section class="photo-card">
-    <div class="section-title"><span class="step-tile red" aria-hidden="true">1</span><div><h2>Table photo</h2><p>The tiles already in play</p></div></div>
+  <section class="photo-card" aria-labelledby="table-heading">
+    <div class="card-header"><h2 id="table-heading"><span class="heading-dot blue" aria-hidden="true"></span>Table</h2><div class="photo-actions"><button data-photo="table" class="secondary">Add photo</button><button data-camera="table" class="secondary">Take photo</button></div></div>
     <input type="file" accept="image/*" id="table-file" hidden>
-    <div id="table-photo" class="photo-zone"><div class="empty-photo"><div class="mini-meld" aria-hidden="true"><span class="mini-tile blue">1</span><span class="mini-tile blue">2</span><span class="mini-tile blue">3</span></div><p class="empty">A clear view of every meld.</p><p class="notice">Keep all table tiles in one photo.<br>You can check the table without a rack.</p></div></div>
-    <div class="actions photo-actions"><button data-photo="table">Choose photo</button><button data-camera="table" class="secondary">Take photo</button></div>
+    <div id="table-photo" class="photo-zone"><div class="empty-photo"><div class="empty-art" aria-hidden="true"><svg class="tile-art-decoration" viewBox="0 288 192 288" focusable="false"><image href="tile-art/tiles-atlas.png" width="2688" height="1152"/></svg><svg class="tile-art-decoration" viewBox="192 288 192 288" focusable="false"><image href="tile-art/tiles-atlas.png" width="2688" height="1152"/></svg><svg class="tile-art-decoration" viewBox="384 288 192 288" focusable="false"><image href="tile-art/tiles-atlas.png" width="2688" height="1152"/></svg></div><p>No table photo yet</p></div></div>
   </section>
-  <section class="photo-card">
-    <div class="section-title"><span class="step-tile blue" aria-hidden="true">2</span><div><h2>Your rack</h2><p>The tiles you can play</p></div></div>
+  <section class="photo-card" aria-labelledby="rack-heading">
+    <div class="card-header"><h2 id="rack-heading"><span class="heading-dot orange" aria-hidden="true"></span>Your rack</h2><div class="photo-actions"><button data-photo="rack" class="secondary">Add photo</button><button data-camera="rack" class="secondary">Take photo</button></div></div>
     <input type="file" accept="image/*" id="rack-file" hidden>
-    <div id="rack-photo" class="photo-zone"><div class="empty-photo"><div class="mini-meld rack-meld" aria-hidden="true"><span class="mini-tile red">9</span><span class="mini-tile black">9</span><span class="mini-tile orange">9</span></div><p class="empty">Let’s see what you’re holding.</p><p class="notice">Take a separate photo of your rack.<br>Include every tile, however many you have.</p></div></div>
-    <div class="actions photo-actions"><button data-photo="rack">Choose photo</button><button data-camera="rack" class="secondary">Take photo</button></div>
+    <div id="rack-photo" class="photo-zone"><div class="empty-photo"><div class="empty-art" aria-hidden="true"><svg class="tile-art-decoration" viewBox="1536 0 192 288" focusable="false"><image href="tile-art/tiles-atlas.png" width="2688" height="1152"/></svg><svg class="tile-art-decoration" viewBox="1536 576 192 288" focusable="false"><image href="tile-art/tiles-atlas.png" width="2688" height="1152"/></svg><svg class="tile-art-decoration" viewBox="1536 864 192 288" focusable="false"><image href="tile-art/tiles-atlas.png" width="2688" height="1152"/></svg></div><p>No rack photo yet</p></div></div>
   </section>
 </div>
-<section class="search-panel">
-  <div class="section-title"><span class="step-tile orange" aria-hidden="true">3</span><div><h2>Find your next move</h2><p>Confirm your readings, then let’s arrange those tiles.</p></div></div>
-  <div class="search-controls"><label>Search effort<select id="budget"><option value="200000">Standard search</option><option value="2000000">Extended search</option></select></label><div class="actions"><button id="validate" class="secondary">Check table</button><button id="solve">Find move <span class="move-arrow" aria-hidden="true"></span></button><button id="cancel" class="secondary" disabled>Cancel search</button></div></div>
-  <p id="status" role="status" aria-live="polite">Loading local engine…</p><div id="result"></div>
+<section class="search-panel" aria-labelledby="move-heading">
+  <div class="search-controls"><h2 id="move-heading">Your next move</h2><div class="actions"><button id="validate" class="secondary">Check table</button><button id="solve">Find move <span class="move-arrow" aria-hidden="true"></span></button><button id="cancel" class="secondary" disabled>Cancel</button></div></div>
+  <p id="status" role="status" aria-live="polite">Loading…</p>
+  <div id="result"></div>
 </section>
-<footer><p>Just you, your tiles, and the next move.</p>Photos stay on your device. No account, upload, or remote solver. Recognition suggestions require your confirmation.<details id="reading-help"><summary>Photo reading wrong?</summary><p>Save a report containing your selected photos, raw readings and browser details. It stays on your device until you choose to share the file.</p><button id="save-report" disabled>Save reading report</button></details><details><summary>Tile artwork credits</summary><p>Multicolor Rummikub tiles by <a href="https://www.printables.com/model/130082-multicolor-rummikub-tiles">KlaasYK on Printables</a>, licensed <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Adapted by reorienting the original meshes, assigning ivory bodies and four ink colors, and rendering a local sprite atlas. The adapted artwork is also CC BY-SA 4.0.</p></details><details><summary>Open-source licenses</summary><pre id="licenses"></pre></details></footer>
+<footer>
+  <p class="privacy-note"><span aria-hidden="true">●</span> Photos and solving stay on your device.</p>
+  <div class="footer-details">
+    <details id="reading-help"><summary>Reading report</summary><p>Download your photos and their readings to review or share.</p><button id="save-report" class="secondary" disabled>Save report</button></details>
+    <details><summary>Tile artwork</summary><p>Multicolor Rummikub tiles by <a href="https://www.printables.com/model/130082-multicolor-rummikub-tiles">KlaasYK on Printables</a>, licensed <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Adapted by reorienting the original meshes, assigning ivory bodies and four ink colors, and rendering a local sprite atlas. The adapted artwork is also CC BY-SA 4.0.</p></details>
+    <details><summary>Licenses</summary><pre id="licenses"></pre></details>
+  </div>
+</footer>
 </main>
 </body>
 </html>

@@ -113,6 +113,9 @@ with sync_playwright() as p:
                 assert actual==truth['tiles'], ('Exact photo regression failed',ident,{'expected':truth['tiles'],'actual':actual})
             print('Exact external photo regression passed: '+str(len(predictions))+' photos, '+str(sum(len(t['tiles']) for t in expected.values()))+' ordered tiles/melds; source hashes matched.')
     else:
+        assert page.locator('#edition').input_value() == '4', 'Four-player edition must be the default'
+        assert page.locator('#budget, #drawn').count() == 0, 'Search effort and drawn-turn controls must not be exposed'
+        assert page.get_by_role('button', name='Confirm tile', exact=True).count() == 0
         values = [(n, ['red', 'black', 'blue', 'orange'][(n-1) % 4]) for n in range(1, 14)]
         for touching in [False, True]:
             data = payload(fixture(values, touching))['buffer']
@@ -137,22 +140,35 @@ with sync_playwright() as p:
         assert [c['tile'] for c in result['observations'][0]['candidates']] == [
             {'number': 11, 'color': 'red'}], ('A dark background streak must not obscure red 11', result)
         # Actual browser import invokes the reader. No injected observations.
-        page.locator('#edition').select_option('4')
         page.locator('#table-file').set_input_files(payload(Image.new('RGB', (300, 160), '#f8efdb')))
-        page.get_by_role('button', name='Confirm complete table reading', exact=True).click()
+        page.wait_for_function('() => sessions.table !== null')
+        # An unreadable physical tile is an error, never an empty reading or a
+        # value silently accepted from a missing candidate. Edits apply directly.
+        unreadable = fixture([])
+        ImageDraw.Draw(unreadable).rounded_rectangle((55, 110, 200, 330), radius=8, fill='#f8efdb')
+        page.locator('#rack-file').set_input_files(payload(unreadable))
+        page.locator('#rack-photo .tile-editor').wait_for()
+        page.get_by_role('button', name='Find move', exact=True).click()
+        assert 'rack' in page.locator('#status').inner_text().lower()
+        assert 'error' in page.locator('#status').get_attribute('class').split()
+        assert page.locator('#result [data-piece-id]').count() == 0
+        editor = page.locator('#rack-photo .tile-editor')
+        editor.get_by_label('Tile color', exact=True).select_option('red')
+        editor.get_by_label('Tile number', exact=True).fill('10')
+        assert page.evaluate('positionFromPhotos(sessions.table,sessions.rack).rack[0].tile') == {'color':'red','number':10}
+        editor.get_by_role('button', name='Remove tile', exact=True).click()
+        assert page.locator('#rack-photo .tile-editor').count() == 0
         rack_file = payload(fixture([(10, 'red'), (10, 'blue'), (10, 'black')]))
         for _ in range(2):
             page.locator('#rack-file').set_input_files(rack_file)
             page.locator('#rack-photo .tile-editor').nth(2).wait_for()
             assert page.locator('#rack-photo .tile-editor').count() == 3, 'Reimporting the same photo appended duplicate readings'
         page.get_by_role('button', name='Find move', exact=True).click()
-        assert 'confirmation' in page.locator('#status').inner_text()
-        for _ in range(3):
-            page.get_by_role('button', name='Confirm tile', exact=True).first.click()
-        page.get_by_role('button', name='Confirm complete rack reading', exact=True).click()
-        page.get_by_role('button', name='Find move', exact=True).click()
         page.wait_for_function("() => document.querySelector('#status').textContent.includes('3 rack tiles')")
         assert page.locator('#result [data-played="true"]').count() == 3
+        assert page.get_by_role('button', name='Confirm tile', exact=True).count() == 0
+        assert page.get_by_role('button', name='Confirm complete rack reading', exact=True).count() == 0
+        session_before = page.evaluate('JSON.stringify(sessions.rack.observations)')
         # Fault-injection regression, NOT an OCR accuracy measurement: a single
         # page-segmentation mode reports a confident partial "1" for visible "12".
         # Other modes still run the actual engine. Image geometry must prevent
@@ -169,27 +185,29 @@ with sync_playwright() as p:
           finally {api.SetVariable=set;api.GetUTF8Text=text;api.MeanTextConf=score;}
         }''', 'data:image/png;base64,'+base64.b64encode(data).decode())
         assert result['observations'][0]['candidates'][0]['tile']['number'] == 12, ('A high-scoring partial digit cannot override two visible digits', result)
-        # Figure-like joker art must stay an unconfirmed proposal.
+        # Figure-like joker art remains a raw proposal, isolated from UI edits.
         data = payload(fixture([(8, 'black'), (10, 'black')], joker=True))['buffer']
         result = page.evaluate(read, 'data:image/png;base64,'+base64.b64encode(data).decode())
         assert len(result['observations']) == 3, ('A light region inside a joker face must not become a second tile', result)
         assert any(o['candidates'] and o['candidates'][0]['tile'].get('joker') for o in result['observations']), result
-        assert not page.evaluate('sessions.rack.observations.some(o => !o.correction)'), 'Unexpected state mutation from a separate read'
+        assert page.evaluate('JSON.stringify(sessions.rack.observations)') == session_before, 'Unexpected state mutation from a separate read'
         page.locator('#reading-help summary').click()
         with page.expect_download() as download:
-            page.get_by_role('button', name='Save reading report', exact=True).click()
+            page.get_by_role('button', name='Save report', exact=True).click()
         saved=json.loads(Path(download.value.path()).read_text())
         assert saved['kind']=='rummy-photo-reading-report' and saved['version']==1
         assert set(saved['photos'])=={'table','rack'}
+        assert saved['state']['settings'] == {'edition':4,'opening_required':True}
+        assert saved['state']['last_outcome']['status'] == 'optimal'
         for zone,sample in saved['photos'].items():
             raw=base64.b64decode(sample['image'].split(',',1)[1])
             assert hashlib.sha256(raw).hexdigest()==sample['source']
             assert sample['zone']==zone and 'recognizer' in sample
             assert all('correction' not in observation for observation in sample['observations'])
         assert len(saved['photos']['rack']['observations'])==3
-        print('Bundled OCR: all 13 synthetic numbers/colors, touching and identical tiles, cross-color background rejection, nested-joker suppression, high-score truncation fault injection, repeated file import, confirmation, and real-engine opening passed.')
+        print('Bundled OCR: all 13 synthetic numbers/colors, touching and identical tiles, cross-color background rejection, nested-joker suppression, high-score truncation fault injection, repeated file import, automatic readable tiles, unreadable-tile errors/direct edits/removal, and real-engine opening passed.')
     assert not errors, errors
     assert not console_errors, console_errors
-    assert set(requested) <= {'index.html','style.css','engine/wasm_exec.js','engine/wasm_data.js','engine.js','photo-state.js','browser-reader.js','tile-art.js','tile-art/tiles-atlas.png','app.js','recognition/reader-core.js','recognition/reader-data.js'}, requested
+    assert set(requested) <= {'index.html','style.css','engine/wasm_exec.js','engine/wasm_data.js','engine.js','photo-state.js','browser-reader.js','tile-art.js','table-view.js','tile-art/tiles-atlas.png','app.js','recognition/reader-core.js','recognition/reader-data.js'}, requested
     browser.close()
 print('All requests were bundled GET assets; no photo upload, external model fetch, remote solver, or CSP violation. Desktop execution; no general accuracy or physical-iPhone acceptance claim.')

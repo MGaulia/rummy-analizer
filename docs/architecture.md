@@ -91,8 +91,12 @@ requests and cancellation; the phone interface invokes the actual Go engine.
 Local script-embedded Wasm bytes avoid WKWebView file-URL fetch/worker problems.
 The generated bundle is reproducible and ignored by Git.
 
-Raw photo observations and corrected/confirmed positions remain separate in
-`phone/web/photo-state.js`. The iPhone adapter uses native image import/camera
+Raw photo observations and current edited positions remain separate in
+`phone/web/photo-state.js`. Readable proposals work immediately at the owner's
+request; uncertain values and invalid drafts block position construction. No
+automatic acceptance is mislabeled as human confirmation. `table-view.js` draws
+responsive melds and rack from independently validated engine positions using
+the local tile atlas. The iPhone adapter uses native image import/camera
 and local Vision proposal code. It is not a verified recognition pipeline or
 phone product until real-photo and physical-device acceptance. See
 phone/README.md for exact supported checks and remaining platform requirements.

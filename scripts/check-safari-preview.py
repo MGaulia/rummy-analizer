@@ -49,15 +49,18 @@ with sync_playwright() as p:
     page = context.new_page()
     page.on('pageerror', lambda error: errors.append(str(error)))
     page.goto(base)
-    page.wait_for_function("document.querySelector('#status').textContent.includes('Local engine ready')")
-    assert page.get_by_role('heading', name='Safari test preview').count() == 1
+    page.evaluate('async()=>await engineReady')
+    assert page.get_by_role('heading', name='Safari test preview').count() == 0
+    assert page.get_by_text('How to play', exact=True).count() == 0
+    assert page.get_by_text('PERSONAL · SAFARI PREVIEW', exact=True).count() == 0
+    assert page.locator('#edition').input_value() == '4'
+    assert page.locator('#budget, #drawn').count() == 0
     assert page.locator('[data-camera]').count() == 0
     assert metadata['source_commit'][:12] in page.content()
-    page.select_option('#edition', '4')
     page.locator('#table-file').set_input_files(image_file('table.png', '#f5eada'))
-    page.get_by_role('button', name='Confirm complete table reading', exact=True).click()
+    page.wait_for_function('() => sessions.table !== null')
     page.get_by_role('button', name='Check table', exact=True).click()
-    page.wait_for_function("document.querySelector('#status').textContent === 'Confirmed table is valid.'")
+    page.wait_for_function("() => /table.*valid/i.test(document.querySelector('#status').textContent)")
     page.locator('#rack-file').set_input_files(image_file('rack.png', '#dce8ec'))
     page.locator('#rack-photo .photo-preview').wait_for()
     for color in ['red', 'blue', 'black']:
@@ -65,10 +68,10 @@ with sync_playwright() as p:
         editor = page.locator('#rack-photo .tile-editor').last
         editor.get_by_label('Tile color', exact=True).select_option(color)
         editor.get_by_label('Tile number', exact=True).fill('10')
-        editor.get_by_role('button', name='Confirm tile', exact=True).click()
-    page.get_by_role('button', name='Confirm complete rack reading', exact=True).click()
+    assert page.get_by_role('button', name='Confirm tile', exact=True).count() == 0
+    assert page.get_by_role('button', name='Confirm complete rack reading', exact=True).count() == 0
     page.get_by_role('button', name='Find move', exact=True).click()
-    page.wait_for_function("document.querySelector('#status').textContent.includes('maximum rack tiles played')")
+    page.wait_for_function("() => document.querySelector('#status').textContent.includes('maximum rack tiles played')")
     assert '3 rack tiles' in page.locator('#status').inner_text()
     assert page.locator('#result [data-played="true"]').count() == 3
     assert page.locator('#result [data-piece-id]').count() == 3
@@ -79,5 +82,5 @@ with sync_playwright() as p:
     browser.close()
 
 print('Preview package: nested Pages path, manual file import/correction, empty-table validation, '
-      'real Wasm three-tile opening and exact rendering passed; no uploads or remote solver requests.')
+      'default four-player/no-confirm flow, real Wasm three-tile opening and exact rendering passed; no uploads or remote solver requests.')
 print('Desktop Chromium at a mobile viewport; physical iPhone/Safari remains untested.')

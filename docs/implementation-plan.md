@@ -1,5 +1,138 @@
 # Implementation status
 
+## Compact meld layout follow-up (2026-10-19, owner local date)
+
+- Owner screenshot showed green played markers on dark green cards, clipped
+  four-tile meld content with a scrollbar, wide tile spacing and duplicated
+  “Your next move” headings. Old 220px equal-width columns held 68px tile slots,
+  although the art viewport was only about 51px wide.
+- Replaced equal columns with content-sized cards that wrap as whole cards.
+  Cards are light neutral, played outlines/legend are amber, and spacing is
+  tighter. Long runs wrap inside the same labeled card rather than scroll or
+  shrink into unreadable tiles. No tiles, IDs, roles or meld boundaries change.
+- Per-piece frames fit the artwork and include padding for the complete outline.
+  Joker-role captions use readable HTML below the image instead of overflowing
+  a narrow SVG cell. The board title is “Final table”, with consistent heading
+  and legend spacing.
+- Updated the existing actual-Go layout regression to match the owner's revised
+  no-scroll requirement. Observed failure before the fix: at 320px, a 13-tile run
+  had scrollWidth 778px versus clientWidth 238px and clipped the final tile.
+  After the fix, four-tile groups stay on one row, long runs stay in one card,
+  and every row/tile fits at 320, 390, 768 and 1200px. Tests retain exact physical
+  occurrence/order/role checks and assert compact pitch and marker contrast.
+- This is a focused follow-up in unmerged #15, still dependent on #14. No game,
+  search, recognition or inventory logic changed. Clean tested/published source
+  `88101cd91e700bd5420ad45e4e311aab95188387`, tree
+  `1836b3c41613a1aa599ae157dc9b38a8053015b7`. Go 1.27.2 linux/amd64,
+  Node v24.19.0, Python 3.12.14, desktop Chromium 154.0.8037.57. With existing
+  Go PATH/cache activation, every final package/source command passed:
+
+  ```sh
+  bash scripts/check.sh
+  bash scripts/build-safari-preview.sh /workspace/rummy-review/safari-preview-compact-melds
+  python3 scripts/check-safari-preview.py /workspace/rummy-review/safari-preview-compact-melds
+  python3 scripts/check-table-view.py --preview-directory /workspace/rummy-review/safari-preview-compact-melds --screenshot /workspace/rummy-review/meld-layout/package-board.png
+  python3 scripts/check-phone-ui.py
+  python3 scripts/check-reading-flow.py --preview-directory /workspace/rummy-review/safari-preview-compact-melds --report '/workspace/attachments/08851a67-f7cf-48b4-984b-87a68335d77f/rummy-reading-report (1).json' --expectations /workspace/rummy-review/red11/expected.json --output /workspace/rummy-review/meld-layout/package-flow.json --screenshot /workspace/rummy-review/meld-layout/package-real-board.png
+  node scripts/check-phone-engine.cjs
+  ```
+
+  Exact 14-photo-tile readings, four played occurrences and one remaining rack
+  tile are unchanged; returned moves independently validate. Desktop screenshots
+  of short and long melds were visually reviewed. Contrast checks require at
+  least 3:1 between the played outline and card surface. No parser/inventory
+  change or new fuzz/benchmark/device result is claimed.
+- Pages commit `18a2d10976fcc6460ca2954c3a72bd7bc1d4f1cc` fast-forwards
+  `49eecb43fde702d3da78cb5037f82ea9537edfe2`. GitHub reports that exact commit
+  built without error. All seventeen live manifest assets and source metadata
+  matched the tested package over public HTTPS. These checks then passed against
+  the downloaded live package:
+
+  ```sh
+  python3 scripts/check-table-view.py --preview-directory /workspace/rummy-review/compact-melds-live-package --screenshot /workspace/rummy-review/meld-layout/live-board.png
+  python3 scripts/check-reading-flow.py --preview-directory /workspace/rummy-review/compact-melds-live-package --report '/workspace/attachments/08851a67-f7cf-48b4-984b-87a68335d77f/rummy-reading-report (1).json' --expectations /workspace/rummy-review/red11/expected.json --output /workspace/rummy-review/meld-layout/live-flow.json --screenshot /workspace/rummy-review/meld-layout/live-real-board.png
+  ```
+
+  Live: <https://mgaulia.github.io/rummy-analizer/?v=88101cd91e70>.
+  #15 stays unmerged; dependency/merge order remains #12 → #13 → #14 → #15.
+
+## Owner feedback: immediate readings and a simpler page (2026-10-20 UTC)
+
+- The owner's updated instructions explicitly remove per-tile and photo
+  confirmation. This supersedes the original confirmation workflow. A single
+  distinct valid raw proposal now works immediately; ambiguous/unknown values,
+  invalid current drafts and failed imports block search with actionable errors.
+  Direct edits never fall back to stale OCR. Red-X removal hides a detection;
+  its original observation stays untouched in local diagnostic exports.
+- Four players is the default. Removed preview branding/tutorials, drawn-turn and
+  search-effort controls. Opening remains required by default; “I have opened”
+  only applies while it is enabled. Drawing still ends a turn in the Go API/CLI.
+  One internal 200,000-node search bound and cancellation replace the effort
+  selector; proof/incomplete statuses are preserved.
+- New report contains the same two original photos as the prior report and all
+  14 correct readings. It lacks settings/confirmation state, so it cannot prove
+  which old gate caused the reported failure. Separate actual CLI and Wasm runs
+  establish: unopened opening-required = proven no move (475 nodes); opened or
+  opening-disabled = proven optimum four rack tiles (24,328 nodes). Both former
+  200k/2m budgets give the same results/work on this example. No phone speed or
+  general search completeness claim follows. Both returned moves independently
+  pass check-move; red 11, black 9, blue 2 and blue 3 play, orange 8 remains.
+- Actual photo bytes now pass through file import → local reader → automatic
+  position → real solver → responsive model-art board, without injected OCR or
+  solver output. Private `check-reading-flow.py` inputs stay outside Git. It
+  checks all 14 labels, exact physical conservation/rendering, the opening result,
+  four-tile optimum, disabled opening control and independent legal verification.
+- Responsive felt meld cards and a wrapping rack replace the browser's fixed
+  table canvas. Roles, physical duplicates, played outlines and accessible labels
+  remain exact; 13-tile melds scroll within their card at a 390px viewport. The
+  native adapter/Go CLI export remain available; native/device acceptance unrun.
+- Local report export now includes rule settings and the latest search/error
+  outcome, keeping raw recognition separate from edits. No uploads, new runtime
+  dependency/service, CI workflow or persistence was added. Early engine-startup
+  edits invalidate pending jobs; engine readiness cannot render stale inputs.
+  A separate reviewer reproduced stale-input rendering and duplicate solver
+  calls before the startup fix; `check-phone-startup.py` now proves zero stale
+  calls and one call for duplicate requests, with independent move validation.
+  Rule toggles disable/hide the opened control without erasing player history.
+- [Draft #15](https://github.com/MGaulia/rummy-analizer/pull/15) depends on #14;
+  all remain unmerged in order #12 → #13 → #14 → #15. Main is unchanged at
+  `23eee9e492acd0cbcc97901143d40ab5a1bdee3d`.
+- Clean tested/published source `58c69de17c376a023f172eb6b1627ff37eea7d38`,
+  tree `544405a799b88c6cac88768afcf78e84feaa5b61`. Go 1.27.2 linux/amd64,
+  Node v24.19.0, Python 3.12.14, desktop Chromium 154.0.8037.57. With the
+  existing Go PATH/cache activation, every final command passed:
+
+  ```sh
+  bash scripts/check.sh
+  bash scripts/build-safari-preview.sh /workspace/rummy-review/safari-preview-streamlined
+  node scripts/check-phone-engine.cjs
+  node scripts/check-photo-state.cjs
+  python3 scripts/check-phone-ui.py
+  python3 scripts/check-phone-startup.py --preview-directory /workspace/rummy-review/safari-preview-streamlined
+  python3 scripts/check-safari-preview.py /workspace/rummy-review/safari-preview-streamlined
+  python3 scripts/check-tile-art.py --preview-directory /workspace/rummy-review/safari-preview-streamlined
+  python3 scripts/check-table-view.py --preview-directory /workspace/rummy-review/safari-preview-streamlined --screenshot /workspace/rummy-review/feedback/final-package-board.png
+  python3 scripts/check-browser-reader.py --preview-directory /workspace/rummy-review/safari-preview-streamlined
+  python3 scripts/check-browser-reader.py --preview-directory /workspace/rummy-review/safari-preview-streamlined --report '/workspace/attachments/08851a67-f7cf-48b4-984b-87a68335d77f/rummy-reading-report (1).json' --expectations /workspace/rummy-review/red11/expected.json --output /workspace/rummy-review/feedback/package-readings.json
+  python3 scripts/check-reading-flow.py --preview-directory /workspace/rummy-review/safari-preview-streamlined --report '/workspace/attachments/08851a67-f7cf-48b4-984b-87a68335d77f/rummy-reading-report (1).json' --expectations /workspace/rummy-review/red11/expected.json --output /workspace/rummy-review/feedback/package-flow.json --screenshot /workspace/rummy-review/feedback/package-real-board.png
+  python3 scripts/check-reading-flow.py --preview-directory /workspace/rummy-review/streamlined-live-package --report '/workspace/attachments/08851a67-f7cf-48b4-984b-87a68335d77f/rummy-reading-report (1).json' --expectations /workspace/rummy-review/red11/expected.json --output /workspace/rummy-review/feedback/live-flow.json --screenshot /workspace/rummy-review/feedback/live-board.png
+  python3 scripts/check-phone-startup.py --preview-directory /workspace/rummy-review/streamlined-live-package
+  ```
+
+  All original-pixel readings match; both applicable moves independently validate
+  and conserve all occurrences. Synthetic UI cases separately verify invalid
+  drafts, ambiguous values, red-X removal, raw isolation and failed-read blocking.
+  A test initially waited for artwork after deliberately toggling a rule (which
+  correctly clears results); moving its screenshot before that invalidation
+  fixed the harness. No test assertion was relaxed. No parser/inventory code
+  changed, so no new fuzz or benchmark claim. Native build/device checks unrun.
+- Pages commit `49eecb43fde702d3da78cb5037f82ea9537edfe2` fast-forwards
+  `9d339f348aab8fe8ff40418a9acb61ef43189307`; GitHub reports that exact commit
+  built without error. Downloaded all seventeen manifest assets over public
+  HTTPS, verified every SHA256 and exact source metadata, and passed actual-photo
+  end-to-end plus startup checks against those downloaded files. Live:
+  <https://mgaulia.github.io/rummy-analizer/?v=58c69de17c37>.
+
 ## Requested Printables tile artwork (2026-10-20 UTC)
 
 - Published access unblocked the owner-selected Printables model. Downloaded all

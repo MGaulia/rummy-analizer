@@ -22,6 +22,7 @@ Optional desktop UI integration (Python Playwright, Pillow, Chromium installed):
 
 ```sh
 python3 scripts/check-phone-ui.py
+python3 scripts/check-phone-startup.py
 ```
 
 The UI test fulfills all local assets in-process with network disabled. It uses
@@ -35,19 +36,22 @@ OCR reader; its separate actual-pixel checks are documented below.
 
 Open the [Safari preview](https://mgaulia.github.io/rummy-analizer/) on any network.
 GitHub's Pages API confirms a successful build of `gh-pages` commit
-`9d339f348aab8fe8ff40418a9acb61ef43189307`, with HTTPS enforced, publishing
-source `20f4f393215400f7666247593e8597e455bb7614`. All sixteen live HTTPS assets
-matched the tested package hashes. The downloaded package passed artwork checks
-and exact replay of all 14 tiles in the owner's original-photo report in desktop
-Chromium; the generated package also passed OCR/confirmation/solver regressions.
+`18a2d10976fcc6460ca2954c3a72bd7bc1d4f1cc`, with HTTPS enforced, publishing
+source `88101cd91e700bd5420ad45e4e311aab95188387`. All seventeen live HTTPS assets
+matched the tested package hashes. The downloaded package passed actual-photo
+import/read/solve/render and compact layout checks in desktop Chromium. Melds
+fit without internal scrollbars at 320, 390, 768 and 1200px; played tiles have
+contrasting amber outlines on light cards. Earlier startup/OCR checks are
+recorded with their exact source checkpoints in docs/implementation-plan.md.
 Physical Safari execution of this revision remains unverified. No source merge
 was needed; #12 and its reader follow-up
-#13 and the artwork follow-up #14 remain unmerged drafts. Merge #12 → #13 → #14.
+#13, artwork #14 and streamlined flow #15 remain unmerged drafts.
+Merge #12 → #13 → #14 → #15.
 The current preview uses a green felt table, ivory numbered tiles, a wooden
 rack, and the four tile colors. Assets include a source-version query parameter
 to refresh the styling after publication. The design adapts to phone and desktop
 widths. The new browser-reader branch adds local suggestions with mandatory
-correction/confirmation; the solver is unchanged.
+direct edits and blocking parse errors; the solver is unchanged.
 
 The owner authorized publishing the draft #12 browser interface on GitHub Pages.
 This does not merge #12 or accept its native integration. Build from a clean,
@@ -69,21 +73,23 @@ The package check needs the optional desktop UI dependencies listed above and
 checks manual file import/correction and solving at the nested Pages URL path.
 It runs desktop Chromium at a phone viewport, not Safari or an iPhone.
 
-In iPhone Safari, open the HTTPS Pages URL on any network. Choose an edition,
-then use **Choose photo** separately for table and rack. The bundled reader
-proposes tiles, colors, numbers and meld rows. Correct every uncertain reading,
-tap missed tiles to add them, exclude false detections, and confirm every tile.
-For table tiles check the meld number and preserve the displayed order. Confirm
-each complete reading before **Check table** or **Find move**. An empty table
+In iPhone Safari, open the HTTPS Pages URL on any network. Four players is the
+default; six players remains available. Use **Add photo** separately for table
+and rack. Readable values work immediately; edit a value if needed, use the red
+X to remove a detection, or add a missed tile. Unreadable values and invalid
+edits block search with an error. Table meld and order fields remain editable.
+No confirmation clicks are required before **Check table** or **Find move**. An empty table
 photo is allowed. Photos and solving stay in the browser. Reloading clears the
 readings; offline reopening is not supported. The native **Take photo** buttons
 are omitted from this preview. Safari's file picker may offer its own camera.
 
 For a small first test, photograph an empty table and a separate rack with red
-10, blue 10, and black 10. Choose the four-player edition and leave the opening
-requirement enabled. After entering and confirming all three rack tiles, the
-solver should show a 30-point opening that plays three tiles. Record the iPhone
-model, iOS version, preview source shown on the page, result, and any errors.
+10, blue 10, and black 10. Leave the default edition and opening requirement.
+After the photos are read, **Find move** should show a 30-point opening that plays
+three tiles. If opening already happened, select **I have opened**; that control
+only applies when the opening rule is enabled. There is one internal search
+budget and a cancel button, with honest incomplete/proven statuses. Record the iPhone
+model, iOS version, source from the downloaded report, result, and any errors.
 This tests manual correction and the actual solver, not recognition accuracy.
 
 ## Local browser reader
@@ -100,10 +106,12 @@ The reader bounds image size to 1400 pixels, finds ivory components, splits
 touching strips, crops ink away from the embossed logo, runs actual OCR, proposes
 colors (including cyan/teal as a blue candidate), and suggests meld rows. A
 face-like joker is only a low-confidence proposal. Scores are uncalibrated; no
-reading is automatically confirmed. Rotation, perspective, shadows, overlapping
+reading is treated as human-confirmed. Per the owner's updated preference, a
+single readable proposal is used immediately; unresolved values block search.
+Rotation, perspective, shadows, overlapping
 tiles, unusual fonts/backgrounds and joker designs can cause missed/wrong values.
-Use a clear, upright, close photo and review completeness. Failures retain manual
-entry. The unbundled source page also falls back to manual entry.
+Use a clear, upright, close photo and review completeness. A failed reader shows
+an error and requires another photo; it cannot become a successfully empty table.
 
 Reader revision 2 suppresses spatially nested regions inside a detected tile
 (such as the ivory area enclosed by a joker face). Separate physical tiles with
@@ -117,7 +125,7 @@ specific regression cases, not a measured general accuracy guarantee.
 After building reader assets, run `python3 scripts/check-browser-reader.py`.
 This executes the real bundled OCR on **synthetic** images of all 13 numbers,
 colors, touching strips and a face-like joker, and then imports images through
-the actual file picker, confirms readings and solves a legal opening. It checks
+the actual file picker and immediately solves a legal opening. It checks
 that only bundled GET assets were requested and that CSP produced no errors.
 These generated fixtures are not real-photo accuracy or iPhone evidence. A
 subsequent owner-shared reading report supplied the two original photos for local
@@ -135,9 +143,10 @@ Use an independently annotated manifest with `scripts/evaluate-photos.py` for
 accuracy metrics. Store originals, labels and proposal exports outside Git.
 
 If a photo still produces duplicates or wrong readings in Safari, expand
-**Photo reading wrong?** at the bottom and choose **Save reading report**. The
+**Reading report** at the bottom and choose **Save report**. The
 download contains the selected original photos, raw proposals, model/build
-revision and browser details; corrections are not mislabeled as recognition.
+revision, browser details, rule settings and latest search/error outcome;
+corrections are not mislabeled as recognition.
 Nothing is uploaded. The user can choose whether to share that JSON file for
 debugging. This explicit export is the only added persistence; reloading still
 clears the active session. It is a browser feature, hidden in the native adapter.
@@ -163,6 +172,17 @@ Physical occurrences, played outlines and explicit joker roles remain exact.
 See [artwork source, license and reproduction](../docs/tile-art.md).
 `python3 scripts/check-tile-art.py` checks all numbered sprites and joker roles
 on a real Go/Wasm diagram; `--preview-directory` checks a generated/live package.
+`python3 scripts/check-table-view.py` checks responsive meld cards, physical IDs,
+roles, rack counts and compact meld wrapping without internal scrollbars. The private report regression below
+imports original photo bytes and checks no opening, then an independently
+verified four-tile optimum after opening (it is specific to that labeled case):
+
+```sh
+python3 scripts/check-reading-flow.py --report /external/report.json --expectations /external/expected.json --expected-played 4 --output /external/flow-results.json
+```
+
+The expectation format is the same hash-bound ordered tile/meld JSON described
+above. Add `--preview-directory` to verify the exact generated/downloaded build.
 
 ## Build the iOS integration
 
@@ -204,11 +224,12 @@ not full joker recognition. Rectangle/grouping/color heuristics require real
 representative-photo evaluation before acceptance.
 
 Each proposal retains its raw text, candidates, image rectangle, and source
-identity. Corrections are separate. Users confirm each tile, meld boundary and
-within-meld order, add missed tiles, exclude false detections, and acknowledge
-completeness. The engine rejects invalid positions rather than changing readings
-to fit. Table-only validation does not require a rack. Search requires a second,
-separately confirmed rack photo. Reusing identical photo bytes is rejected; users
+identity. Edits are separate. Readable proposals are used automatically, while
+unknown or ambiguous values and invalid edits block search. Users can edit tiles,
+melds and order, add missed tiles, or remove detections without confirmation steps.
+The engine rejects invalid positions rather than changing readings to fit.
+Table-only validation does not require a rack. Search requires a second,
+separate rack photo. Reusing identical photo bytes is rejected; users
 must also check the photographs do not contain overlapping physical tiles.
 Photos stay in memory in the local view and are not committed, persisted, or
 uploaded. Import/camera permissions use the operating system's normal controls.
