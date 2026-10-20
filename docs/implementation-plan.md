@@ -22,7 +22,33 @@
   The real report assertion fails against the previous published package and
   passes against revision 3: all 14 tiles, counts and suggested meld/orders match
   independent visual labels. These two photos are not a representative dataset.
-- Verification and publication checkpoint follows after the clean source build.
+- Clean tested/published source `7860dec5d2506932c08785a4b4ae4c66c060684e`,
+  tree `8ab0d99f140903648992da0dc9ac5b73648ba28c`. Go 1.27.2 linux/amd64,
+  Node v24.19.0, Python 3.12.14, desktop Chromium 154.0.8037.57. All passed:
+
+  ```sh
+  bash scripts/check.sh
+  bash scripts/build-safari-preview.sh /workspace/rummy-review/safari-preview-reader-revision3
+  node scripts/check-phone-engine.cjs
+  node scripts/check-photo-state.cjs
+  python3 scripts/check-phone-ui.py
+  python3 scripts/check-safari-preview.py /workspace/rummy-review/safari-preview-reader-revision3
+  python3 scripts/check-browser-reader.py --preview-directory /workspace/rummy-review/safari-preview-reader-revision3
+  python3 scripts/check-browser-reader.py --report /workspace/attachments/a44c4bfe-d20b-44b6-88a5-b3bff61f2c05/rummy-reading-report.json --expectations /workspace/rummy-review/red11/expected.json --output /workspace/rummy-review/red11/after.json
+  python3 scripts/check-browser-reader.py --preview-directory /workspace/rummy-review/safari-preview-reader-revision3 --report /workspace/attachments/a44c4bfe-d20b-44b6-88a5-b3bff61f2c05/rummy-reading-report.json --expectations /workspace/rummy-review/red11/expected.json --output /workspace/rummy-review/red11/package-after.json
+  python3 scripts/check-browser-reader.py --preview-directory /workspace/rummy-review/reader-revision3-live-package --report /workspace/attachments/a44c4bfe-d20b-44b6-88a5-b3bff61f2c05/rummy-reading-report.json --expectations /workspace/rummy-review/red11/expected.json --output /workspace/rummy-review/red11/live-after.json
+  ```
+
+  A separate reviewer also ran actual bundled OCR on synthetic 11 in each of four
+  colors with a competing-color streak: four correct single proposals, each with
+  two detected digits. No parser/inventory code changed; no new fuzz or benchmark
+  result is claimed. No native/device check ran.
+- Pages commit `b6acbb5fc8bd210f7d3d9438a27cd74b24e8e98e` fast-forwards
+  `9cb5b8e4d1c7ffdda34139273a3b33e3cd6aac85`; GitHub reports it built without
+  error. Downloaded all twelve manifest assets over public HTTPS, verified each
+  hash and the exact source metadata, then passed the real-photo regression
+  against that downloaded package. Preview:
+  <https://mgaulia.github.io/rummy-analizer/?v=7860dec5d250>.
   #13 remains based on unmerged #12; merge order stays #12 then #13.
   Native builds/device acceptance remain blocked by no Mac build machine.
 - Independent artwork milestone resumed after network publication: downloaded
