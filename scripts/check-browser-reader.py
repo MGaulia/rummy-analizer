@@ -145,14 +145,25 @@ with sync_playwright() as p:
         assert [c['tile'] for c in result['observations'][0]['candidates']] == [
             {'number': 11, 'color': 'red'}], ('A dark background streak must not obscure red 11', result)
         # Actual browser import invokes the reader. No injected observations.
+        page.evaluate('''()=>{
+          window.photoDecodeCount=0;
+          const decode=HTMLImageElement.prototype.decode;
+          HTMLImageElement.prototype.decode=function(){
+            photoDecodeCount++;
+            return decode.call(this);
+          };
+        }''')
         page.locator('#table-file').set_input_files(payload(Image.new('RGB', (300, 160), '#f8efdb')))
         page.wait_for_function('() => sessions.table !== null')
+        decodes = page.evaluate('photoDecodeCount')
+        assert decodes == 1, {'error':'A browser photo must be decoded once, then reused for display','expected':1,'actual':decodes}
         # An unreadable physical tile is an error, never an empty reading or a
         # value silently accepted from a missing candidate. Edits apply directly.
         unreadable = fixture([])
         ImageDraw.Draw(unreadable).rounded_rectangle((55, 110, 200, 330), radius=8, fill='#f8efdb')
         page.locator('#rack-file').set_input_files(payload(unreadable))
         page.locator('#rack-photo .tile-editor').wait_for()
+        assert page.evaluate('photoDecodeCount') == 2, 'Rack import decoded the same image more than once'
         page.get_by_role('button', name='Find move', exact=True).click()
         assert 'rack' in page.locator('#status').inner_text().lower()
         assert 'error' in page.locator('#status').get_attribute('class').split()
@@ -164,10 +175,56 @@ with sync_playwright() as p:
         editor.get_by_role('button', name='Remove tile', exact=True).click()
         assert page.locator('#rack-photo .tile-editor').count() == 0
         rack_file = payload(fixture([(10, 'red'), (10, 'blue'), (10, 'black')]))
-        for _ in range(2):
+        for imported in range(2):
             page.locator('#rack-file').set_input_files(rack_file)
             page.locator('#rack-photo .tile-editor').nth(2).wait_for()
             assert page.locator('#rack-photo .tile-editor').count() == 3, 'Reimporting the same photo appended duplicate readings'
+            assert page.evaluate('photoDecodeCount') == 3 + imported, 'Reimport must reuse its decoded image'
+        # The native adapter still decodes incoming image bytes itself. Reuse
+        # the actual imported payload here; no recognition values are invented.
+        page.evaluate('''async()=>{
+          const payload={...rummyObservationReport().table,image:images.table.src};
+          await acceptNativePhoto(payload);
+        }''')
+        assert page.evaluate('photoDecodeCount') == 5, 'The native adapter must decode its incoming image once'
+        # Delay one actual OCR result until its replacement has finished. The
+        # old file handler must not restore its stale image or observations.
+        page.evaluate('''()=>{
+          window.originalPhotoRead=RummyReader.read;
+          window.originalRackChange=document.querySelector('#rack-file').onchange;
+          window.photoHandlers=[];
+          window.delayedPhotoReady=false;
+          let first=true;
+          RummyReader.read=async(...args)=>{
+            const result=await originalPhotoRead(...args);
+            if(first){
+              first=false;
+              delayedPhotoReady=true;
+              await new Promise(resolve=>window.releasePhoto=resolve);
+            }
+            return result;
+          };
+          document.querySelector('#rack-file').onchange=function(event){
+            const task=originalRackChange.call(this,event);
+            photoHandlers.push(task);
+            return task;
+          };
+        }''')
+        try:
+            page.locator('#rack-file').set_input_files(payload(fixture([(11, 'red')])))
+            page.wait_for_function('()=>delayedPhotoReady')
+            page.locator('#rack-file').set_input_files(rack_file)
+            page.locator('#rack-photo .tile-editor').nth(2).wait_for()
+            current_reading = page.evaluate('JSON.stringify(rummyObservationReport().rack)')
+            page.evaluate('async()=>{releasePhoto();await Promise.all(photoHandlers);}')
+            assert page.evaluate('JSON.stringify(rummyObservationReport().rack)') == current_reading, 'A superseded read replaced the current photo'
+            assert page.locator('#rack-photo .tile-editor').count() == 3
+        finally:
+            page.evaluate('''()=>{
+              if(window.releasePhoto)releasePhoto();
+              RummyReader.read=originalPhotoRead;
+              document.querySelector('#rack-file').onchange=originalRackChange;
+            }''')
         page.get_by_role('button', name='Find move', exact=True).click()
         page.wait_for_function("() => document.querySelector('#status').textContent.includes('3 rack tiles')")
         assert page.locator('#result [data-played="true"]').count() == 3
@@ -210,7 +267,7 @@ with sync_playwright() as p:
             assert sample['zone']==zone and 'recognizer' in sample
             assert all('correction' not in observation for observation in sample['observations'])
         assert len(saved['photos']['rack']['observations'])==3
-        print('Bundled OCR: all 13 synthetic numbers/colors at normal/dim exposure, touching and identical tiles, cross-color background rejection, nested-joker suppression, high-score truncation fault injection, repeated file import, automatic readable tiles, unreadable-tile errors/direct edits/removal, and real-engine opening passed.')
+        print('Bundled OCR: all 13 synthetic numbers/colors at normal/dim exposure, touching and identical tiles, cross-color background rejection, nested-joker suppression, high-score truncation fault injection, single-decode file import, native payload decoding, reimport/superseded reading isolation, automatic readable tiles, unreadable-tile errors/direct edits/removal, and real-engine opening passed.')
     assert not errors, errors
     assert not console_errors, console_errors
     assert set(requested) <= {'index.html','style.css','engine/wasm_exec.js','engine/wasm_data.js','engine.js','photo-state.js','browser-reader.js','tile-art.js','table-view.js','tile-art/tiles-atlas.png','app.js','recognition/reader-core.js','recognition/reader-data.js'}, requested
