@@ -1,5 +1,32 @@
 # Implementation status
 
+## Requested Printables tile artwork (2026-10-20 UTC)
+
+- Published access unblocked the owner-selected Printables model. Downloaded all
+  four original geometry/project files and verified sizes/hashes. The author's
+  model PDF explicitly licenses it CC BY-SA 4.0, including the actual license
+  hyperlink. Source/license evidence remains outside Git; documented in
+  `docs/tile-art.md`. Credit, license links and modifications are bundled and
+  visible in the app.
+- Rendered the actual original meshes into 56 local transparent sprites (all
+  numbers/colors and jokers), with pinned source hash, fixed Blender 4.3.2/Cycles
+  settings and deterministic PNG metadata stripping. Two separate renders match
+  byte-for-byte; wrong-source rejection passes. Runtime needs no model download,
+  renderer, upload or remote inference.
+- Browser/app diagrams use the atlas for each identified piece. Explicit physical
+  tile/role metadata comes from the Go SVG; IDs, ordering, accessibility, played
+  outlines and visible joker-role captions survive decoration. Standalone Go SVG
+  remains self-contained. Scoped CSS prevents nested sprite viewports from
+  inheriting the outer diagram's minimum width.
+- Actual Go/Wasm artwork check covers all 52 numbered faces, four physical jokers,
+  63 total occurrences, duplicate copies, exact role captions and repeated
+  decoration. Screenshot visually reviewed. Opening integration checks actual
+  solver output plus three local sprites/played outlines. These are desktop
+  checks, not physical-iPhone acceptance or recognition measurements.
+- Focused artwork PR depends on #13, which depends on #12. Keep all unmerged;
+  merge order #12 → #13 → artwork. Clean build/verification/publication checkpoint
+  follows below. Native device/build blockers and engine proof limits persist.
+
 ## Red 11 original-photo regression (2026-10-20 UTC)
 
 - Owner supplied `rummy-reading-report.json` from preview source

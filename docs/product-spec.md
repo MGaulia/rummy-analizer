@@ -72,7 +72,9 @@ state remain part of the interface contract.
 The owner additionally requested actual tile artwork for the confirmed table and
 identified <https://www.printables.com/model/130082-multicolor-rummikub-tiles> as
 the desired source. Published network access now permits downloading the actual
-model files and inspecting their CC BY-SA 4.0 license. Local atlas rendering is
-in progress; the exact diagrams remain in place until integration is verified. Do not
-claim CSS boxes or generated replacement art are the requested model assets, and
-do not substitute the user's photos for them.
+model files and inspecting their CC BY-SA 4.0 license. A locally rendered atlas
+now uses the author's actual numeral, joker and tile-body meshes. Browser/app
+diagrams decorate validated Go positions with these bundled images, preserving
+each occurrence, played marker and explicit joker role. See docs/tile-art.md for
+source/license evidence, pinned mesh hash and reproducible Blender rendering.
+No user photos are used as artwork. The CLI SVG remains self-contained.

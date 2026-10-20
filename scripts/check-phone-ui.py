@@ -25,7 +25,7 @@ with sync_playwright() as p:
         if target == root:
             target = root / 'index.html'
         assert target.resolve().is_relative_to(root.resolve())
-        kind = {'.html':'text/html','.js':'text/javascript','.css':'text/css','.wasm':'application/wasm'}.get(target.suffix,'application/octet-stream')
+        kind = {'.html':'text/html','.js':'text/javascript','.css':'text/css','.wasm':'application/wasm','.png':'image/png'}.get(target.suffix,'application/octet-stream')
         route.fulfill(status=200,body=target.read_bytes(),content_type=kind)
     context.route('**/*', serve)
     page = context.new_page()
@@ -53,6 +53,9 @@ with sync_playwright() as p:
     assert '3 rack tiles' in page.locator('#status').inner_text()
     assert page.locator('#result [data-piece-id]').count() == 3
     assert page.locator('#result [data-played="true"]').count() == 3
+    assert page.locator('#result .tile-art-sprite image').count() == 3
+    assert page.locator('#result .tile-art-played[fill="none"]').count() == 3
+    assert page.locator('#result .tile-art-caption').text_content().startswith('Joker as ')
     assert 'Joker as' in page.locator('#result').inner_html()
     page.screenshot(path='/tmp/rummy-phone-ui.png',full_page=True)
     # Editing a confirmed reading invalidates both the old result and its consent.

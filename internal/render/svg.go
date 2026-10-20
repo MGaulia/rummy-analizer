@@ -65,7 +65,11 @@ func SVG(position game.Position, edition game.Edition, played []string) (string,
 				label = "Joker as " + label
 			}
 		}
-		fmt.Fprintf(&b, `<g data-piece-id="%s" data-played="%t"><title>%s</title><rect x="%d" y="%d" width="68" height="76" rx="7" fill="#fffaf0" stroke="%s" stroke-width="3"/>`, escape(p.ID), additions[p.ID], escape(p.ID+": "+label), x, y, stroke)
+		roleColor, roleNumber := "", 0
+		if joker && p.As != nil {
+			roleColor, roleNumber = string(p.As.Color), p.As.Number
+		}
+		fmt.Fprintf(&b, `<g data-piece-id="%s" data-played="%t" data-tile-color="%s" data-tile-number="%d" data-joker="%t" data-role-color="%s" data-role-number="%d"><title>%s</title><rect x="%d" y="%d" width="68" height="76" rx="7" fill="#fffaf0" stroke="%s" stroke-width="3"/>`, escape(p.ID), additions[p.ID], p.Tile.Color, p.Tile.Number, joker, roleColor, roleNumber, escape(p.ID+": "+label), x, y, stroke)
 		top := ""
 		if joker {
 			top = "JOKER"

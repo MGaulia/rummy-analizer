@@ -154,6 +154,13 @@ one OCR mode while other modes still run the real engine; this fault injection
 tests the selection guard and is separate from actual-OCR fixture checks. Neither
 that test nor the synthetic images establish general photo accuracy.
 
+The confirmed table and remaining rack now use local artwork rendered from the
+owner-selected [Printables model](https://www.printables.com/model/130082-multicolor-rummikub-tiles).
+Physical occurrences, played outlines and explicit joker roles remain exact.
+See [artwork source, license and reproduction](../docs/tile-art.md).
+`python3 scripts/check-tile-art.py` checks all numbered sprites and joker roles
+on a real Go/Wasm diagram; `--preview-directory` checks a generated/live package.
+
 ## Build the iOS integration
 
 Requires a Mac with Xcode 15+ and iOS 17+ SDK. iOS 17 is an initial integration
