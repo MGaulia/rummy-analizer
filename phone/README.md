@@ -36,26 +36,26 @@ OCR reader; its separate actual-pixel checks are documented below.
 
 Open the [Safari preview](https://mgaulia.github.io/rummy-analizer/) on any network.
 GitHub's Pages API confirms a successful build of `gh-pages` commit
-`18a2d10976fcc6460ca2954c3a72bd7bc1d4f1cc`, with HTTPS enforced, publishing
-source `88101cd91e700bd5420ad45e4e311aab95188387`. All seventeen live HTTPS assets
+`f18fab4fae4991adc54119187dbeff38f3a94b60`, with HTTPS enforced, publishing
+source `f1414d88f347249eff25932c9098ad34202fb5a6`. All seventeen live HTTPS assets
 matched the tested package hashes. The downloaded package passed actual-photo
 import/read/solve/render and compact layout checks in desktop Chromium. Melds
 fit without internal scrollbars at 320, 390, 768 and 1200px; played tiles have
 contrasting amber outlines on light cards. Earlier startup/OCR checks are
 recorded with their exact source checkpoints in docs/implementation-plan.md.
-Physical Safari execution of this revision remains unverified. No source merge
-was needed; #12 and its reader follow-up
-#13, artwork #14, streamlined flow #15 and adaptive photo lighting #16 remain
-unmerged drafts. Merge #12 → #13 → #14 → #15 → #16.
+Physical Safari acceptance of this reader revision remains unverified. The owner
+authorized merging #12–#16 on 2026-10-20. They are now integrated into main in
+dependency order, with fresh merged-source checks recorded in the implementation
+plan. The existing published page is unchanged by these merges.
 The current preview uses a green felt table, ivory numbered tiles, a wooden
 rack, and the four tile colors. Assets include a source-version query parameter
 to refresh the styling after publication. The design adapts to phone and desktop
-widths. The new browser-reader branch adds local suggestions with mandatory
-direct edits and blocking parse errors; the solver is unchanged.
+widths. Readable local suggestions apply immediately; unreadable values and
+invalid drafts block search until edited. The solver is unchanged.
 
-The owner authorized publishing the draft #12 browser interface on GitHub Pages.
-This does not merge #12 or accept its native integration. Build from a clean,
-committed checkout with the same Go/Python prerequisites as above:
+The owner's publication and merge approvals do not establish native integration
+acceptance. Build from a clean, committed checkout with the same Go/Python
+prerequisites as above:
 
 ```sh
 bash scripts/build-safari-preview.sh /tmp/rummy-safari-preview
