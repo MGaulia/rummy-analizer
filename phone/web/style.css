@@ -59,7 +59,7 @@ button:disabled{opacity:.4;cursor:default;box-shadow:none}
 .search-controls .actions{margin:0;gap:9px}
 #solve{background:var(--gold);border-color:#d5a149;box-shadow:0 3px 0 #b88738;color:#3b301e;padding-left:24px;padding-right:24px}
 #solve:hover:not(:disabled){background:#f7cd7c}
-#solve>span{margin-left:13px}
+.move-arrow{display:inline-block;width:8px;height:8px;border-right:2px solid currentColor;border-top:2px solid currentColor;transform:rotate(45deg);margin-left:13px}
 #status{font-size:13px;font-weight:600;overflow-wrap:anywhere;background:#eaf0e3;border:1px solid #d7e0ce;border-left:3px solid #4f8862;border-radius:6px;padding:13px 15px;margin:23px 0 0;line-height:1.6}
 #status.error{color:#9b322f;background:#fff0e8;border-color:#e9bfb0;border-left-color:#ba4941}
 #result{max-width:100%;overflow:auto;margin-top:12px;overscroll-behavior-x:contain}

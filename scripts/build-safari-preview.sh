@@ -51,6 +51,11 @@ for zone in ['table', 'rack']:
     page = page.replace('<button data-camera="' + zone + '" class="secondary">Take photo</button>', '')
 page = page.replace('Recognition suggestions require your confirmation.',
                     'Browser tile entry is manual. Confirm every reading.')
+for name in assets:
+    if name.endswith(('.js', '.css')):
+        attribute = 'href' if name.endswith('.css') else 'src'
+        page = page.replace(attribute + '="' + name + '"',
+                            attribute + '="' + name + '?v=' + commit[:12] + '"')
 index.write_text(page)
 (destination / '.nojekyll').touch()
 metadata = {
