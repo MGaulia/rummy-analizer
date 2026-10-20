@@ -38,9 +38,44 @@
   calls before the startup fix; `check-phone-startup.py` now proves zero stale
   calls and one call for duplicate requests, with independent move validation.
   Rule toggles disable/hide the opened control without erasing player history.
-- New source/packaged checks pass during implementation. Exact clean source,
-  full command results and publication checkpoint follow after final review.
-  New focused PR depends on #14; keep #12 → #13 → #14 → feedback PR unmerged.
+- [Draft #15](https://github.com/MGaulia/rummy-analizer/pull/15) depends on #14;
+  all remain unmerged in order #12 → #13 → #14 → #15. Main is unchanged at
+  `23eee9e492acd0cbcc97901143d40ab5a1bdee3d`.
+- Clean tested/published source `58c69de17c376a023f172eb6b1627ff37eea7d38`,
+  tree `544405a799b88c6cac88768afcf78e84feaa5b61`. Go 1.27.2 linux/amd64,
+  Node v24.19.0, Python 3.12.14, desktop Chromium 154.0.8037.57. With the
+  existing Go PATH/cache activation, every final command passed:
+
+  ```sh
+  bash scripts/check.sh
+  bash scripts/build-safari-preview.sh /workspace/rummy-review/safari-preview-streamlined
+  node scripts/check-phone-engine.cjs
+  node scripts/check-photo-state.cjs
+  python3 scripts/check-phone-ui.py
+  python3 scripts/check-phone-startup.py --preview-directory /workspace/rummy-review/safari-preview-streamlined
+  python3 scripts/check-safari-preview.py /workspace/rummy-review/safari-preview-streamlined
+  python3 scripts/check-tile-art.py --preview-directory /workspace/rummy-review/safari-preview-streamlined
+  python3 scripts/check-table-view.py --preview-directory /workspace/rummy-review/safari-preview-streamlined --screenshot /workspace/rummy-review/feedback/final-package-board.png
+  python3 scripts/check-browser-reader.py --preview-directory /workspace/rummy-review/safari-preview-streamlined
+  python3 scripts/check-browser-reader.py --preview-directory /workspace/rummy-review/safari-preview-streamlined --report '/workspace/attachments/08851a67-f7cf-48b4-984b-87a68335d77f/rummy-reading-report (1).json' --expectations /workspace/rummy-review/red11/expected.json --output /workspace/rummy-review/feedback/package-readings.json
+  python3 scripts/check-reading-flow.py --preview-directory /workspace/rummy-review/safari-preview-streamlined --report '/workspace/attachments/08851a67-f7cf-48b4-984b-87a68335d77f/rummy-reading-report (1).json' --expectations /workspace/rummy-review/red11/expected.json --output /workspace/rummy-review/feedback/package-flow.json --screenshot /workspace/rummy-review/feedback/package-real-board.png
+  python3 scripts/check-reading-flow.py --preview-directory /workspace/rummy-review/streamlined-live-package --report '/workspace/attachments/08851a67-f7cf-48b4-984b-87a68335d77f/rummy-reading-report (1).json' --expectations /workspace/rummy-review/red11/expected.json --output /workspace/rummy-review/feedback/live-flow.json --screenshot /workspace/rummy-review/feedback/live-board.png
+  python3 scripts/check-phone-startup.py --preview-directory /workspace/rummy-review/streamlined-live-package
+  ```
+
+  All original-pixel readings match; both applicable moves independently validate
+  and conserve all occurrences. Synthetic UI cases separately verify invalid
+  drafts, ambiguous values, red-X removal, raw isolation and failed-read blocking.
+  A test initially waited for artwork after deliberately toggling a rule (which
+  correctly clears results); moving its screenshot before that invalidation
+  fixed the harness. No test assertion was relaxed. No parser/inventory code
+  changed, so no new fuzz or benchmark claim. Native build/device checks unrun.
+- Pages commit `49eecb43fde702d3da78cb5037f82ea9537edfe2` fast-forwards
+  `9d339f348aab8fe8ff40418a9acb61ef43189307`; GitHub reports that exact commit
+  built without error. Downloaded all seventeen manifest assets over public
+  HTTPS, verified every SHA256 and exact source metadata, and passed actual-photo
+  end-to-end plus startup checks against those downloaded files. Live:
+  <https://mgaulia.github.io/rummy-analizer/?v=58c69de17c37>.
 
 ## Requested Printables tile artwork (2026-10-20 UTC)
 

@@ -46,7 +46,7 @@ interface and actual Go bridge are tested on desktop; native compilation, real
 recognition, physical-device memory/latency, and the end-to-end offline workflow
 are unverified. There is no Mac build machine; a representative recognition
 dataset beyond the two shared examples remains unavailable. PRs #9–#11 are
-merged into main. Draft dependencies/merge order are #12 → #13 → #14; all remain
+merged into main. Draft dependencies/merge order are #12 → #13 → #14 → #15; all remain
 unmerged, with #12 targeting main.
 The owner authorized a static GitHub Pages Safari preview and then requested
 automatic browser tile reading. The browser-reader branch depends on #12 and
