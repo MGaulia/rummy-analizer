@@ -9,13 +9,19 @@
 
   function colorOf(r, g, b) {
     const high = Math.max(r, g, b), low = Math.min(r, g, b), delta = high - low;
-    if (high < 125 && delta < 65) return 'black';
-    if (delta < 65 || high < 95) return null;
+    const saturation = high ? delta/high : 0;
+    if (!delta) return high < 125 ? 'black' : null;
     let hue;
     if (high === r) hue = ((g - b) / delta) % 6;
     else if (high === g) hue = (b - r) / delta + 2;
     else hue = (r - g) / delta + 4;
     hue = (hue * 60 + 360) % 360;
+    // Dim teal retains a strong hue even below the absolute black-ink cutoff.
+    // Keep the established warm/neutral black rule: warm lighting can tint a
+    // printed black joker brown without changing its physical ink color.
+    if (hue >= 145 && hue <= 265 && high >= 45 && delta >= 20 && saturation >= .35) return 'blue';
+    if (high < 125 && delta < 65) return 'black';
+    if (delta < 65 || high < 95) return null;
     if (hue < 13 || hue > 335) return 'red';
     if (hue >= 13 && hue < 65) return 'orange';
     // The blue ink on some physical sets is cyan/teal. This is only a proposal.
@@ -43,11 +49,27 @@
     return found;
   }
 
-  function detect(image) {
+  function lighting(image) {
+    const histogram = new Uint32Array(256), pixels = image.width*image.height;
+    for (let i = 0; i < image.data.length; i += 4) {
+      histogram[Math.round((image.data[i]+image.data[i+1]+image.data[i+2])/3)]++;
+    }
+    // A high percentile represents the lit tile faces without letting a few
+    // bright pixels set exposure. Keep the established cutoff for bright photos
+    // and a floor that avoids promoting dark background texture into tiles.
+    let remaining = Math.ceil(pixels*.98), reference = 0;
+    for (; reference < 255; reference++) {
+      remaining -= histogram[reference];
+      if (remaining <= 0) break;
+    }
+    return {reference,threshold:Math.min(165,Math.max(110,reference*.75))};
+  }
+
+  function detect(image, threshold = lighting(image).threshold) {
     const {data, width, height} = image, mask = new Uint8Array(width * height);
     for (let p = 0; p < mask.length; p++) {
       const r = data[p*4], g = data[p*4+1], b = data[p*4+2];
-      mask[p] = (r+g+b)/3 > 165 && Math.max(r,g,b)-Math.min(r,g,b) < 75 && b > r*.7 ? 1 : 0;
+      mask[p] = (r+g+b)/3 > threshold && Math.max(r,g,b)-Math.min(r,g,b) < 75 && b > r*.7 ? 1 : 0;
     }
     const regions = components(mask, width, height, Math.max(80, width*height*.0006));
     const tiles = [];
@@ -209,7 +231,8 @@
     const context = canvas.getContext('2d',{willReadFrequently:true});context.drawImage(image,0,0,canvas.width,canvas.height);
     const pixels = context.getImageData(0,0,canvas.width,canvas.height);
     progress('Looking for tiles on this device…');await pause();
-    const boxes = group(detect(pixels));
+    const exposure = lighting(pixels);
+    const boxes = group(detect(pixels,exposure.threshold));
     const {module,api} = boxes.length ? await ready() : {};
     const observations = [];
     for (let i = 0; i < boxes.length; i++) {
@@ -241,8 +264,9 @@
         text:text||'Uncertain number or color',candidates,ocrReadings,digitReadings,digitCount,suggestedMeld:box.suggestedMeld,suggestedOrder:box.suggestedOrder});
       progress(`Reading tiles on this device… ${i+1} of ${boxes.length}`);await pause();
     }
-    return {observations,recognizer:{name:'local-ivory-tiles-tesseract',pipelineRevision:3,coreVersion:'6.1.2',
-      modelRevision:'87416418657359cb625c412a48b6e1d6d41c29bd',maxDimension:MAX_DIMENSION},
+    return {observations,recognizer:{name:'local-ivory-tiles-tesseract',pipelineRevision:4,coreVersion:'6.1.2',
+      modelRevision:'87416418657359cb625c412a48b6e1d6d41c29bd',maxDimension:MAX_DIMENSION,
+      brightnessThreshold:exposure.threshold,highPercentileLuminance:exposure.reference},
       notice:`Proposed ${observations.length} tiles locally. Scores are uncalibrated; unreadable values require editing.`};
   }
   const api={read,ready,colorOf,detect,group};

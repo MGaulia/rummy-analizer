@@ -45,8 +45,9 @@ is not a measured final minimum device/OS or an accepted model choice. The local
 interface and actual Go bridge are tested on desktop; native compilation, real
 recognition, physical-device memory/latency, and the end-to-end offline workflow
 are unverified. There is no Mac build machine; a representative recognition
-dataset beyond the two shared examples remains unavailable. PRs #9–#11 are
-merged into main. Draft dependencies/merge order are #12 → #13 → #14 → #15; all remain
+dataset beyond the four shared photos remains unavailable. PRs #9–#11 are
+merged into main. Draft dependencies/merge order are #12 → #13 → #14 → #15 → #16;
+all remain
 unmerged, with #12 targeting main.
 The owner authorized a static GitHub Pages Safari preview and then requested
 automatic browser tile reading. The browser-reader branch depends on #12 and
@@ -64,8 +65,13 @@ debugging; it never uploads or shares the report automatically. Synthetic actual
 native acceptance, or measured iPhone memory/latency. The owner subsequently
 shared a reading report containing the two original examples. Reader revision 3
 passes exact local replay of their 14 manually labeled tiles, counts and suggested
-melds. This bounded real-photo regression is desktop evidence, not representative
-dataset evaluation or physical-iPhone acceptance. Dominant ink filtering prevents
+melds. A later iPhone report added two dimmer originals with 22 labeled tiles.
+Reader revision 4 adapts face brightness to the image's 98th-percentile luminance
+and recovers saturated dim blue/teal ink, retaining the established warm-black
+joker handling. All 36 occurrences across these four photos pass exact desktop
+replay, including duplicate counts and suggested melds. This bounded regression
+does not establish representative dataset accuracy or physical-iPhone acceptance
+of the updated reader. Dominant ink filtering prevents
 cross-color background slivers from contaminating number crops; same-color
 artifacts and other capture conditions remain unmeasured.
 

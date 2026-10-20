@@ -1,5 +1,104 @@
 # Implementation status
 
+## Adaptive photo lighting follow-up (2026-10-19, owner local date)
+
+- The latest supplied iPhone reading report was produced by preview source
+  `88101cd91e700bd5420ad45e4e311aab95188387`, reader revision 3. It contains
+  21 visible table tiles in seven melds and a rack red 1, independently labeled
+  from the two original photos. The old reader found only four table tiles;
+  it read the rack correctly. The report has no recorded search outcome, so it
+  does not establish that the owner attempted a search.
+- Reproduced the exact-photo assertion failure before changing the reader. A
+  synthetic 70%-brightness regression also failed (zero of thirteen tiles).
+  The fixed brightness cutoff excluded most dim ivory faces. Reader revision 4
+  uses the 98th-percentile image luminance with a 110–165 bounded cutoff, keeps
+  the existing color/shape filters, and exports its lighting measurements.
+- Adaptive detection alone recovered all 21 table boxes but exposed the old
+  absolute color cutoff: dim blue/teal ink could be missing or proposed black.
+  A narrow hue/saturation rule recovers that ink while retaining warm/neutral
+  black handling. A broader color adjustment regressed the earlier warm-lit
+  joker during testing and was rejected. No OCR score gate, game rules or
+  inventory logic was changed; no values are inferred from meld legality.
+- Current source passes exact labels/counts/melds/order on both original-photo
+  pairs: 22 new plus 14 earlier occurrences. Synthetic actual-OCR regressions
+  cover all thirteen numbers/colors at 100%, 70% and 60% brightness, separated
+  and touching. The 60% case caught dim blue failures before the color fix.
+  These are bounded regressions, not representative accuracy measurements.
+- Actual file import → reader → automatic position → Go/Wasm → rendered board
+  passes for both private reports, without confirmation clicks or injected
+  observations/results. Independent CLI and Wasm runs establish the new case:
+  unopened with opening required = proven no move (2 nodes); already opened or
+  opening disabled = proven optimum one rack tile (194,009 nodes, below the
+  existing 200,000 bound). Every returned move passes a separate check-move,
+  preserves all 22 physical occurrences and empties the rack. The old report
+  retains its independently verified four-tile optimum. No timeout is called
+  no move. Desktop execution timings are not phone performance evidence.
+- Original reports, photos, hash-bound manual labels and replay outputs stay
+  outside Git and the static deployment. The rack photo's EXIF orientation was
+  already honored by browser decoding; this change makes no rotation claim.
+  Independent source review found no blocking issue. Focused draft #16 depends
+  on #15; merge order is #12 → #13 → #14 → #15 → #16, with every PR left
+  unmerged. Broader capture conditions, updated physical-iPhone execution,
+  native builds (no Mac/Xcode host), representative evaluation and the full
+  offline acceptance workflow remain unverified.
+
+### Revision 4 release verification
+
+Clean tested/published source `f1414d88f347249eff25932c9098ad34202fb5a6`, tree
+`149c591a4d435bb4a3a6a4410ca4e59c66b257ed`. Go 1.27.2 linux/amd64,
+Node v24.19.0, Python 3.12.14, Chromium 154.0.8037.57. All commands below passed;
+private paths are abbreviated by these shell variables (original inputs and
+labels are intentionally absent from Git):
+
+```sh
+export PATH="/workspace/.rummy-tools/go/bin:$PATH"
+export GOCACHE=/workspace/.rummy-cache/go-build GOPATH=/workspace/.rummy-cache/go GOWORK=off
+new_report='/tmp/codex-remote-attachments/01a155ff-2f31-7128-8bb8-ad22899b5016/03EEB0AC-762D-46DB-8AE8-451BFA1AAD6F/1-att.4gsfqgkHEIU2T3a-jjuom1UYLjNfY593QKU777r3IFs.json'
+prior_report=/workspace/attachments/a44c4bfe-d20b-44b6-88a5-b3bff61f2c05/rummy-reading-report.json
+new_labels=/workspace/rummy-review/iphone-report3/expected.json
+prior_labels=/workspace/rummy-review/red11/expected.json
+release_package=/workspace/rummy-review/safari-preview-reader-revision4
+live_package=/workspace/rummy-review/reader-revision4-live-package
+bash scripts/check.sh
+python3 scripts/check-browser-reader.py
+python3 scripts/check-phone-ui.py
+python3 scripts/check-phone-startup.py
+node scripts/check-photo-state.cjs
+node scripts/check-phone-engine.cjs
+bash scripts/build-safari-preview.sh "$release_package"
+python3 scripts/check-safari-preview.py "$release_package"
+python3 scripts/check-table-view.py --preview-directory "$release_package" --screenshot /workspace/rummy-review/iphone-report3/package-layout.png
+python3 scripts/check-tile-art.py --preview-directory "$release_package"
+python3 scripts/check-browser-reader.py --preview-directory "$release_package" --report "$new_report" --expectations "$new_labels" --output /workspace/rummy-review/iphone-report3/package-reader.json
+python3 scripts/check-reading-flow.py --preview-directory "$release_package" --report "$new_report" --expectations "$new_labels" --expected-played 1 --output /workspace/rummy-review/iphone-report3/package-flow.json --screenshot /workspace/rummy-review/iphone-report3/package-board.png
+python3 scripts/check-reading-flow.py --preview-directory "$release_package" --report "$prior_report" --expectations "$prior_labels" --expected-played 4 --output /workspace/rummy-review/iphone-report3/package-bright-flow.json
+python3 scripts/check-reading-flow.py --preview-directory "$live_package" --report "$new_report" --expectations "$new_labels" --expected-played 1 --output /workspace/rummy-review/iphone-report3/live-flow.json --screenshot /workspace/rummy-review/iphone-report3/live-board.png
+python3 scripts/check-reading-flow.py --preview-directory "$live_package" --report "$prior_report" --expectations "$prior_labels" --expected-played 4 --output /workspace/rummy-review/iphone-report3/live-bright-flow.json
+```
+
+The clean core check includes uncached tests, vet, races, CLI smoke checks and
+exact rendering. OCR retains duplicate/joker/truncation/reimport checks; UI tests
+also retain stale-input/startup locking and explicit errors. Package layout/art
+checks cover every numbered face, physical joker roles and compact/wrapped melds
+at 320/390/768/1200px. Actual-photo flows independently check returned moves and
+physical conservation under all three opening states. Desktop screenshots were
+visually reviewed. There are no parser/inventory changes; no new fuzz or benchmark
+result is claimed.
+
+Static Pages commit `f18fab4fae4991adc54119187dbeff38f3a94b60` fast-forwards
+`18a2d10976fcc6460ca2954c3a72bd7bc1d4f1cc`. GitHub reported that exact commit
+built without error. Over public HTTPS, all seventeen manifest assets matched
+SHA256 hashes in the clean package; metadata and `.nojekyll` also matched. The
+two live-package commands above then passed the 22- and 14-occurrence cases.
+Private deployment/hash/replay evidence is under
+`/workspace/rummy-review/iphone-report3`; only the nineteen expected static
+package files were published, without any report or original photo.
+Live: <https://mgaulia.github.io/rummy-analizer/?v=f1414d88f347>.
+[PR #16](https://github.com/MGaulia/rummy-analizer/pull/16) remains an unmerged
+draft based on #15. This documentation checkpoint does not change the deployed
+source. No updated-reader physical-iPhone run, native build, representative photo
+accuracy evaluation or complete offline-device acceptance is claimed.
+
 ## Compact meld layout follow-up (2026-10-19, owner local date)
 
 - Owner screenshot showed green played markers on dark green cards, clipped
