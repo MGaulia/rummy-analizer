@@ -45,9 +45,8 @@ contrasting amber outlines on light cards. Earlier startup/OCR checks are
 recorded with their exact source checkpoints in docs/implementation-plan.md.
 Physical Safari execution of this revision remains unverified. No source merge
 was needed; #12 and its reader follow-up
-#13, artwork #14 and streamlined flow #15 remain unmerged drafts. The adaptive
-photo-lighting branch depends on #15 and follows it in merge order.
-Merge #12 → #13 → #14 → #15, then adaptive photo lighting.
+#13, artwork #14, streamlined flow #15 and adaptive photo lighting #16 remain
+unmerged drafts. Merge #12 → #13 → #14 → #15 → #16.
 The current preview uses a green felt table, ivory numbered tiles, a wooden
 rack, and the four tile colors. Assets include a source-version query parameter
 to refresh the styling after publication. The design adapts to phone and desktop
