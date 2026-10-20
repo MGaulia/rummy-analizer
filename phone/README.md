@@ -28,8 +28,8 @@ The UI test fulfills all local assets in-process with network disabled. It uses
 synthetic photo observations solely to test correction and real-engine wiring;
 it does not evaluate recognition. It checks uncertainty gates, separate photo
 identity, raw/corrected value isolation, exact occurrence rendering, and result
-invalidation when inputs change. Browser-only imports require manual annotation;
-no browser recognizer is claimed.
+invalidation when inputs change. The Safari package additionally bundles a local
+OCR reader; its separate actual-pixel checks are documented below.
 
 ## Safari preview
 
@@ -43,7 +43,8 @@ been verified here. No source merge was needed; #12 remains an unmerged draft.
 The current preview uses a green felt table, ivory numbered tiles, a wooden
 rack, and the four tile colors. Assets include a source-version query parameter
 to refresh the styling after publication. The design adapts to phone and desktop
-widths; the solver and manual tile-entry requirements are unchanged.
+widths. The new browser-reader branch adds local suggestions with mandatory
+correction/confirmation; the solver is unchanged.
 
 The owner authorized publishing the draft #12 browser interface on GitHub Pages.
 This does not merge #12 or accept its native integration. Build from a clean,
@@ -52,6 +53,7 @@ committed checkout with the same Go/Python prerequisites as above:
 ```sh
 bash scripts/build-safari-preview.sh /tmp/rummy-safari-preview
 python3 scripts/check-safari-preview.py /tmp/rummy-safari-preview
+python3 scripts/check-browser-reader.py
 ```
 
 Use an empty output directory. Publish only its contents to the `gh-pages`
@@ -63,9 +65,10 @@ checks manual file import/correction and solving at the nested Pages URL path.
 It runs desktop Chromium at a phone viewport, not Safari or an iPhone.
 
 In iPhone Safari, open the HTTPS Pages URL on any network. Choose an edition,
-then use **Choose photo** separately for table and rack. Browser imports have no
-recognizer: tap each tile to add it, enter color/number or joker, and confirm it.
-For table tiles assign a meld number and preserve the displayed order. Confirm
+then use **Choose photo** separately for table and rack. The bundled reader
+proposes tiles, colors, numbers and meld rows. Correct every uncertain reading,
+tap missed tiles to add them, exclude false detections, and confirm every tile.
+For table tiles check the meld number and preserve the displayed order. Confirm
 each complete reading before **Check table** or **Find move**. An empty table
 photo is allowed. Photos and solving stay in the browser. Reloading clears the
 readings; offline reopening is not supported. The native **Take photo** buttons
@@ -77,6 +80,43 @@ requirement enabled. After entering and confirming all three rack tiles, the
 solver should show a 30-point opening that plays three tiles. Record the iPhone
 model, iOS version, preview source shown on the page, result, and any errors.
 This tests manual correction and the actual solver, not recognition accuracy.
+
+## Local browser reader
+
+`scripts/build-browser-reader.py` downloads the pinned Tesseract.js-core 6.1.2
+runtime and an upstream tessdata_fast English model **at build time**, verifying
+their checksums. The preview bundles the runtime, WebAssembly bytes, model and
+Apache-2.0 notices as local script assets. There is no runtime CDN/model request,
+worker, photo upload, or remote inference. CSP still blocks all connections.
+The Go engine and native Apple Vision adapter are unchanged. The model increases
+the initial page download; phone memory and latency still need measurement.
+
+The reader bounds image size to 1400 pixels, finds ivory components, splits
+touching strips, crops ink away from the embossed logo, runs actual OCR, proposes
+colors (including cyan/teal as a blue candidate), and suggests meld rows. A
+face-like joker is only a low-confidence proposal. Scores are uncalibrated; no
+reading is automatically confirmed. Rotation, perspective, shadows, overlapping
+tiles, unusual fonts/backgrounds and joker designs can cause missed/wrong values.
+Use a clear, upright, close photo and review completeness. Failures retain manual
+entry. The unbundled source page also falls back to manual entry.
+
+After building reader assets, run `python3 scripts/check-browser-reader.py`.
+This executes the real bundled OCR on **synthetic** images of all 13 numbers,
+colors, touching strips and a face-like joker, and then imports images through
+the actual file picker, confirms readings and solves a legal opening. It checks
+that only bundled GET assets were requested and that CSP produced no errors.
+This is not real-photo accuracy or iPhone evidence. The two owner photos are
+visible in chat but their original bytes are not mounted in this workspace, so
+their end-to-end readings have not been evaluated here.
+
+To export proposals for an accessible original photo without uploads:
+
+```sh
+python3 scripts/check-browser-reader.py --image /external/table.jpg --zone table --output /external/table-proposals.json
+```
+
+Use an independently annotated manifest with `scripts/evaluate-photos.py` for
+accuracy metrics. Store originals, labels and proposal exports outside Git.
 
 ## Build the iOS integration
 

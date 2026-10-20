@@ -46,10 +46,15 @@ interface and actual Go bridge are tested on desktop; native compilation, real
 recognition, physical-device memory/latency, and the end-to-end offline workflow
 are unverified. The owner confirmed there is no Mac build machine or real-photo
 dataset yet. PRs #9–#11 are merged into main; #12 targets main and remains a draft.
-The owner authorized a static GitHub Pages Safari preview of #12 for manual
-photo annotation and on-phone solver testing. It performs no browser recognition,
-does not persist photos/readings, and does not yet support offline reopening.
-Publishing that preview does not satisfy native or recognition acceptance.
+The owner authorized a static GitHub Pages Safari preview and then requested
+automatic browser tile reading. The browser-reader branch depends on #12 and
+bundles local Tesseract OCR, tile/ink segmentation, color proposals and suggested
+meld rows. Model/runtime downloads happen at build time; CSP still prohibits
+runtime connections, uploads and remote inference. All proposals require explicit
+confirmation. The preview does not persist photos/readings or support offline
+reopening. Synthetic actual-OCR checks do not establish real-photo accuracy,
+native acceptance, or measured iPhone memory/latency. The owner's two inline
+examples are visually transcribed but unavailable as original files to the runner.
 
 The owner requested a Rummikub-style interface: green felt, ivory numbered
 tiles with red/blue/black/orange accents, and wooden rack details. Decorative
@@ -57,3 +62,8 @@ tiles are separate from the confirmed table/rack rendering. Phone layouts stack
 the two photo panels; wider layouts show them side by side. Local processing,
 explicit reading confirmation, search coverage messages, and edition/opening
 state remain part of the interface contract.
+The owner additionally requested actual official tile artwork for the confirmed
+table. Inspection found official product photographs and joker icons, but not a
+complete individual tile-face atlas. The requested source page/asset is pending;
+existing exact diagrams remain in place. Do not claim CSS boxes or generated art
+are the requested official tiles, and do not substitute user photos for that art.

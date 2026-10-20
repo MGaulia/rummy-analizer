@@ -1,5 +1,38 @@
 # Implementation status
 
+## Browser reading follow-up (2026-10-19, owner local date)
+
+- Owner reported that Safari did not read their tiles and supplied two inline
+  photos. The previous published preview intentionally had no automatic browser
+  recognizer. Visual transcription: rack red 11, black 9, blue/teal 2 and 3,
+  orange 8; table orange/black/red 12, black 8–joker–10, blue/black/orange 11.
+  These are manual observations, not program output. The inline originals are
+  not mounted under `/workspace/attachments` or otherwise accessible as files;
+  real-pixel evaluation on those exact examples remains blocked by original-file
+  access. Do not turn this transcription into a mocked recognition result.
+- Implemented a separate browser-reader branch on top of unmerged draft #12.
+  Real local Tesseract.js-core 6.1.2 and a pinned tessdata_fast model are bundled
+  as scripts with verified source checksums and Apache-2.0 notices. No workers,
+  runtime fetches, photo uploads, cloud inference or remote solver. Inputs are
+  bounded to 1400px; ivory segmentation, touching-strip seams, ink crops, OCR,
+  cyan/teal color proposals, low-confidence possible-joker detection and geometric
+  meld suggestions feed the existing raw/corrected confirmation boundary.
+- Actual-OCR tests initially exposed missing 5/9 readings under single-line
+  segmentation; a raw-line fallback fixes the synthetic regression. The new
+  integration check also exposed an existing CSP violation in the embedded SVG
+  style element. Browser rendering now removes the generated style before parsing
+  and uses the local stylesheet; standalone Go SVG output is unchanged. The
+  strict CSP is preserved. Synthetic reader, actual file import, confirmation,
+  real-engine opening and no-network/no-CSP-error checks passed before committing.
+- The owner also requested real official tiles for visualization. Inspected the
+  official site's home page, media searches and older asset records. Found product
+  photographs, joker logos and rulebook illustrations, but not a complete clean
+  individual tile-face atlas. Requested the intended official page URL using an
+  asynchronous question; original tile-art substitution remains pending that
+  asset/source. Do not silently replace it with generated/CSS tiles. Continue
+  browser reading and publication independently.
+- Final commit/tree, full checks and deployment record follow after publication.
+
 ## Current state after network publication (2026-10-19)
 
 - Published policy is enforced for api.github.com and rummikub.com; actual API

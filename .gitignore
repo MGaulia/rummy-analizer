@@ -1,4 +1,5 @@
 .DS_Store
 phone/web/engine/
+phone/web/recognition/
 phone/ios/build/
 __pycache__/
