@@ -34,16 +34,17 @@ for name in assets:
     shutil.copyfile(source / name, target)
 index = destination / 'index.html'
 page = index.read_text()
-notice = '''<section aria-label="Safari preview instructions"><h2>Safari test preview</h2>
-<p>Choose separate table and rack photos. Tap each tile in each photo, enter its
-color and number (or joker), and confirm it. For table tiles, enter the meld
-number and its displayed order. Confirm each complete reading, then check the
-table or find a move. An empty table photo is allowed.</p>
-<p>Tile entry is manual in this browser preview. Automatic recognition requires
-the native iPhone app. Photos and solving stay on this device. Reloading clears
-your readings; reopening offline is not supported by this preview.</p>
-<p class="notice">Preview source: <code>''' + html.escape(commit[:12]) + '''</code>.
-Native build and recognition acceptance remain pending.</p></section>'''
+notice = '''<section class="preview-note" aria-label="Safari preview instructions">
+<div><h2>Safari test preview</h2><p>Tile entry is manual. Your photos stay on your device.</p></div>
+<details><summary>How to play</summary>
+<p>Choose separate table and rack photos. Tap every tile to enter its color and
+number (or joker), then confirm it. For table tiles, assign a meld number and
+keep their displayed order. Confirm each complete reading before checking or
+finding a move. An empty table photo is allowed.</p>
+<p>Automatic recognition requires the native iPhone app. Reloading clears your
+readings; offline reopening is not supported by this preview.</p>
+<p>Preview source: <code>''' + html.escape(commit[:12]) + '''</code>.
+Native build and recognition acceptance remain pending.</p></details></section>'''
 page = page.replace('</header>', '</header>\n' + notice, 1)
 page = page.replace('PERSONAL · OFFLINE', 'PERSONAL · SAFARI PREVIEW')
 for zone in ['table', 'rack']:
