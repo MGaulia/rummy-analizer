@@ -24,10 +24,39 @@
   share the downloaded JSON; there is no upload, network call or automatic
   persistence. Local `--report` replay verifies photo hashes and reruns the
   actual reader. Download contents/hashes are checked by the browser integration.
-- Full source/package verification and deployment details are recorded below
-  after publishing. Printables model artwork remains an independent pending
-  milestone, blocked by the unchanged enforced network policy (the saved domain
-  additions are not active). Native build/device acceptance is still unrun.
+- Exact tested/published source: `744f670966950d5373d1f462a7d36a1a8182af31`;
+  tree `7b0ea8ea6e33006e3b59853f6061d5cd3cde68e1`. Toolchain unchanged:
+  Go 1.27.2 linux/amd64, Node v24.19.0, Python 3.12.14,
+  desktop Chromium 154.0.8037.57. With the existing Go PATH/cache activation,
+  all final commands passed:
+
+  ```sh
+  bash scripts/check.sh
+  bash scripts/build-safari-preview.sh /workspace/rummy-review/safari-preview-reader-revision2
+  node scripts/check-phone-engine.cjs
+  node scripts/check-photo-state.cjs
+  python3 scripts/check-phone-ui.py
+  python3 scripts/check-safari-preview.py /workspace/rummy-review/safari-preview-reader-revision2
+  python3 scripts/check-browser-reader.py --preview-directory /workspace/rummy-review/safari-preview-reader-revision2
+  python3 scripts/check-browser-reader.py --report /workspace/rummy-review/revision2-five-report.json --output /workspace/rummy-review/revision2-five-proposals.json
+  python3 scripts/check-browser-reader.py --preview-directory /workspace/rummy-review/reader-revision2-live-package
+  ```
+
+  The report replay fixture is explicitly synthetic; all five manually specified
+  expected values matched. One earlier replay comparison failed because a reused
+  synthetic file had been overwritten by a two-tile debug case while the assertion
+  still expected five tiles. Fresh deterministic input resolved that test-artifact
+  mismatch; the two-tile report also replayed correctly. No real-photo claim.
+- Pages commit `9cb5b8e4d1c7ffdda34139273a3b33e3cd6aac85` fast-forwards
+  `75c5e96f0190da8d49e58d5dd8752d98ed02f831`. GitHub reports the exact new
+  commit `built` without error. Direct public HTTPS access now works. Downloaded
+  all twelve assets named in the live manifest, checked each SHA256 against the
+  tested package, and reran the actual reader/export regressions on those files.
+  Preview: <https://mgaulia.github.io/rummy-analizer/?v=744f67096695>.
+- #13 contains this follow-up and stays draft, based on unmerged #12. Printables
+  model artwork remains an independent pending milestone: its saved network
+  additions are not active in the enforced policy. Native build/device acceptance
+  and reproduction from the owner's actual original image bytes remain unrun.
 
 ## Browser reading follow-up (2026-10-19, owner local date)
 

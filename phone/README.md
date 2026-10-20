@@ -35,11 +35,11 @@ OCR reader; its separate actual-pixel checks are documented below.
 
 Open the [Safari preview](https://mgaulia.github.io/rummy-analizer/) on any network.
 GitHub's Pages API confirms a successful build of `gh-pages` commit
-`75c5e96f0190da8d49e58d5dd8752d98ed02f831`, with HTTPS enforced. The initial
-activation request from this session was denied, but Pages was subsequently
-enabled. The workspace's direct public-URL request is still blocked by its
-pending network configuration; live HTTP and physical Safari execution have not
-been verified here. No source merge was needed; #12 and its reader follow-up
+`9cb5b8e4d1c7ffdda34139273a3b33e3cd6aac85`, with HTTPS enforced. All twelve
+live HTTPS assets matched the tested package hashes, and the downloaded package
+passed the actual OCR/confirmation/solver/report regressions in desktop Chromium.
+Physical Safari execution of this revision remains unverified. No source merge
+was needed; #12 and its reader follow-up
 #13 remain unmerged drafts. Merge #12 before #13.
 The current preview uses a green felt table, ivory numbered tiles, a wooden
 rack, and the four tile colors. Assets include a source-version query parameter
