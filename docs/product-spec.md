@@ -44,8 +44,10 @@ using native camera/import/Vision proposals and the bundled Go/Wasm engine; this
 is not a measured final minimum device/OS or an accepted model choice. The local
 interface and actual Go bridge are tested on desktop; native compilation, real
 recognition, physical-device memory/latency, and the end-to-end offline workflow
-are unverified. The owner confirmed there is no Mac build machine or real-photo
-dataset yet. PRs #9–#11 are merged into main; #12 targets main and remains a draft.
+are unverified. There is no Mac build machine; a representative recognition
+dataset beyond the two shared examples remains unavailable. PRs #9–#11 are
+merged into main. Draft dependencies/merge order are #12 → #13 → #14; all remain
+unmerged, with #12 targeting main.
 The owner authorized a static GitHub Pages Safari preview and then requested
 automatic browser tile reading. The browser-reader branch depends on #12 and
 bundles local Tesseract OCR, tile/ink segmentation, color proposals and suggested

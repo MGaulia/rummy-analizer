@@ -23,9 +23,42 @@
   decoration. Screenshot visually reviewed. Opening integration checks actual
   solver output plus three local sprites/played outlines. These are desktop
   checks, not physical-iPhone acceptance or recognition measurements.
-- Focused artwork PR depends on #13, which depends on #12. Keep all unmerged;
-  merge order #12 → #13 → artwork. Clean build/verification/publication checkpoint
-  follows below. Native device/build blockers and engine proof limits persist.
+- [Draft #14](https://github.com/MGaulia/rummy-analizer/pull/14) depends on #13,
+  which depends on #12. All remain unmerged; merge order #12 → #13 → #14.
+  Native device/build blockers and engine proof limits persist. Main remains
+  `23eee9e492acd0cbcc97901143d40ab5a1bdee3d`.
+- Clean tested/published source `20f4f393215400f7666247593e8597e455bb7614`,
+  tree `9d7018421a34d05f23d30e08ba0096a8acdd6020`. Go 1.27.2 linux/amd64,
+  Node v24.19.0, Python 3.12.14, Chromium 154.0.8037.57, Blender 4.3.2.
+  All commands passed with the existing Go PATH/cache activation:
+
+  ```sh
+  bash scripts/check.sh
+  bash scripts/build-safari-preview.sh /workspace/rummy-review/safari-preview-printables-art
+  node scripts/check-phone-engine.cjs
+  node scripts/check-photo-state.cjs
+  python3 scripts/check-phone-ui.py
+  python3 scripts/check-safari-preview.py /workspace/rummy-review/safari-preview-printables-art
+  python3 scripts/check-tile-art.py --preview-directory /workspace/rummy-review/safari-preview-printables-art --screenshot /workspace/rummy-review/printables-130082/diagram-final.png
+  python3 scripts/check-browser-reader.py --preview-directory /workspace/rummy-review/safari-preview-printables-art
+  python3 scripts/check-browser-reader.py --preview-directory /workspace/rummy-review/safari-preview-printables-art --report /workspace/attachments/a44c4bfe-d20b-44b6-88a5-b3bff61f2c05/rummy-reading-report.json --expectations /workspace/rummy-review/red11/expected.json --output /workspace/rummy-review/red11/art-package-after.json
+  python3 scripts/check-tile-art.py --preview-directory /workspace/rummy-review/printables-art-live-package --screenshot /workspace/rummy-review/printables-130082/diagram-live.png
+  python3 scripts/check-browser-reader.py --preview-directory /workspace/rummy-review/printables-art-live-package --report /workspace/attachments/a44c4bfe-d20b-44b6-88a5-b3bff61f2c05/rummy-reading-report.json --expectations /workspace/rummy-review/red11/expected.json --output /workspace/rummy-review/red11/art-live-after.json
+  ```
+
+  No parser/inventory change, new fuzz/benchmark result or native/device result.
+  PNG hash, geometry source pin and byte-identical rendering reproduction are
+  recorded in `docs/tile-art.md`; original local render logs/verification live in
+  `/workspace/rummy-review/printables-130082/evidence/`. During test development,
+  SVG sizing needed `width.baseVal` rather than HTML computed-width assumptions,
+  and SVG caption assertions needed textContent rather than HTMLElement innerText;
+  both harness errors were corrected before the clean run.
+- Pages commit `9d339f348aab8fe8ff40418a9acb61ef43189307` fast-forwards the
+  reader deployment `b6acbb5fc8bd210f7d3d9438a27cd74b24e8e98e`. GitHub reports
+  this exact commit built without error. Downloaded all sixteen manifest assets
+  over public HTTPS and verified each hash/source metadata, then passed the art
+  and original-photo checks against the downloaded package. Live preview:
+  <https://mgaulia.github.io/rummy-analizer/?v=20f4f3932154>.
 
 ## Red 11 original-photo regression (2026-10-20 UTC)
 
