@@ -65,6 +65,10 @@ button:disabled{opacity:.4;cursor:default;box-shadow:none}
 #result{max-width:100%;overflow:auto;margin-top:12px;overscroll-behavior-x:contain}
 #result:empty{margin:0}
 #result svg{display:block;width:100%;min-width:1020px}
+#result svg text{font-family:system-ui,sans-serif}
+#result svg .heading{font-size:22px;fill:#162f24}
+#result svg .number{font-size:28px;font-weight:700}
+#result svg .caption{font-size:11px;fill:#253d31}
 .photo-preview{max-width:100%;max-height:460px;display:block;margin:4px auto 15px;border-radius:8px;cursor:crosshair}
 .tile-editor{display:grid;grid-template-columns:60px minmax(0,1fr);gap:12px;padding:16px 0;border-top:1px solid #dedecb}
 .tile-editor canvas{width:60px;height:80px;object-fit:contain;background:#e5e9df;border-radius:6px}
