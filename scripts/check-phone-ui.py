@@ -1,74 +1,77 @@
-"""Desktop browser integration of real Go/Wasm and correction UI.
-
-Photo observations below are synthetic test input, NOT recognizer evaluation.
-All assets are fulfilled in-process; any other request fails the test.
-"""
+"""Desktop real Go/Wasm UI with synthetic photo observations, not recognition."""
 from pathlib import Path
 import base64
 import io
 from PIL import Image
 from playwright.sync_api import sync_playwright
 
-root = Path(__file__).resolve().parents[1] / 'phone' / 'web'
+root = Path(__file__).resolve().parents[1] / 'phone/web'
 blank = io.BytesIO()
-Image.new('RGB', (300, 160), '#faf3de').save(blank, format='PNG')
-photo = 'data:image/png;base64,' + base64.b64encode(blank.getvalue()).decode()
-requests = []
+Image.new('RGB', (300,160), '#faf3de').save(blank, format='PNG')
+photo = 'data:image/png;base64,'+base64.b64encode(blank.getvalue()).decode()
+requests, errors = [], []
 with sync_playwright() as p:
     browser = p.chromium.launch(executable_path='/usr/bin/chromium', headless=True, args=['--no-sandbox'])
     context = browser.new_context(viewport={'width':390,'height':844}, offline=True)
     def serve(route):
-        url = route.request.url
-        requests.append(url)
-        assert url.startswith('https://rummy.test/'), f'Unexpected network destination: {url}'
-        target = root / url.removeprefix('https://rummy.test/').split('?')[0]
-        if target == root:
-            target = root / 'index.html'
-        assert target.resolve().is_relative_to(root.resolve())
-        kind = {'.html':'text/html','.js':'text/javascript','.css':'text/css','.wasm':'application/wasm','.png':'image/png'}.get(target.suffix,'application/octet-stream')
-        route.fulfill(status=200,body=target.read_bytes(),content_type=kind)
-    context.route('**/*', serve)
-    page = context.new_page()
-    errors = []
-    page.on('pageerror', lambda error: errors.append(str(error)))
+        url=route.request.url;requests.append(url)
+        assert route.request.method=='GET' and url.startswith('https://rummy.test/'), url
+        name=url.removeprefix('https://rummy.test/').split('?')[0] or 'index.html'
+        target=root/name;assert target.resolve().is_relative_to(root)
+        kind={'.html':'text/html','.js':'text/javascript','.css':'text/css','.png':'image/png'}
+        route.fulfill(body=target.read_bytes(),content_type=kind.get(target.suffix,'text/plain'))
+    context.route('**/*',serve)
+    page=context.new_page();page.on('pageerror',lambda error:errors.append(str(error)))
+    page.on('console',lambda message:errors.append(message.text) if message.type=='error' else None)
     page.goto('https://rummy.test/')
-    page.wait_for_function("document.getElementById('status').textContent.includes('Local engine ready')")
+    page.wait_for_function("typeof rummyExecute==='function'")
+    assert page.locator('#edition').input_value()=='4'
+    assert page.locator('#budget,#drawn').count()==0
     assert 'Redistributions in binary form' in page.locator('#licenses').text_content()
-    page.select_option('#edition','4')
-    page.evaluate('payload => acceptNativePhoto(payload)', {'zone':'table','source':'table-fixture','image':photo,'observations':[]})
-    page.get_by_role('button',name='Confirm complete table reading',exact=True).click()
-    # Raw proposals cannot be silently treated as confirmed values.
-    observations=[]
-    for i,tile in enumerate([{'color':'red','number':10},{'color':'blue','number':10},{'joker':True}]):
-        observations.append({'text':str(tile),'rect':{'x':i/3,'y':0,'width':1/3,'height':1},'candidates':[{'tile':tile,'confidence':.9}]})
-    page.evaluate('payload => acceptNativePhoto(payload)',{'zone':'rack','source':'rack-fixture','image':photo,'observations':observations})
+    page.locator('#opened').check();page.locator('#opening').uncheck()
+    assert page.locator('#opened').is_disabled() and page.locator('#opened').is_checked()
+    page.locator('#opening').check();assert page.locator('#opened').is_enabled() and page.locator('#opened').is_checked()
+    page.locator('#opened').uncheck()
+    page.evaluate('payload=>acceptNativePhoto(payload)',{'zone':'table','source':'table-fixture','image':photo,'observations':[]})
+    observations=[{'text':str(tile),'rect':{'x':i/3,'y':0,'width':1/3,'height':1},'candidates':[{'tile':tile,'confidence':.9}]} for i,tile in enumerate([
+        {'color':'red','number':10},{'color':'blue','number':10},{'joker':True}])]
+    page.evaluate('payload=>acceptNativePhoto(payload)',{'zone':'rack','source':'rack-fixture','image':photo,'observations':observations})
+    assert page.get_by_role('button',name='Confirm tile',exact=True).count()==0
     page.get_by_role('button',name='Find move',exact=True).click()
-    assert 'confirmation' in page.locator('#status').inner_text()
-    for _ in range(3):
-        page.get_by_role('button',name='Confirm tile',exact=True).first.click()
-    page.get_by_role('button',name='Confirm complete rack reading',exact=True).click()
-    page.get_by_role('button',name='Find move',exact=True).click()
-    page.wait_for_function("document.getElementById('status').textContent.includes('maximum rack tiles played')")
-    assert 'primary upper bound' not in page.locator('#status').inner_text()
+    page.wait_for_function("document.querySelector('#status').textContent.includes('maximum rack tiles played')")
     assert '3 rack tiles' in page.locator('#status').inner_text()
-    assert page.locator('#result [data-piece-id]').count() == 3
-    assert page.locator('#result [data-played="true"]').count() == 3
-    assert page.locator('#result .tile-art-sprite image').count() == 3
-    assert page.locator('#result .tile-art-played[fill="none"]').count() == 3
+    assert page.locator('#result [data-piece-id]').count()==3
+    assert page.locator('#result .tile-art-played[fill="none"]').count()==3
     assert page.locator('#result .tile-art-caption').text_content().startswith('Joker as ')
-    assert 'Joker as' in page.locator('#result').inner_html()
+    assert page.locator('#result .table-board').count()==1
     page.screenshot(path='/tmp/rummy-phone-ui.png',full_page=True)
-    # Editing a confirmed reading invalidates both the old result and its consent.
-    page.locator('#rack-photo input[type=number]').first.fill('9')
-    assert page.locator('#result svg').count()==0
+    # Blank current drafts block a move, even when OCR had a valid old proposal.
+    page.locator('#rack-photo input[type=number]').first.fill('')
+    assert page.locator('#result .table-board').count()==0
     page.get_by_role('button',name='Find move',exact=True).click()
-    assert 'confirmation' in page.locator('#status').inner_text()
-    # Manual additions/corrections must not contaminate raw recognizer metrics.
-    page.evaluate("sessions.rack.add({x:0,y:0,width:.1,height:.1})")
-    report=page.evaluate("rummyObservationReport()")
-    assert len(report['rack']['observations'])==3
-    assert report['rack']['observations'][0]['candidates'][0]['tile']['number']==10
-    assert not errors, errors
-    assert all(url.startswith('https://rummy.test/') for url in requests)
+    assert 'Could not read rack tile' in page.locator('#status').inner_text()
+    assert 'error' in page.locator('#status').get_attribute('class').split()
+    page.locator('#rack-photo input[type=number]').first.fill('10')
+    page.get_by_role('button',name='Find move',exact=True).click()
+    page.wait_for_function("document.querySelector('#status').textContent.includes('3 rack tiles')")
+    # Removed detections disappear, while raw report remains unmodified.
+    page.locator('#rack-photo').get_by_role('button',name='Remove tile',exact=True).first.click()
+    assert page.locator('#rack-photo .tile-editor').count()==2
+    raw=page.evaluate('rummyObservationReport()')
+    assert len(raw['rack']['observations'])==3 and raw['rack']['observations'][0]['candidates'][0]['tile']['number']==10
+    ambiguous={'rect':{'x':0,'y':0,'width':1,'height':1},'candidates':[
+        {'tile':{'color':'red','number':10},'confidence':.9},
+        {'tile':{'color':'red','number':11},'confidence':.8}]}
+    page.evaluate('payload=>acceptNativePhoto(payload)',{'zone':'rack','source':'ambiguous-rack','image':photo,'observations':[ambiguous]})
+    assert page.locator('#rack-photo input[type=number]').input_value()==''
+    assert page.locator('#rack-photo .tile-error').is_visible()
+    page.get_by_role('button',name='Find move',exact=True).click()
+    assert 'Could not read rack tile' in page.locator('#status').inner_text()
+    # An actual reader failure cannot masquerade as a successfully empty table.
+    page.evaluate('payload=>acceptNativePhoto(payload)',{'zone':'table','source':'failed-table','image':photo,'observations':[],'readError':'Test decoder failure'})
+    page.get_by_role('button',name='Check table',exact=True).click()
+    assert 'Could not read the table photo' in page.locator('#status').inner_text()
+    assert page.locator('#result [data-piece-id]').count()==0
+    assert not errors,errors
     browser.close()
-print('Desktop offline UI: real Wasm solve/render, separate synthetic photo corrections, confirmation gate, invalidation, and no external requests passed.')
+print('Desktop offline UI: default4, dependent opening state, immediate real-engine solve, responsive exact artwork, invalid draft/read-error blocking and red-X/raw isolation passed. Synthetic observations, no phone accuracy claim.')

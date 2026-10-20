@@ -1,5 +1,47 @@
 # Implementation status
 
+## Owner feedback: immediate readings and a simpler page (2026-10-20 UTC)
+
+- The owner's updated instructions explicitly remove per-tile and photo
+  confirmation. This supersedes the original confirmation workflow. A single
+  distinct valid raw proposal now works immediately; ambiguous/unknown values,
+  invalid current drafts and failed imports block search with actionable errors.
+  Direct edits never fall back to stale OCR. Red-X removal hides a detection;
+  its original observation stays untouched in local diagnostic exports.
+- Four players is the default. Removed preview branding/tutorials, drawn-turn and
+  search-effort controls. Opening remains required by default; “I have opened”
+  only applies while it is enabled. Drawing still ends a turn in the Go API/CLI.
+  One internal 200,000-node search bound and cancellation replace the effort
+  selector; proof/incomplete statuses are preserved.
+- New report contains the same two original photos as the prior report and all
+  14 correct readings. It lacks settings/confirmation state, so it cannot prove
+  which old gate caused the reported failure. Separate actual CLI and Wasm runs
+  establish: unopened opening-required = proven no move (475 nodes); opened or
+  opening-disabled = proven optimum four rack tiles (24,328 nodes). Both former
+  200k/2m budgets give the same results/work on this example. No phone speed or
+  general search completeness claim follows. Both returned moves independently
+  pass check-move; red 11, black 9, blue 2 and blue 3 play, orange 8 remains.
+- Actual photo bytes now pass through file import → local reader → automatic
+  position → real solver → responsive model-art board, without injected OCR or
+  solver output. Private `check-reading-flow.py` inputs stay outside Git. It
+  checks all 14 labels, exact physical conservation/rendering, the opening result,
+  four-tile optimum, disabled opening control and independent legal verification.
+- Responsive felt meld cards and a wrapping rack replace the browser's fixed
+  table canvas. Roles, physical duplicates, played outlines and accessible labels
+  remain exact; 13-tile melds scroll within their card at a 390px viewport. The
+  native adapter/Go CLI export remain available; native/device acceptance unrun.
+- Local report export now includes rule settings and the latest search/error
+  outcome, keeping raw recognition separate from edits. No uploads, new runtime
+  dependency/service, CI workflow or persistence was added. Early engine-startup
+  edits invalidate pending jobs; engine readiness cannot render stale inputs.
+  A separate reviewer reproduced stale-input rendering and duplicate solver
+  calls before the startup fix; `check-phone-startup.py` now proves zero stale
+  calls and one call for duplicate requests, with independent move validation.
+  Rule toggles disable/hide the opened control without erasing player history.
+- New source/packaged checks pass during implementation. Exact clean source,
+  full command results and publication checkpoint follow after final review.
+  New focused PR depends on #14; keep #12 → #13 → #14 → feedback PR unmerged.
+
 ## Requested Printables tile artwork (2026-10-20 UTC)
 
 - Published access unblocked the owner-selected Printables model. Downloaded all

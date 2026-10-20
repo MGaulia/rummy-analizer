@@ -2,7 +2,7 @@
 
 Implement the personal assistant described in the owner's CODEX_HANDOFF.md
 (2026-10-19). The final workflow is two separate local photos (table, then rack),
-visible uncertainty and corrections, confirmed-position validation, legal move
+visible uncertainty and corrections, position validation, legal move
 search, and exact final-table/remaining-rack rendering on a phone. No runtime
 server, inference API, photo upload, or remote solver is permitted.
 
@@ -52,8 +52,12 @@ The owner authorized a static GitHub Pages Safari preview and then requested
 automatic browser tile reading. The browser-reader branch depends on #12 and
 bundles local Tesseract OCR, tile/ink segmentation, color proposals and suggested
 meld rows. Model/runtime downloads happen at build time; CSP still prohibits
-runtime connections, uploads and remote inference. All proposals require explicit
-confirmation. The preview does not automatically persist photos/readings or
+runtime connections, uploads and remote inference. Per the owner's 2026-10-20
+feedback, one readable proposal is used automatically. There are no per-tile or
+photo confirmation gates; uncertain readings, invalid drafts and read failures
+block search with an error. Edits apply immediately, and a red X removes a
+detection. Raw proposals stay separate from edits in diagnostics.
+The preview does not automatically persist photos/readings or
 support offline reopening. An explicit local reading-report download includes
 selected originals, raw proposals and build/browser information for reproducible
 debugging; it never uploads or shares the report automatically. Synthetic actual-OCR checks do not establish real-photo accuracy,
@@ -69,8 +73,18 @@ The owner requested a Rummikub-style interface: green felt, ivory numbered
 tiles with red/blue/black/orange accents, and wooden rack details. Decorative
 tiles are separate from the confirmed table/rack rendering. Phone layouts stack
 the two photo panels; wider layouts show them side by side. Local processing,
-explicit reading confirmation, search coverage messages, and edition/opening
-state remain part of the interface contract.
+blocking parse errors, search coverage messages, and edition/opening state remain
+part of the interface contract. The phone page defaults to four players and uses
+one internal 200,000-node search setting with cancellation. The user's report
+reaches the same proven optimum at both former budgets; no general or phone
+speed claim follows. Opening is enabled by default, and “I have opened” is only
+available while that rule is enabled; disabling it preserves separate player
+history. The drawn-turn control is omitted from the
+phone page; drawing still ends the turn in the Go rules/CLI. An unavailable
+30-point opening gets a specific result message. Preview branding, tutorials
+and search-effort controls are removed. Responsive meld cards and a wrapping
+remaining rack replace the fixed-width browser diagram; occurrence IDs, played
+markers, order and joker roles remain exact.
 The owner additionally requested actual tile artwork for the confirmed table and
 identified <https://www.printables.com/model/130082-multicolor-rummikub-tiles> as
 the desired source. Published network access now permits downloading the actual
