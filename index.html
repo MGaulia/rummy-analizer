@@ -5,28 +5,28 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#075749">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; img-src 'self' data: blob:; connect-src 'none'; worker-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
-<meta name="rummy-preview-source" content="58c69de17c376a023f172eb6b1627ff37eea7d38">
+<meta name="rummy-preview-source" content="88101cd91e700bd5420ad45e4e311aab95188387">
 <title>Rummikub · Table assistant</title>
-<link rel="stylesheet" href="style.css?v=58c69de17c37">
-<script defer src="engine/wasm_exec.js?v=58c69de17c37"></script>
-<script defer src="engine/wasm_data.js?v=58c69de17c37"></script>
-<script defer src="engine.js?v=58c69de17c37"></script>
-<script defer src="photo-state.js?v=58c69de17c37"></script>
-<script defer src="recognition/reader-core.js?v=58c69de17c37"></script>
-<script defer src="recognition/reader-data.js?v=58c69de17c37"></script>
-<script defer src="browser-reader.js?v=58c69de17c37"></script>
-<script defer src="tile-art.js?v=58c69de17c37"></script>
-<script defer src="table-view.js?v=58c69de17c37"></script>
-<script defer src="app.js?v=58c69de17c37"></script>
+<link rel="stylesheet" href="style.css?v=88101cd91e70">
+<script defer src="engine/wasm_exec.js?v=88101cd91e70"></script>
+<script defer src="engine/wasm_data.js?v=88101cd91e70"></script>
+<script defer src="engine.js?v=88101cd91e70"></script>
+<script defer src="photo-state.js?v=88101cd91e70"></script>
+<script defer src="recognition/reader-core.js?v=88101cd91e70"></script>
+<script defer src="recognition/reader-data.js?v=88101cd91e70"></script>
+<script defer src="browser-reader.js?v=88101cd91e70"></script>
+<script defer src="tile-art.js?v=88101cd91e70"></script>
+<script defer src="table-view.js?v=88101cd91e70"></script>
+<script defer src="app.js?v=88101cd91e70"></script>
 </head>
 <body>
 <main>
 <header class="page-header">
   <div><p class="wordmark">Rummikub</p><h1>Table assistant<span class="title-dot">.</span></h1></div>
   <div class="header-tiles" aria-hidden="true">
-    <svg class="tile-art-decoration" viewBox="1728 0 192 288" focusable="false"><image href="tile-art/tiles-atlas.png?v=58c69de17c37" width="2688" height="1152"/></svg>
-    <svg class="tile-art-decoration" viewBox="1728 288 192 288" focusable="false"><image href="tile-art/tiles-atlas.png?v=58c69de17c37" width="2688" height="1152"/></svg>
-    <svg class="tile-art-decoration" viewBox="1728 576 192 288" focusable="false"><image href="tile-art/tiles-atlas.png?v=58c69de17c37" width="2688" height="1152"/></svg>
+    <svg class="tile-art-decoration" viewBox="1728 0 192 288" focusable="false"><image href="tile-art/tiles-atlas.png?v=88101cd91e70" width="2688" height="1152"/></svg>
+    <svg class="tile-art-decoration" viewBox="1728 288 192 288" focusable="false"><image href="tile-art/tiles-atlas.png?v=88101cd91e70" width="2688" height="1152"/></svg>
+    <svg class="tile-art-decoration" viewBox="1728 576 192 288" focusable="false"><image href="tile-art/tiles-atlas.png?v=88101cd91e70" width="2688" height="1152"/></svg>
   </div>
 </header>
 <section class="settings" aria-label="Game settings">
@@ -40,12 +40,12 @@
   <section class="photo-card" aria-labelledby="table-heading">
     <div class="card-header"><h2 id="table-heading"><span class="heading-dot blue" aria-hidden="true"></span>Table</h2><div class="photo-actions"><button data-photo="table" class="secondary">Add photo</button></div></div>
     <input type="file" accept="image/*" id="table-file" hidden>
-    <div id="table-photo" class="photo-zone"><div class="empty-photo"><div class="empty-art" aria-hidden="true"><svg class="tile-art-decoration" viewBox="0 288 192 288" focusable="false"><image href="tile-art/tiles-atlas.png?v=58c69de17c37" width="2688" height="1152"/></svg><svg class="tile-art-decoration" viewBox="192 288 192 288" focusable="false"><image href="tile-art/tiles-atlas.png?v=58c69de17c37" width="2688" height="1152"/></svg><svg class="tile-art-decoration" viewBox="384 288 192 288" focusable="false"><image href="tile-art/tiles-atlas.png?v=58c69de17c37" width="2688" height="1152"/></svg></div><p>No table photo yet</p></div></div>
+    <div id="table-photo" class="photo-zone"><div class="empty-photo"><div class="empty-art" aria-hidden="true"><svg class="tile-art-decoration" viewBox="0 288 192 288" focusable="false"><image href="tile-art/tiles-atlas.png?v=88101cd91e70" width="2688" height="1152"/></svg><svg class="tile-art-decoration" viewBox="192 288 192 288" focusable="false"><image href="tile-art/tiles-atlas.png?v=88101cd91e70" width="2688" height="1152"/></svg><svg class="tile-art-decoration" viewBox="384 288 192 288" focusable="false"><image href="tile-art/tiles-atlas.png?v=88101cd91e70" width="2688" height="1152"/></svg></div><p>No table photo yet</p></div></div>
   </section>
   <section class="photo-card" aria-labelledby="rack-heading">
     <div class="card-header"><h2 id="rack-heading"><span class="heading-dot orange" aria-hidden="true"></span>Your rack</h2><div class="photo-actions"><button data-photo="rack" class="secondary">Add photo</button></div></div>
     <input type="file" accept="image/*" id="rack-file" hidden>
-    <div id="rack-photo" class="photo-zone"><div class="empty-photo"><div class="empty-art" aria-hidden="true"><svg class="tile-art-decoration" viewBox="1536 0 192 288" focusable="false"><image href="tile-art/tiles-atlas.png?v=58c69de17c37" width="2688" height="1152"/></svg><svg class="tile-art-decoration" viewBox="1536 576 192 288" focusable="false"><image href="tile-art/tiles-atlas.png?v=58c69de17c37" width="2688" height="1152"/></svg><svg class="tile-art-decoration" viewBox="1536 864 192 288" focusable="false"><image href="tile-art/tiles-atlas.png?v=58c69de17c37" width="2688" height="1152"/></svg></div><p>No rack photo yet</p></div></div>
+    <div id="rack-photo" class="photo-zone"><div class="empty-photo"><div class="empty-art" aria-hidden="true"><svg class="tile-art-decoration" viewBox="1536 0 192 288" focusable="false"><image href="tile-art/tiles-atlas.png?v=88101cd91e70" width="2688" height="1152"/></svg><svg class="tile-art-decoration" viewBox="1536 576 192 288" focusable="false"><image href="tile-art/tiles-atlas.png?v=88101cd91e70" width="2688" height="1152"/></svg><svg class="tile-art-decoration" viewBox="1536 864 192 288" focusable="false"><image href="tile-art/tiles-atlas.png?v=88101cd91e70" width="2688" height="1152"/></svg></div><p>No rack photo yet</p></div></div>
   </section>
 </div>
 <section class="search-panel" aria-labelledby="move-heading">
