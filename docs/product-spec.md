@@ -57,6 +57,12 @@ merged into main. The owner authorized merging the remaining stack on
 2026-10-20; #12 → #13 → #14 → #15 → #16 landed in that order, each directly into
 main. Merged source and fresh verification are recorded in the implementation
 plan; merging does not establish native/device acceptance.
+Maintenance PRs #19–#21 independently target main and remain under review.
+Their contracts preserve search enumeration and work accounting, physical identities,
+raw/correction isolation and current photo-error behavior. They remove unused
+search allocations, avoid repeated photo decoding and preserve cancellation
+ownership when a request ID is reused. Combined verification and merge guidance
+are recorded in the implementation plan; native/device acceptance is unchanged.
 The owner authorized a static GitHub Pages Safari preview and then requested
 automatic browser tile reading. The integrated browser reader
 bundles local Tesseract OCR, tile/ink segmentation, color proposals and suggested
