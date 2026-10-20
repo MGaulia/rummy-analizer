@@ -35,11 +35,15 @@ no browser recognizer is claimed.
 
 Open the [Safari preview](https://mgaulia.github.io/rummy-analizer/) on any network.
 GitHub's Pages API confirms a successful build of `gh-pages` commit
-`383f66c17baad35a9d31bd4c8a0225f706fa882d`, with HTTPS enforced. The initial
+`eb2e7e041e64ab18df5ec187a22dcff67cd1a298`, with HTTPS enforced. The initial
 activation request from this session was denied, but Pages was subsequently
 enabled. The workspace's direct public-URL request is still blocked by its
 pending network configuration; live HTTP and physical Safari execution have not
 been verified here. No source merge was needed; #12 remains an unmerged draft.
+The current preview uses a green felt table, ivory numbered tiles, a wooden
+rack, and the four tile colors. Assets include a source-version query parameter
+to refresh the styling after publication. The design adapts to phone and desktop
+widths; the solver and manual tile-entry requirements are unchanged.
 
 The owner authorized publishing the draft #12 browser interface on GitHub Pages.
 This does not merge #12 or accept its native integration. Build from a clean,

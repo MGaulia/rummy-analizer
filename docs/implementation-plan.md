@@ -91,6 +91,45 @@ binding; publication remains required for workspace configuration. No duplicate
 credential was requested and no secret value was read or printed. The owner can
 test the Pages link in Safari independently of this workspace update.
 
+## Rummikub-style UI republication (2026-10-19, owner local date)
+
+- Implemented the requested game styling: green felt, ivory tiles in the four
+  colors, wooden rack, numbered step tiles, touch-friendly controls, gold move
+  button, and responsive table/rack photo panels. Shortened browser-preview
+  guidance into a visible manual-entry notice and expandable instructions.
+  No engine, photo processing, rule, or search semantics changed. No external
+  fonts, images, dependencies, or runtime network calls were added.
+- Exact tested/published source: `68ad21da591290b4a2d5d3640e7bbeb8317b431e`;
+  tree `6138ccdaa3ec061c1ddd292bdbcd1750037a61a2`. Go 1.27.2 linux/amd64,
+  Node v24.19.0, Python 3.12.14, desktop Chromium 154.0.8037.57. With the existing
+  Go PATH/cache activation, these all passed:
+
+  ```sh
+  bash scripts/check.sh
+  bash scripts/build-safari-preview.sh /workspace/rummy-review/safari-preview-game-publish
+  node scripts/check-phone-engine.cjs
+  node scripts/check-photo-state.cjs
+  python3 scripts/check-phone-ui.py
+  python3 scripts/check-safari-preview.py /workspace/rummy-review/safari-preview-game-publish
+  ```
+
+- Inspected desktop/mobile screenshots and checked empty-page layout at 320,
+  390, 768, and 1280 pixels: no page-width overflow. Fixed a missing arrow glyph
+  using CSS and added source-version query parameters to CSS/JS assets for Safari
+  cache refresh. The final generated-package test exercised these versioned URLs,
+  manual file import/correction, and actual solve/render with no uploads.
+- Fast-forward publication preserved Pages history. Static deployment commit:
+  `eb2e7e041e64ab18df5ec187a22dcff67cd1a298`, parent
+  `383f66c17baad35a9d31bd4c8a0225f706fa882d`. GitHub Pages reports this exact
+  commit as `built` without an error; its deployment run
+  <https://github.com/MGaulia/rummy-analizer/actions/runs/39345720538> completed
+  successfully. HTTPS remains enforced. No CI workflow was added to the source.
+- Public URL: <https://mgaulia.github.io/rummy-analizer/?v=68ad21da5912>.
+  Workspace CONNECT requests to the public host still return proxy HTTP 403,
+  so verification is via the deployment API plus local browser package checks.
+  Actual iPhone/Safari execution and recognition/native acceptance remain unrun.
+  #12 remains a draft against main and is not merged.
+
 The remaining acceptance work is not a completed photo-to-move phone product.
 Before continuing, obtain a Mac/Xcode/iPhone with authorized build/signing access
 and consented representative table/rack photos with ground truth. Run the native

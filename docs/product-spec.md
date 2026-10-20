@@ -50,3 +50,10 @@ The owner authorized a static GitHub Pages Safari preview of #12 for manual
 photo annotation and on-phone solver testing. It performs no browser recognition,
 does not persist photos/readings, and does not yet support offline reopening.
 Publishing that preview does not satisfy native or recognition acceptance.
+
+The owner requested a Rummikub-style interface: green felt, ivory numbered
+tiles with red/blue/black/orange accents, and wooden rack details. Decorative
+tiles are separate from the confirmed table/rack rendering. Phone layouts stack
+the two photo panels; wider layouts show them side by side. Local processing,
+explicit reading confirmation, search coverage messages, and edition/opening
+state remain part of the interface contract.
