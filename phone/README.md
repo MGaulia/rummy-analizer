@@ -171,7 +171,7 @@ See [artwork source, license and reproduction](../docs/tile-art.md).
 `python3 scripts/check-tile-art.py` checks all numbered sprites and joker roles
 on a real Go/Wasm diagram; `--preview-directory` checks a generated/live package.
 `python3 scripts/check-table-view.py` checks responsive meld cards, physical IDs,
-roles, rack counts and long-meld scrolling. The private report regression below
+roles, rack counts and compact meld wrapping without internal scrollbars. The private report regression below
 imports original photo bytes and checks no opening, then an independently
 verified four-tile optimum after opening (it is specific to that labeled case):
 

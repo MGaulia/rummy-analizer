@@ -1,5 +1,29 @@
 # Implementation status
 
+## Compact meld layout follow-up (2026-10-19, owner local date)
+
+- Owner screenshot showed green played markers on dark green cards, clipped
+  four-tile meld content with a scrollbar, wide tile spacing and duplicated
+  “Your next move” headings. Old 220px equal-width columns held 68px tile slots,
+  although the art viewport was only about 51px wide.
+- Replaced equal columns with content-sized cards that wrap as whole cards.
+  Cards are light neutral, played outlines/legend are amber, and spacing is
+  tighter. Long runs wrap inside the same labeled card rather than scroll or
+  shrink into unreadable tiles. No tiles, IDs, roles or meld boundaries change.
+- Per-piece frames fit the artwork and include padding for the complete outline.
+  Joker-role captions use readable HTML below the image instead of overflowing
+  a narrow SVG cell. The board title is “Final table”, with consistent heading
+  and legend spacing.
+- Updated the existing actual-Go layout regression to match the owner's revised
+  no-scroll requirement. Observed failure before the fix: at 320px, a 13-tile run
+  had scrollWidth 778px versus clientWidth 238px and clipped the final tile.
+  After the fix, four-tile groups stay on one row, long runs stay in one card,
+  and every row/tile fits at 320, 390, 768 and 1200px. Tests retain exact physical
+  occurrence/order/role checks and assert compact pitch and marker contrast.
+- This is a focused follow-up in unmerged #15, still dependent on #14. No game,
+  search, recognition or inventory logic changed. Verification/publication
+  checkpoint follows after the clean package checks.
+
 ## Owner feedback: immediate readings and a simpler page (2026-10-20 UTC)
 
 - The owner's updated instructions explicitly remove per-tile and photo

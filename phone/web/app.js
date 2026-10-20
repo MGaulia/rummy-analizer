@@ -156,7 +156,7 @@ async function execute(operation){
         if(Number.isInteger(search.upper_bound))message+=` At most ${search.upper_bound} rack tiles could be played.`;
       }
       status(message);
-      if(search.verified?.valid)$('result').append(RummyTableView.render(search.verified.after,search.verified.played,{label:'Your next move'}));
+      if(search.verified?.valid)$('result').append(RummyTableView.render(search.verified.after,search.verified.played,{label:'Final table'}));
     }else{
       status('Table is valid.');
       $('result').append(RummyTableView.render({table:response.position.resolved_table||[],rack:position.rack},[],{label:'Current table',showRack:false}));

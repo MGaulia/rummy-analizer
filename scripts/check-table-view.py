@@ -4,6 +4,7 @@ Synthetic positions check rendering and layout; this is not photo recognition
 evaluation or physical-iPhone acceptance.
 """
 import argparse
+import re
 from pathlib import Path
 
 from playwright.sync_api import sync_playwright
@@ -59,9 +60,9 @@ with sync_playwright() as p:
       document.querySelector('#result').replaceChildren(RummyTableView.render(resolved,[],{label:'Table'}));
       return [...document.querySelectorAll('#result [data-piece-id]')].map(g=>({id:g.dataset.pieceId,played:g.dataset.played,
         label:g.getAttribute('aria-label'),sprites:g.querySelectorAll('.tile-art-sprite').length,
-        cell:g.querySelector('.tile-art-sprite').getAttribute('viewBox'),caption:g.querySelector('.tile-art-caption')?.textContent||''}));
+        cell:g.querySelector('.tile-art-sprite').getAttribute('viewBox'),caption:g.closest('.art-tile').querySelector('.tile-art-caption')?.textContent||''}));
     }'''
-    for width in [1200,390]:
+    for width in [320,390,768,1200]:
         page.set_viewport_size({'width':width,'height':1000})
         actual = page.evaluate(render,position)
         assert [g['id'] for g in actual] == expected_ids
@@ -78,16 +79,42 @@ with sync_playwright() as p:
         assert page.locator('.board-table .meld-card').count()==3
         assert page.evaluate('document.documentElement.scrollWidth<=window.innerWidth'), 'Board caused page-wide overflow'
 
-    # A complete thirteen-tile run scrolls as one meld; it must never wrap into
-    # apparently separate melds or force the entire phone page sideways.
+    # A long run stays in one labeled card and wraps in order. It must never
+    # hide tiles behind a per-meld scrollbar or force the phone page sideways.
     long_position = {'table':position['table']+[[numbered(f'long-red-{n}','red',n) for n in range(1,14)]], 'rack':position['rack']}
-    page.evaluate(render,long_position)
-    assert page.locator('.meld-card').last.locator('[data-piece-id]').count()==13
-    assert page.evaluate('document.documentElement.scrollWidth<=window.innerWidth'), 'Long meld caused page-wide overflow'
-    assert page.locator('.meld-row').last.evaluate('(r)=>r.scrollWidth>r.clientWidth'), 'Long meld must remain horizontally scrollable'
+    for width in [320,390,768,1200]:
+        page.set_viewport_size({'width':width,'height':1000})
+        page.evaluate(render,long_position)
+        actual_ids = page.locator('.meld-card').last.locator('[data-piece-id]').evaluate_all('(pieces)=>pieces.map(p=>p.dataset.pieceId)')
+        assert actual_ids == [f'long-red-{n}' for n in range(1,14)], 'Wrapping must preserve all thirteen tiles in order'
+        assert page.evaluate('document.documentElement.scrollWidth<=window.innerWidth'), 'Long meld caused page-wide overflow'
+        rows = page.locator('.meld-row').evaluate_all('''(rows)=>rows.map(row=>({
+          scroll:row.scrollWidth,client:row.clientWidth,
+          pieces:[...row.querySelectorAll('.art-tile')].map(tile=>{const r=tile.getBoundingClientRect(),p=row.getBoundingClientRect();return {left:r.left-p.left,right:r.right-p.left}})
+        }))''')
+        assert all(r['scroll'] <= r['client']+1 for r in rows), ('Meld tiles must fit without an internal scrollbar',width,rows)
+        assert all(p['left']>=-1 and p['right']<=r['client']+1 for r in rows for p in r['pieces']), ('A tile is clipped at its meld boundary',width,rows)
+        if args.screenshot and width in (320,390):
+            page.locator('#result').screenshot(path=str(args.screenshot.with_name(args.screenshot.stem+f'-long-{width}'+args.screenshot.suffix)))
+
+    # A four-tile group must fit as a compact row, including the screenshot's
+    # formerly clipped fourth tile. Do not spread a short meld across its card.
+    four = {'table':[[numbered('four-'+c,c,11) for c in ['red','blue','black','orange']]],'rack':[]}
+    for width in [320,390,768,1200]:
+        page.set_viewport_size({'width':width,'height':1000})
+        actual = page.evaluate(render,four)
+        assert [g['id'] for g in actual] == ['four-'+c for c in ['red','blue','black','orange']]
+        geometry = page.locator('.meld-row').evaluate('''row=>({scroll:row.scrollWidth,client:row.clientWidth,
+          tiles:[...row.querySelectorAll('.art-tile')].map(t=>{const r=t.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width}})})''')
+        assert geometry['scroll'] <= geometry['client']+1, ('Four-tile meld must not scroll',width,geometry)
+        tiles = geometry['tiles']
+        assert all(abs(t['y']-tiles[0]['y'])<1 for t in tiles), ('Four tiles should fit on one row',width,geometry)
+        assert all(tiles[i]['width']-.5 <= tiles[i+1]['x']-tiles[i]['x'] <= 56 for i in range(3)), ('Tiles overlap or their spacing is too wide',width,geometry)
+        if args.screenshot and width in (390,1200):
+            page.locator('#result').screenshot(path=str(args.screenshot.with_name(args.screenshot.stem+f'-four-{width}'+args.screenshot.suffix)))
 
     # An actual opening solve supplies played IDs; independently replay the move
-    # before checking their visible green outlines and the empty remaining rack.
+    # before checking their visible played outlines and the empty remaining rack.
     opening = {'table':[], 'rack':[numbered('played-red','red',10),numbered('played-blue','blue',10),joker('played-joker')]}
     result = page.evaluate('''async position=>{
       const settings={edition:4};
@@ -100,6 +127,18 @@ with sync_playwright() as p:
     assert result['status']=='optimal' and len(result['played'])==3
     assert page.locator('[data-played="true"]').count()==3
     assert page.locator('.tile-art-played').count()==3
+    marker = page.locator('.tile-art-played').first.evaluate('''node=>({stroke:getComputedStyle(node).stroke,
+      background:getComputedStyle(node.closest('.meld-card')).backgroundColor})''')
+    def rgb(value):
+        channels = [float(n) for n in re.findall(r'[\d.]+',value)]
+        assert len(channels) in (3,4) and (len(channels)==3 or channels[3]==1), ('Played marker needs a solid contrasting card',marker)
+        return channels[:3]
+    def luminance(channels):
+        c=[v/255 for v in channels]
+        c=[v/12.92 if v<=.04045 else ((v+.055)/1.055)**2.4 for v in c]
+        return sum(v*w for v,w in zip(c,[.2126,.7152,.0722]))
+    light,dark=sorted([luminance(rgb(marker['stroke'])),luminance(rgb(marker['background']))],reverse=True)
+    assert (light+.05)/(dark+.05)>=3, ('Played marker must contrast with the meld surface',marker)
     assert page.locator('.board-rack .board-count').text_content()=='0 tiles'
     assert page.locator('.board-rack .board-empty').text_content()=='Rack is empty'
     page.evaluate('''async()=>{const im=new Image();im.src=document.querySelector('#result .tile-art-sprite image').getAttribute('href');await im.decode();await new Promise(requestAnimationFrame)}''')
@@ -110,4 +149,4 @@ with sync_playwright() as p:
     assert page.locator('.board-table .board-empty').text_content()=='Table is empty'
     assert 'tile-art/tiles-atlas.png' in requested and not errors, errors
     browser.close()
-print('Responsive table: actual Go validation, all52 numbered faces, 63 occurrences, exact joker roles/rack counts, long-meld scrolling at390px, and independently checked opening/played outlines passed. Desktop only; all assets local.')
+print('Responsive table: actual Go validation, all 52 numbered faces, 63 occurrences, exact joker roles/rack counts, compact four-tile and wrapped 13-tile melds without scrollbars at 320/390/768/1200px, and independently checked opening/played outlines passed. Desktop only; all assets local.')

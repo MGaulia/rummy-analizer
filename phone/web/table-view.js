@@ -16,9 +16,9 @@
     const holder = element('div', 'art-tile' + (played ? ' played' : ''));
     holder.setAttribute('role', 'listitem');
     const svg = document.createElementNS(NS, 'svg');
-    svg.setAttribute('viewBox', '0 0 68 94');
-    svg.setAttribute('width', '68');
-    svg.setAttribute('height', '94');
+    svg.setAttribute('viewBox', '0 0 54 80');
+    svg.setAttribute('width', '54');
+    svg.setAttribute('height', '80');
     svg.setAttribute('focusable', 'false');
     const group = document.createElementNS(NS, 'g');
     for (const [name, value] of Object.entries({
@@ -31,11 +31,18 @@
     const title = document.createElementNS(NS, 'title');
     title.textContent = label + (played ? ' · played from your rack' : '');
     const rect = document.createElementNS(NS, 'rect');
-    for (const [name, value] of Object.entries({x:0,y:0,width:68,height:76})) rect.setAttribute(name, value);
+    for (const [name, value] of Object.entries({x:0,y:2,width:54,height:76})) rect.setAttribute(name, value);
     group.append(title, rect);
     svg.append(group);
     root.RummyTileArt.decorate(svg);
+    svg.querySelector('.tile-art-caption')?.remove();
     holder.append(svg);
+    if (joker) {
+      const caption = element('span', 'tile-art-caption joker-role');
+      if (role) caption.append(element('span', '', 'Joker as '), element('span', '', `${role.color} ${role.number}`));
+      else caption.textContent = 'Joker';
+      holder.append(caption);
+    }
     return holder;
   }
 
@@ -53,7 +60,7 @@
     const board = element('div', 'table-board');
     const total = position.table.reduce((n, meld) => n + meld.length, 0);
     const table = section(label, `${total} tiles · ${position.table.length} ${position.table.length === 1 ? 'meld' : 'melds'}`, 'board-table');
-    if (played.size) table.append(element('p', 'board-legend', `${played.size} played from your rack · green borders`));
+    if (played.size) table.append(element('p', 'board-legend', `${played.size} from your rack · amber outlines`));
     const melds = element('div', 'melds-grid');
     position.table.forEach((meld, index) => {
       const card = element('div', 'meld-card');

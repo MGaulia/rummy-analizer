@@ -85,6 +85,10 @@ phone page; drawing still ends the turn in the Go rules/CLI. An unavailable
 and search-effort controls are removed. Responsive meld cards and a wrapping
 remaining rack replace the fixed-width browser diagram; occurrence IDs, played
 markers, order and joker roles remain exact.
+Meld cards use a light neutral background and amber played-tile outlines.
+Cards fit their contents, tiles sit close together, and long melds wrap inside
+one labeled card without an internal scrollbar. Joker-role captions remain
+readable below their tiles; the board heading is “Final table”.
 The owner additionally requested actual tile artwork for the confirmed table and
 identified <https://www.printables.com/model/130082-multicolor-rummikub-tiles> as
 the desired source. Published network access now permits downloading the actual
