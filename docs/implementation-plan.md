@@ -75,6 +75,22 @@
   reload loses readings, and no supported offline reopening. Native camera
   buttons are omitted. #12 remains a draft; native/recognition blockers remain.
 
+Deployment follow-up (owner local date 2026-10-19): GitHub's Pages API now reports
+`status=built`, source `gh-pages:/`, public URL
+`https://mgaulia.github.io/rummy-analizer/`, and HTTPS enforced. The latest build
+completed without an error and its commit is exactly the published
+`383f66c17baad35a9d31bd4c8a0225f706fa882d`; the source metadata still matches
+`7f9d357f974ec18d40d0357f8ebc8d3c501a212c`. Thus Pages activation is resolved.
+After the owner reported a generic environment save failure, configuration reads
+confirmed a saved `RUMMY_PAGES_TOKEN` binding and the intended three hostnames.
+The token variable is not yet present in this workspace, and runtime policy/
+secret observations are unknown. The direct public-URL request returned proxy
+CONNECT HTTP 403, so no live HTTP/browser success is inferred from the API build.
+A minimal network-only draft retry was saved successfully, preserving the secret
+binding; publication remains required for workspace configuration. No duplicate
+credential was requested and no secret value was read or printed. The owner can
+test the Pages link in Safari independently of this workspace update.
+
 The remaining acceptance work is not a completed photo-to-move phone product.
 Before continuing, obtain a Mac/Xcode/iPhone with authorized build/signing access
 and consented representative table/rack photos with ground truth. Run the native
