@@ -46,9 +46,10 @@
   and executable/rendering checks. This documentation change needs no new fuzz,
   benchmark or broad recognition/device run. Logs, public demo inputs, capture
   script and independent solver evidence remain in /workspace/rummy-review/readme.
-- [PR #18](https://github.com/MGaulia/rummy-analizer/pull/18) targets main and is
-  unmerged. There are no implementation dependencies or blockers for this
-  documentation. Main remains `02c7801adda6c9eae8c62fbe6a520f7a23a3ed02`;
+- The owner approved merging [PR #18](https://github.com/MGaulia/rummy-analizer/pull/18)
+  into main on 2026-10-20. There are no implementation dependencies or blockers
+  for this documentation. Main before this merge was
+  `02c7801adda6c9eae8c62fbe6a520f7a23a3ed02`;
   the published app is unchanged. Native/device and representative recognition
   acceptance prerequisites remain as previously recorded.
 - For the owner's public-sharing question, checked the official GitHub Pages
