@@ -12,7 +12,7 @@ import json
 import hashlib
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageEnhance, ImageFont
 from playwright.sync_api import sync_playwright
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -118,11 +118,16 @@ with sync_playwright() as p:
         assert page.get_by_role('button', name='Confirm tile', exact=True).count() == 0
         values = [(n, ['red', 'black', 'blue', 'orange'][(n-1) % 4]) for n in range(1, 14)]
         for touching in [False, True]:
-            data = payload(fixture(values, touching))['buffer']
-            result = page.evaluate(read, 'data:image/png;base64,'+base64.b64encode(data).decode())
-            actual = [o['candidates'][0]['tile'] if o['candidates'] else None for o in result['observations']]
-            expected = [{'number': n, 'color': c} for n, c in values]
-            assert actual == expected, {'touching': touching, 'expected': expected, 'actual': actual, 'raw': result['observations']}
+            # A dim ivory face falls below the former fixed brightness cutoff.
+            # Run actual OCR at normal and dim exposures with exact counts/colors.
+            # These generated images test the mechanism, not phone accuracy.
+            for exposure in [1, .70, .60]:
+                image = ImageEnhance.Brightness(fixture(values, touching)).enhance(exposure)
+                data = payload(image)['buffer']
+                result = page.evaluate(read, 'data:image/png;base64,'+base64.b64encode(data).decode())
+                actual = [o['candidates'][0]['tile'] if o['candidates'] else None for o in result['observations']]
+                expected = [{'number': n, 'color': c} for n, c in values]
+                assert actual == expected, {'touching': touching, 'exposure': exposure, 'expected': expected, 'actual': actual, 'raw': result['observations']}
         # Spatial suppression must preserve separate physical copies, even when
         # their values/colors match and their faces touch.
         data = payload(fixture([(11, 'red'), (11, 'red'), (10, 'black')], touching=True))['buffer']
@@ -205,7 +210,7 @@ with sync_playwright() as p:
             assert sample['zone']==zone and 'recognizer' in sample
             assert all('correction' not in observation for observation in sample['observations'])
         assert len(saved['photos']['rack']['observations'])==3
-        print('Bundled OCR: all 13 synthetic numbers/colors, touching and identical tiles, cross-color background rejection, nested-joker suppression, high-score truncation fault injection, repeated file import, automatic readable tiles, unreadable-tile errors/direct edits/removal, and real-engine opening passed.')
+        print('Bundled OCR: all 13 synthetic numbers/colors at normal/dim exposure, touching and identical tiles, cross-color background rejection, nested-joker suppression, high-score truncation fault injection, repeated file import, automatic readable tiles, unreadable-tile errors/direct edits/removal, and real-engine opening passed.')
     assert not errors, errors
     assert not console_errors, console_errors
     assert set(requested) <= {'index.html','style.css','engine/wasm_exec.js','engine/wasm_data.js','engine.js','photo-state.js','browser-reader.js','tile-art.js','table-view.js','tile-art/tiles-atlas.png','app.js','recognition/reader-core.js','recognition/reader-data.js'}, requested

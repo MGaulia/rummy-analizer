@@ -1,5 +1,47 @@
 # Implementation status
 
+## Adaptive photo lighting follow-up (2026-10-19, owner local date)
+
+- The latest supplied iPhone reading report was produced by preview source
+  `88101cd91e700bd5420ad45e4e311aab95188387`, reader revision 3. It contains
+  21 visible table tiles in seven melds and a rack red 1, independently labeled
+  from the two original photos. The old reader found only four table tiles;
+  it read the rack correctly. The report has no recorded search outcome, so it
+  does not establish that the owner attempted a search.
+- Reproduced the exact-photo assertion failure before changing the reader. A
+  synthetic 70%-brightness regression also failed (zero of thirteen tiles).
+  The fixed brightness cutoff excluded most dim ivory faces. Reader revision 4
+  uses the 98th-percentile image luminance with a 110–165 bounded cutoff, keeps
+  the existing color/shape filters, and exports its lighting measurements.
+- Adaptive detection alone recovered all 21 table boxes but exposed the old
+  absolute color cutoff: dim blue/teal ink could be missing or proposed black.
+  A narrow hue/saturation rule recovers that ink while retaining warm/neutral
+  black handling. A broader color adjustment regressed the earlier warm-lit
+  joker during testing and was rejected. No OCR score gate, game rules or
+  inventory logic was changed; no values are inferred from meld legality.
+- Current source passes exact labels/counts/melds/order on both original-photo
+  pairs: 22 new plus 14 earlier occurrences. Synthetic actual-OCR regressions
+  cover all thirteen numbers/colors at 100%, 70% and 60% brightness, separated
+  and touching. The 60% case caught dim blue failures before the color fix.
+  These are bounded regressions, not representative accuracy measurements.
+- Actual file import → reader → automatic position → Go/Wasm → rendered board
+  passes for both private reports, without confirmation clicks or injected
+  observations/results. Independent CLI and Wasm runs establish the new case:
+  unopened with opening required = proven no move (2 nodes); already opened or
+  opening disabled = proven optimum one rack tile (194,009 nodes, below the
+  existing 200,000 bound). Every returned move passes a separate check-move,
+  preserves all 22 physical occurrences and empties the rack. The old report
+  retains its independently verified four-tile optimum. No timeout is called
+  no move. Desktop execution timings are not phone performance evidence.
+- Original reports, photos, hash-bound manual labels and replay outputs stay
+  outside Git and the static deployment. The rack photo's EXIF orientation was
+  already honored by browser decoding; this change makes no rotation claim.
+  Source review and publication are pending at this checkpoint. This focused
+  branch depends on #15; merge after #12 → #13 → #14 → #15, with every PR left
+  unmerged. Broader capture conditions, updated physical-iPhone execution,
+  native builds (no Mac/Xcode host), representative evaluation and the full
+  offline acceptance workflow remain unverified.
+
 ## Compact meld layout follow-up (2026-10-19, owner local date)
 
 - Owner screenshot showed green played markers on dark green cards, clipped

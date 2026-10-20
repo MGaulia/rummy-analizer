@@ -45,8 +45,9 @@ contrasting amber outlines on light cards. Earlier startup/OCR checks are
 recorded with their exact source checkpoints in docs/implementation-plan.md.
 Physical Safari execution of this revision remains unverified. No source merge
 was needed; #12 and its reader follow-up
-#13, artwork #14 and streamlined flow #15 remain unmerged drafts.
-Merge #12 → #13 → #14 → #15.
+#13, artwork #14 and streamlined flow #15 remain unmerged drafts. The adaptive
+photo-lighting branch depends on #15 and follows it in merge order.
+Merge #12 → #13 → #14 → #15, then adaptive photo lighting.
 The current preview uses a green felt table, ivory numbered tiles, a wooden
 rack, and the four tile colors. Assets include a source-version query parameter
 to refresh the styling after publication. The design adapts to phone and desktop
@@ -123,15 +124,25 @@ cover a wider ink area while excluding the lower embossed logo. This improves
 specific regression cases, not a measured general accuracy guarantee.
 
 After building reader assets, run `python3 scripts/check-browser-reader.py`.
-This executes the real bundled OCR on **synthetic** images of all 13 numbers,
-colors, touching strips and a face-like joker, and then imports images through
+This executes the real bundled OCR on **synthetic** images of all 13 numbers and
+colors at normal, 70% and 60% brightness, touching strips and a face-like joker,
+and then imports images through
 the actual file picker and immediately solves a legal opening. It checks
 that only bundled GET assets were requested and that CSP produced no errors.
 These generated fixtures are not real-photo accuracy or iPhone evidence. A
 subsequent owner-shared reading report supplied the two original photos for local
 replay: reader revision 3 proposes all 14 manually labeled tiles correctly,
-including the rack's red 11, with exact counts and suggested table melds. This
-two-photo regression is not representative recognition evaluation or a phone run.
+including the rack's red 11, with exact counts and suggested table melds.
+
+Reader revision 4 addresses the later dim iPhone photos: ivory detection uses
+75% of the image's 98th-percentile mean RGB luminance, bounded to 110–165, instead
+of a fixed 165 cutoff. Diagnostic metadata records the reference and threshold.
+A narrow saturated blue/teal rule recovers dim colored ink that the former
+absolute filters dropped or proposed as black; warm-black joker handling stays
+unchanged. The later two originals now propose all 22 labeled tiles, while the
+earlier 14 remain correct. These four-photo desktop regressions are not
+representative recognition evaluation or physical-iPhone acceptance. Very dark,
+mixed-lighting, low-contrast and differently framed scenes remain unmeasured.
 
 To export proposals for an accessible original photo without uploads:
 
@@ -182,7 +193,10 @@ python3 scripts/check-reading-flow.py --report /external/report.json --expectati
 ```
 
 The expectation format is the same hash-bound ordered tile/meld JSON described
-above. Add `--preview-directory` to verify the exact generated/downloaded build.
+above. Use `--expected-played 1` for the later 21-table-tile/red-1-rack report.
+That case cannot make a 30-point opening; when already opened or opening is
+disabled, it has a verified optimum that empties the rack. Add
+`--preview-directory` to verify the exact generated/downloaded build.
 
 ## Build the iOS integration
 
