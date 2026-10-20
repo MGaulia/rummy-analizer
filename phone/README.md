@@ -36,11 +36,13 @@ OCR reader; its separate actual-pixel checks are documented below.
 
 Open the [Safari preview](https://mgaulia.github.io/rummy-analizer/) on any network.
 GitHub's Pages API confirms a successful build of `gh-pages` commit
-`49eecb43fde702d3da78cb5037f82ea9537edfe2`, with HTTPS enforced, publishing
-source `58c69de17c376a023f172eb6b1627ff37eea7d38`. All seventeen live HTTPS assets
+`18a2d10976fcc6460ca2954c3a72bd7bc1d4f1cc`, with HTTPS enforced, publishing
+source `88101cd91e700bd5420ad45e4e311aab95188387`. All seventeen live HTTPS assets
 matched the tested package hashes. The downloaded package passed actual-photo
-import/read/solve/render and delayed-readiness regressions in desktop Chromium;
-the generated package also passed synthetic OCR, editing and layout checks.
+import/read/solve/render and compact layout checks in desktop Chromium. Melds
+fit without internal scrollbars at 320, 390, 768 and 1200px; played tiles have
+contrasting amber outlines on light cards. Earlier startup/OCR checks are
+recorded with their exact source checkpoints in docs/implementation-plan.md.
 Physical Safari execution of this revision remains unverified. No source merge
 was needed; #12 and its reader follow-up
 #13, artwork #14 and streamlined flow #15 remain unmerged drafts.

@@ -21,8 +21,40 @@
   and every row/tile fits at 320, 390, 768 and 1200px. Tests retain exact physical
   occurrence/order/role checks and assert compact pitch and marker contrast.
 - This is a focused follow-up in unmerged #15, still dependent on #14. No game,
-  search, recognition or inventory logic changed. Verification/publication
-  checkpoint follows after the clean package checks.
+  search, recognition or inventory logic changed. Clean tested/published source
+  `88101cd91e700bd5420ad45e4e311aab95188387`, tree
+  `1836b3c41613a1aa599ae157dc9b38a8053015b7`. Go 1.27.2 linux/amd64,
+  Node v24.19.0, Python 3.12.14, desktop Chromium 154.0.8037.57. With existing
+  Go PATH/cache activation, every final package/source command passed:
+
+  ```sh
+  bash scripts/check.sh
+  bash scripts/build-safari-preview.sh /workspace/rummy-review/safari-preview-compact-melds
+  python3 scripts/check-safari-preview.py /workspace/rummy-review/safari-preview-compact-melds
+  python3 scripts/check-table-view.py --preview-directory /workspace/rummy-review/safari-preview-compact-melds --screenshot /workspace/rummy-review/meld-layout/package-board.png
+  python3 scripts/check-phone-ui.py
+  python3 scripts/check-reading-flow.py --preview-directory /workspace/rummy-review/safari-preview-compact-melds --report '/workspace/attachments/08851a67-f7cf-48b4-984b-87a68335d77f/rummy-reading-report (1).json' --expectations /workspace/rummy-review/red11/expected.json --output /workspace/rummy-review/meld-layout/package-flow.json --screenshot /workspace/rummy-review/meld-layout/package-real-board.png
+  node scripts/check-phone-engine.cjs
+  ```
+
+  Exact 14-photo-tile readings, four played occurrences and one remaining rack
+  tile are unchanged; returned moves independently validate. Desktop screenshots
+  of short and long melds were visually reviewed. Contrast checks require at
+  least 3:1 between the played outline and card surface. No parser/inventory
+  change or new fuzz/benchmark/device result is claimed.
+- Pages commit `18a2d10976fcc6460ca2954c3a72bd7bc1d4f1cc` fast-forwards
+  `49eecb43fde702d3da78cb5037f82ea9537edfe2`. GitHub reports that exact commit
+  built without error. All seventeen live manifest assets and source metadata
+  matched the tested package over public HTTPS. These checks then passed against
+  the downloaded live package:
+
+  ```sh
+  python3 scripts/check-table-view.py --preview-directory /workspace/rummy-review/compact-melds-live-package --screenshot /workspace/rummy-review/meld-layout/live-board.png
+  python3 scripts/check-reading-flow.py --preview-directory /workspace/rummy-review/compact-melds-live-package --report '/workspace/attachments/08851a67-f7cf-48b4-984b-87a68335d77f/rummy-reading-report (1).json' --expectations /workspace/rummy-review/red11/expected.json --output /workspace/rummy-review/meld-layout/live-flow.json --screenshot /workspace/rummy-review/meld-layout/live-real-board.png
+  ```
+
+  Live: <https://mgaulia.github.io/rummy-analizer/?v=88101cd91e70>.
+  #15 stays unmerged; dependency/merge order remains #12 → #13 → #14 → #15.
 
 ## Owner feedback: immediate readings and a simpler page (2026-10-20 UTC)
 
