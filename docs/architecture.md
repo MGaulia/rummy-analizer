@@ -81,3 +81,18 @@ then a photo adapter feeding the same representation. Keep uncertain image
 readings separate from confirmed tile values. Define the search objective and
 report whether a result is optimal, merely feasible, incomplete/timed out, or a
 proven absence of moves. Search statuses belong to the search layer, not meld analysis.
+
+## Application, rendering, and offline phone adapters
+
+`internal/app` is the shared request/response boundary for CLI and Go/Wasm.
+`internal/render` draws only validated identified positions. The game package
+still owns rules and depends on neither adapter. `cmd/phonewasm` bridges bounded
+requests and cancellation; the phone interface invokes the actual Go engine.
+Local script-embedded Wasm bytes avoid WKWebView file-URL fetch/worker problems.
+The generated bundle is reproducible and ignored by Git.
+
+Raw photo observations and corrected/confirmed positions remain separate in
+`phone/web/photo-state.js`. The iPhone adapter uses native image import/camera
+and local Vision proposal code. It is not a verified recognition pipeline or
+phone product until real-photo and physical-device acceptance. See
+phone/README.md for exact supported checks and remaining platform requirements.

@@ -498,3 +498,21 @@ func TestRetrievedJokerNewSetMayUseOnlyTableTiles(t *testing.T) {
 		t.Fatal("mutated original state or supplied certificate")
 	}
 }
+
+func TestNodeLimitKeepsVerifiedBest(t *testing.T) {
+	before := Position{Rack: []Piece{mp("r10", Red, 10), mp("b10", Blue, 10), mp("k10", Black, 10), mp("o2", Orange, 2), mp("r5", Red, 5), mp("k8", Black, 8)}}
+	found := false
+	for limit := 100; limit <= 5000; limit += 100 {
+		got := Search(context.Background(), before, Rules{Edition: 4}, Turn{}, SearchOptions{MaxNodes: limit})
+		if got.Status == FeasibleIncomplete {
+			found = true
+			if got.Nodes > limit || len(got.Verified.Played) != 3 || !ValidateMove(before, Rules{Edition: 4}, Turn{}, *got.Move).Valid {
+				t.Fatalf("bad retained best %+v", got)
+			}
+			break
+		}
+	}
+	if !found {
+		t.Fatal("fixture did not exercise a limit after finding a feasible move")
+	}
+}
