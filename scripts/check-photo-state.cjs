@@ -76,6 +76,18 @@ assert.equal(numbered.pieces()[0].id,secondId);
 assert.equal(numbered.pieces()[0].order,2);
 numbered.exclude(secondId);
 assert.throws(()=>numbered.pieces(),/No rack tiles/);
+// Rack ordering is not used for game input, but returned metadata must remain
+// detached from raw observations/corrections and retain JSON normalization.
+const rackMetadata = new PhotoSession('rack','metadata',[observation('blue',4,1,{value:1})]);
+rackMetadata.pieces()[0].order.value=99;
+assert.deepEqual(rackMetadata.observations[0].raw.suggestedOrder,{value:1},'Returned order metadata cannot mutate raw observations');
+rackMetadata.edit(rackMetadata.observations[0].id,{color:'blue',number:4},undefined,{value:2});
+rackMetadata.pieces()[0].order.value=99;
+assert.deepEqual(rackMetadata.reading(rackMetadata.observations[0].id).order,{value:2},'Returned order metadata cannot mutate corrections');
+for(const order of [NaN,Infinity,-Infinity]){
+  rackMetadata.edit(rackMetadata.observations[0].id,{color:'blue',number:4},undefined,order);
+  assert.equal(rackMetadata.pieces()[0].order,null,'Nonfinite corrected order retains JSON normalization');
+}
 const ordered = new PhotoSession('table','ordered',[observation('blue',2,1,2),observation('blue',1,1,1),observation('blue',3,1,3)]);
 assert.deepEqual(positionFromPhotos(ordered,null,false).table[0].map(p=>p.tile.number),[1,2,3]);
 ordered.edit(ordered.observations[2].id,{color:'blue',number:3},1,1);

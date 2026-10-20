@@ -61,14 +61,14 @@
       const pieces = [];
       for (const [index, observation] of this.observations.entries()) {
         if (observation.excluded) continue;
-        const value = observationReading(observation, index);
+        const value = clone(observationReading(observation, index));
         const number = index + 1;
         if (!validTile(value.tile)) throw new Error(`Could not read ${this.zone} tile ${number}. Edit its color and number or remove it.`);
         if (this.zone === 'table' && (!Number.isInteger(value.meld) || value.meld < 1)) throw new Error(`Enter the meld number for table tile ${number}.`);
         if (this.zone === 'table' && (!Number.isInteger(value.order) || value.order < 1)) throw new Error(`Enter the order for table tile ${number}.`);
         pieces.push({
           id: observation.id,
-          tile: clone(value.tile),
+          tile: value.tile,
           meld: this.zone === 'table' ? value.meld : null,
           order: value.order
         });
