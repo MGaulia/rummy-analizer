@@ -6,6 +6,13 @@ visible uncertainty and corrections, position validation, legal move
 search, and exact final-table/remaining-rack rendering on a phone. No runtime
 server, inference API, photo upload, or remote solver is permitted.
 
+The root README presents two user entry points: the browser UI with separate
+table/rack photos, and the Go CLI with JSON positions or single-meld text input.
+It includes app screenshots using generated demo inputs, correction/opening
+instructions, and independently checked CLI examples. Internal APIs, native
+build steps and migration history stay in developer references. Demo screenshots
+illustrate usage and do not establish real-photo accuracy or phone acceptance.
+
 - Edition 4: two numbered copies and two jokers (106 tiles). Edition 6: three
   numbered copies and four jokers (160 tiles); both have four colors.
 - New position commands require explicit `--edition=4|6`.

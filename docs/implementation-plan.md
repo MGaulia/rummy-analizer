@@ -1,5 +1,67 @@
 # Implementation status
 
+## README: UI and CLI entry points (2026-10-20, owner local date)
+
+- The owner requested a clearer user README with game images and just two paths:
+  UI and CLI. Replaced the old rules-library/migration introduction with the
+  assistant's purpose, a direct app link, separate-photo/correction/opening/move
+  instructions, JSON/SVG examples and the preserved single-meld text interface.
+  Developer details link to the existing reference docs. Reading uncertainty,
+  incomplete search and session/offline-reopening limits remain explicit.
+- Added two screenshots of the actual browser app. Public demo inputs were drawn
+  from the licensed tile atlas, with no personal photos or reading reports. All
+  eight raw proposals matched the demo values; values were reviewed through the
+  ordinary UI. The actual Go/Wasm solver proved four played tiles, left one rack
+  tile, and a separate check-move validated it. The board renders all eight
+  occurrences. Images were visually reviewed and carry CC BY-SA 4.0 attribution
+  in docs/images/README.md. They are usage illustrations, not real-photo or
+  physical-iPhone acceptance evidence.
+- Screenshot application/CLI source was merged main
+  `02c7801adda6c9eae8c62fbe6a520f7a23a3ed02`, tree
+  `b5d483854ae93e04aec9582d0028b5478e7bc343`. Clean documentation checkpoint
+  `35ed49c9670c7c5cdb577321b7b1288aee2a671d`, tree
+  `133da0aa3004ccab503a826dfd03b4fb6a6e250c`, passed the required full repository
+  check and a separate CLI check-move. Runtime code is identical between these
+  commits. Toolchain: Go 1.27.2 linux/amd64, Node v24.19.0, Python 3.12.14,
+  Chromium 154.0.8037.57. Actual commands and results:
+
+  ```sh
+  # Existing Go PATH/cache activation from earlier verification applies.
+  bash scripts/build-safari-preview.sh /workspace/rummy-review/readme/preview
+  python3 /workspace/rummy-review/readme/capture.py
+  go run . validate --edition=4 < testdata/positions/rearrangement.json
+  go run . solve --edition=4 --opened < testdata/positions/rearrangement.json
+  go run . solve --edition=4 --opened --format=svg < testdata/positions/rearrangement.json > /workspace/rummy-review/readme/final-table.svg
+  printf 'blue 3\nblue 1\nblue 2\n' | go run .
+  bash scripts/check.sh
+  go run . check-move --edition=4 --opened < /workspace/rummy-review/readme/check-move-request.json
+  ```
+
+  Validation succeeds; the CLI example proves optimal four played with an empty
+  rack (1,296 nodes), and its independently checked final position matches.
+  Standalone SVG and text `Can form group/run: true` outputs were verified. The
+  screenshot uses a different demo position and has one remaining tile. All ten
+  local README/image-credit links resolve, PNGs decode, and the root README has
+  exactly two usage headings. Full check includes uncached Go tests, vet, races
+  and executable/rendering checks. This documentation change needs no new fuzz,
+  benchmark or broad recognition/device run. Logs, public demo inputs, capture
+  script and independent solver evidence remain in /workspace/rummy-review/readme.
+- [PR #18](https://github.com/MGaulia/rummy-analizer/pull/18) targets main and is
+  unmerged. There are no implementation dependencies or blockers for this
+  documentation. Main remains `02c7801adda6c9eae8c62fbe6a520f7a23a3ed02`;
+  the published app is unchanged. Native/device and representative recognition
+  acceptance prerequisites remain as previously recorded.
+- For the owner's public-sharing question, checked the official GitHub Pages
+  [availability](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages)
+  and [usage limits](https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits)
+  on 2026-10-20. The repository is public, Pages is included for public repos on
+  GitHub Free, and the app has no paid backend/inference requests. Visitors run
+  the local reader/solver; requests do not trigger a deployment. GitHub documents
+  a soft 100 GB/month bandwidth quota and possible rate limits/unavailability
+  when limits are exceeded. Public traffic can affect availability; this static
+  setup has no per-request compute/AI or Pages overage billing mechanism. No
+  hosting or billing configuration was changed.
+
 ## Owner-authorized PR merges (2026-10-20, owner local date)
 
 The owner explicitly requested merging all open PRs. #12–#16 were marked ready
