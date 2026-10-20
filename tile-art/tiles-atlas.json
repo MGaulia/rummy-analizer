@@ -1,0 +1,575 @@
+{
+  "source": "https://www.printables.com/model/130082-multicolor-rummikub-tiles",
+  "creator": "KlaasYK",
+  "sourceObjSha256": "cd92b514f2f435f1877b64e70e71c14716319e3bebdfa73c654f81cec905d1bc",
+  "license": "CC-BY-SA-4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "modifications": "Reoriented original OBJ geometry, assigned ivory and four numeral colors, rendered atlas.",
+  "image": "tiles-atlas.png",
+  "width": 2688,
+  "height": 1152,
+  "cellWidth": 192,
+  "cellHeight": 288,
+  "sprites": [
+    {
+      "id": "red-1",
+      "color": "red",
+      "value": 1,
+      "joker": false,
+      "x": 0,
+      "y": 0,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "red-2",
+      "color": "red",
+      "value": 2,
+      "joker": false,
+      "x": 192,
+      "y": 0,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "red-3",
+      "color": "red",
+      "value": 3,
+      "joker": false,
+      "x": 384,
+      "y": 0,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "red-4",
+      "color": "red",
+      "value": 4,
+      "joker": false,
+      "x": 576,
+      "y": 0,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "red-5",
+      "color": "red",
+      "value": 5,
+      "joker": false,
+      "x": 768,
+      "y": 0,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "red-6",
+      "color": "red",
+      "value": 6,
+      "joker": false,
+      "x": 960,
+      "y": 0,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "red-7",
+      "color": "red",
+      "value": 7,
+      "joker": false,
+      "x": 1152,
+      "y": 0,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "red-8",
+      "color": "red",
+      "value": 8,
+      "joker": false,
+      "x": 1344,
+      "y": 0,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "red-9",
+      "color": "red",
+      "value": 9,
+      "joker": false,
+      "x": 1536,
+      "y": 0,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "red-10",
+      "color": "red",
+      "value": 10,
+      "joker": false,
+      "x": 1728,
+      "y": 0,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "red-11",
+      "color": "red",
+      "value": 11,
+      "joker": false,
+      "x": 1920,
+      "y": 0,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "red-12",
+      "color": "red",
+      "value": 12,
+      "joker": false,
+      "x": 2112,
+      "y": 0,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "red-13",
+      "color": "red",
+      "value": 13,
+      "joker": false,
+      "x": 2304,
+      "y": 0,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "red-joker",
+      "color": "red",
+      "value": null,
+      "joker": true,
+      "x": 2496,
+      "y": 0,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "blue-1",
+      "color": "blue",
+      "value": 1,
+      "joker": false,
+      "x": 0,
+      "y": 288,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "blue-2",
+      "color": "blue",
+      "value": 2,
+      "joker": false,
+      "x": 192,
+      "y": 288,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "blue-3",
+      "color": "blue",
+      "value": 3,
+      "joker": false,
+      "x": 384,
+      "y": 288,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "blue-4",
+      "color": "blue",
+      "value": 4,
+      "joker": false,
+      "x": 576,
+      "y": 288,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "blue-5",
+      "color": "blue",
+      "value": 5,
+      "joker": false,
+      "x": 768,
+      "y": 288,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "blue-6",
+      "color": "blue",
+      "value": 6,
+      "joker": false,
+      "x": 960,
+      "y": 288,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "blue-7",
+      "color": "blue",
+      "value": 7,
+      "joker": false,
+      "x": 1152,
+      "y": 288,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "blue-8",
+      "color": "blue",
+      "value": 8,
+      "joker": false,
+      "x": 1344,
+      "y": 288,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "blue-9",
+      "color": "blue",
+      "value": 9,
+      "joker": false,
+      "x": 1536,
+      "y": 288,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "blue-10",
+      "color": "blue",
+      "value": 10,
+      "joker": false,
+      "x": 1728,
+      "y": 288,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "blue-11",
+      "color": "blue",
+      "value": 11,
+      "joker": false,
+      "x": 1920,
+      "y": 288,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "blue-12",
+      "color": "blue",
+      "value": 12,
+      "joker": false,
+      "x": 2112,
+      "y": 288,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "blue-13",
+      "color": "blue",
+      "value": 13,
+      "joker": false,
+      "x": 2304,
+      "y": 288,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "blue-joker",
+      "color": "blue",
+      "value": null,
+      "joker": true,
+      "x": 2496,
+      "y": 288,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "black-1",
+      "color": "black",
+      "value": 1,
+      "joker": false,
+      "x": 0,
+      "y": 576,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "black-2",
+      "color": "black",
+      "value": 2,
+      "joker": false,
+      "x": 192,
+      "y": 576,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "black-3",
+      "color": "black",
+      "value": 3,
+      "joker": false,
+      "x": 384,
+      "y": 576,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "black-4",
+      "color": "black",
+      "value": 4,
+      "joker": false,
+      "x": 576,
+      "y": 576,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "black-5",
+      "color": "black",
+      "value": 5,
+      "joker": false,
+      "x": 768,
+      "y": 576,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "black-6",
+      "color": "black",
+      "value": 6,
+      "joker": false,
+      "x": 960,
+      "y": 576,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "black-7",
+      "color": "black",
+      "value": 7,
+      "joker": false,
+      "x": 1152,
+      "y": 576,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "black-8",
+      "color": "black",
+      "value": 8,
+      "joker": false,
+      "x": 1344,
+      "y": 576,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "black-9",
+      "color": "black",
+      "value": 9,
+      "joker": false,
+      "x": 1536,
+      "y": 576,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "black-10",
+      "color": "black",
+      "value": 10,
+      "joker": false,
+      "x": 1728,
+      "y": 576,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "black-11",
+      "color": "black",
+      "value": 11,
+      "joker": false,
+      "x": 1920,
+      "y": 576,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "black-12",
+      "color": "black",
+      "value": 12,
+      "joker": false,
+      "x": 2112,
+      "y": 576,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "black-13",
+      "color": "black",
+      "value": 13,
+      "joker": false,
+      "x": 2304,
+      "y": 576,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "black-joker",
+      "color": "black",
+      "value": null,
+      "joker": true,
+      "x": 2496,
+      "y": 576,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "orange-1",
+      "color": "orange",
+      "value": 1,
+      "joker": false,
+      "x": 0,
+      "y": 864,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "orange-2",
+      "color": "orange",
+      "value": 2,
+      "joker": false,
+      "x": 192,
+      "y": 864,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "orange-3",
+      "color": "orange",
+      "value": 3,
+      "joker": false,
+      "x": 384,
+      "y": 864,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "orange-4",
+      "color": "orange",
+      "value": 4,
+      "joker": false,
+      "x": 576,
+      "y": 864,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "orange-5",
+      "color": "orange",
+      "value": 5,
+      "joker": false,
+      "x": 768,
+      "y": 864,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "orange-6",
+      "color": "orange",
+      "value": 6,
+      "joker": false,
+      "x": 960,
+      "y": 864,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "orange-7",
+      "color": "orange",
+      "value": 7,
+      "joker": false,
+      "x": 1152,
+      "y": 864,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "orange-8",
+      "color": "orange",
+      "value": 8,
+      "joker": false,
+      "x": 1344,
+      "y": 864,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "orange-9",
+      "color": "orange",
+      "value": 9,
+      "joker": false,
+      "x": 1536,
+      "y": 864,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "orange-10",
+      "color": "orange",
+      "value": 10,
+      "joker": false,
+      "x": 1728,
+      "y": 864,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "orange-11",
+      "color": "orange",
+      "value": 11,
+      "joker": false,
+      "x": 1920,
+      "y": 864,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "orange-12",
+      "color": "orange",
+      "value": 12,
+      "joker": false,
+      "x": 2112,
+      "y": 864,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "orange-13",
+      "color": "orange",
+      "value": 13,
+      "joker": false,
+      "x": 2304,
+      "y": 864,
+      "width": 192,
+      "height": 288
+    },
+    {
+      "id": "orange-joker",
+      "color": "orange",
+      "value": null,
+      "joker": true,
+      "x": 2496,
+      "y": 864,
+      "width": 192,
+      "height": 288
+    }
+  ]
+}

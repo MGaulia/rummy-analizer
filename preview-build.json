@@ -1,19 +1,23 @@
 {
-  "source_commit": "7860dec5d2506932c08785a4b4ae4c66c060684e",
-  "source_tree": "8ab0d99f140903648992da0dc9ac5b73648ba28c",
+  "source_commit": "20f4f393215400f7666247593e8597e455bb7614",
+  "source_tree": "9d7018421a34d05f23d30e08ba0096a8acdd6020",
   "go_version": "go version go1.27.2 linux/amd64",
   "files_sha256": {
-    "index.html": "ccc914ac53bf2063320fae4b6ea9b2796fbafbea4ebe6a0bd0328d3180915787",
-    "style.css": "f1bb7d30105b9c59ac8cfae2a8c080b0594ec07761e0372d71f24d80ab053db2",
+    "index.html": "80e3f9b798fc2fc34e5b0062a37b60666f8742cf9fedefe3a50fdecaeb0234da",
+    "style.css": "700101887e6c48c21109cd581061909241445fa7ff3f1db4f6cab97af1afed29",
     "engine.js": "892fc8486f86102c65014a3fb2df05219581804c03b871a2085d45d91dfbf627",
     "photo-state.js": "ae0291c9e7e3dce0c4af54e2fd8c91561c547bf67535e3d5c42438f98c4c8711",
     "browser-reader.js": "80ac0bd43aacf794e81b7fccf744b98cbca9cf5e66cadffa50cd698f76debcd5",
-    "app.js": "db344477a87a6fb34a7823d66fda00ebcbb85a574635c439cb58a4945c98e8dd",
+    "tile-art.js": "e6239ae850d3ec702dcc10578f3f9d75c176e1ad706cf3304d262d040cf45e7d",
+    "app.js": "64177939d7374822a65fd2e66dfc5b201d45d28e0b932c4ed9e8a82670473741",
     "engine/wasm_exec.js": "0c949f4996f9a89698e4b5c586de32249c3b69b7baadb64d220073cc04acba14",
-    "engine/wasm_data.js": "67ba759f07d3af06a1c625de9891430da9b8c0996ee9b334504c3e4c42a64b16",
+    "engine/wasm_data.js": "d6cd4a2e86dbde14270d062c63392336b037dd4518ba40b0ac9da743c6a5414e",
     "engine/GO-LICENSE.txt": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
     "recognition/reader-core.js": "48a3ee8e00924cb8c7f0cc0d099b1318fea120af56b3ee8fb3a70dd2311806c2",
     "recognition/reader-data.js": "396d28153d4f60815d144d7a0ef8b9ebd0d8017805a592ba31b075955500fcb1",
-    "recognition/READER-LICENSES.txt": "c991cf803edd010e65d7c7fdbed1f065006861761849389b3b828d8ce3cc3b35"
+    "recognition/READER-LICENSES.txt": "c991cf803edd010e65d7c7fdbed1f065006861761849389b3b828d8ce3cc3b35",
+    "tile-art/tiles-atlas.png": "37dfd3f03bd4d6281c4f359c10f2cdd06adbe716d274bfed1011496d332323a6",
+    "tile-art/tiles-atlas.json": "0748a31573c943e7b69f6c4f8075c3dfccf2728342f369ee894051770727e765",
+    "tile-art/ATTRIBUTION.txt": "11e527238b0987b2a6674c60266e989cbc1e11e7db6a06c3565c485386417a2d"
   }
 }
