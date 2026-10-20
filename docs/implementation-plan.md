@@ -1,5 +1,67 @@
 # Implementation status
 
+## Owner-authorized PR merges (2026-10-20, owner local date)
+
+The owner explicitly requested merging all open PRs. #12–#16 were marked ready
+and merged in dependency order, each directly into `main`; child PR bases were
+retargeted only after their parent landed. Head-SHA checks guarded each merge.
+Original branches were preserved, with no force push or history rewrite.
+
+| PR | Original head | Merge commit on main |
+| --- | --- | --- |
+| #12 | 366f6b5a8b986218270e1206233db3e03fd2204b | 81f899e7f5d3427cc3f0e0efbc8d76572133e95f |
+| #13 | d0e7e1de47c95c6d22af58592e166bb01f5b8298 | 76623d274877070283b4ace8bbc49f76730a1775 |
+| #14 | 782623454f3b025ceb3d3fab4e11df30841e3839 | 8f1fd0b7f8637bce132904d30d5d619a74530e5b |
+| #15 | be49074775b82c5a2bee64ff8b843560b0c1b684 | 79e7d49ae00541cf3bbfdfeabb65f53671a92913 |
+| #16 | 107af64cff3730d866aad1e8f6bbfb215a344432 | d919221c9f11f61fb0e65a86abb101c2aff43681 |
+
+Independent inspection confirmed the former main
+`23eee9e492acd0cbcc97901143d40ab5a1bdee3d` and all five original PR heads are
+ancestors of merged main. GitHub records every PR merged into main, and the open
+PR list was empty after #16. Merged main `d919221c9f11f61fb0e65a86abb101c2aff43681`
+has tree `86ae774f24eeb453b91e77c173347ba38da2b1d0`, exactly the final PR head's
+tracked tree. This current status supersedes historical unmerged/draft entries
+below. The follow-up containing this status update changes documentation only.
+
+Fresh checks ran from a separate clean checkout of that merged main, using Go
+1.27.2 linux/amd64, Node v24.19.0, Python 3.12.14 and Chromium 154.0.8037.57.
+All commands below passed. The Go PATH/cache activation and private report paths
+are the same as the revision-4 release commands below:
+
+```sh
+bash scripts/check.sh
+bash scripts/build-safari-preview.sh /workspace/rummy-review/safari-preview-merged-main
+node scripts/check-photo-state.cjs
+node scripts/check-phone-engine.cjs
+python3 scripts/check-browser-reader.py
+python3 scripts/check-safari-preview.py /workspace/rummy-review/safari-preview-merged-main
+python3 scripts/check-table-view.py --preview-directory /workspace/rummy-review/safari-preview-merged-main --screenshot /workspace/rummy-review/merge-stack/board.png
+python3 scripts/check-phone-ui.py
+python3 scripts/check-phone-startup.py
+python3 -m unittest discover -s scripts -p test_photo_evaluation.py -v
+python3 scripts/check-reading-flow.py --preview-directory /workspace/rummy-review/safari-preview-merged-main --report "$new_report" --expectations "$new_labels" --expected-played 1 --output /workspace/rummy-review/merge-stack/new-flow.json
+python3 scripts/check-reading-flow.py --preview-directory /workspace/rummy-review/safari-preview-merged-main --report "$prior_report" --expectations "$prior_labels" --expected-played 4 --output /workspace/rummy-review/merge-stack/prior-flow.json
+```
+
+The core script passed uncached tests, vet, races and CLI/rendering smoke checks.
+Synthetic OCR retains all thirteen numbers/colors at three brightness levels;
+state/startup checks preserve automatic readings, errors and stale-job handling.
+Actual original-photo flows passed exact counts/values/melds/order for 22 new
+and 14 earlier occurrences, plus independently validated optimal moves and
+physical conservation under all three opening states. Model-art layout tests
+passed at 320/390/768/1200px without internal meld scrollbars. The evaluator's
+two unit tests passed; they test metric arithmetic/integrity, not photo accuracy.
+Private logs and replay evidence are under `/workspace/rummy-review/merge-stack`.
+No parser/inventory changes or new performance claim require additional fuzz or
+benchmark runs for these merges.
+
+The published Pages commit remains `f18fab4fae4991adc54119187dbeff38f3a94b60`,
+source `f1414d88f347249eff25932c9098ad34202fb5a6`. Its code/assets match merged
+main; only documentation differs. No republish or runtime change was needed.
+Native builds still require a Mac/Xcode host, and representative photo evaluation
+and full offline physical-phone acceptance remain outstanding. Merge approval
+and desktop checks do not establish those results.
+
 ## Adaptive photo lighting follow-up (2026-10-19, owner local date)
 
 - The latest supplied iPhone reading report was produced by preview source
