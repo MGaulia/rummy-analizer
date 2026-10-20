@@ -242,7 +242,7 @@ func walkPartitions(pool []Piece, required int, budget *searchBudget, visit func
 		if anchor == len(pool) {
 			return false
 		}
-		if enumerateMelds(pool, used, anchor, budget, func(meld []Piece, indices []int) bool {
+		if enumerateMelds(pool, used, anchor, budget, func(meld []Piece) bool {
 			path = append(path, meld)
 			stop := walk(anchor + 1)
 			path = path[:len(path)-1]
@@ -261,7 +261,7 @@ func walkPartitions(pool []Piece, required int, budget *searchBudget, visit func
 	return walk(0)
 }
 
-func enumerateMelds(pool []Piece, used []bool, anchor int, budget *searchBudget, visit func([]Piece, []int) bool) bool {
+func enumerateMelds(pool []Piece, used []bool, anchor int, budget *searchBudget, visit func([]Piece) bool) bool {
 	available := 0
 	for _, taken := range used {
 		if !taken {
@@ -284,14 +284,13 @@ func enumerateMelds(pool []Piece, used []bool, anchor int, budget *searchBudget,
 			if p.Tile.Kind != Joker && p.Tile != role {
 				continue
 			}
-			indices := make([]int, len(roles))
 			meld := make([]Piece, len(roles))
 			p.As = nil
 			if p.Tile.Kind == Joker {
 				r := role
 				p.As = &r
 			}
-			indices[anchorSlot], meld[anchorSlot] = anchor, p
+			meld[anchorSlot] = p
 			used[anchor] = true
 			var fill func(int) bool
 			fill = func(slot int) bool {
@@ -299,7 +298,7 @@ func enumerateMelds(pool []Piece, used []bool, anchor int, budget *searchBudget,
 					return false
 				}
 				if slot == len(roles) {
-					return visit(meld, indices)
+					return visit(meld)
 				}
 				if slot == anchorSlot {
 					return fill(slot + 1)
@@ -314,7 +313,7 @@ func enumerateMelds(pool []Piece, used []bool, anchor int, budget *searchBudget,
 						q.As = &r
 					}
 					used[i] = true
-					indices[slot], meld[slot] = i, q
+					meld[slot] = q
 					stop := fill(slot + 1)
 					used[i] = false
 					if stop {
@@ -334,9 +333,12 @@ func enumerateMelds(pool []Piece, used []bool, anchor int, budget *searchBudget,
 		}
 		return false
 	}
+	// Each template is consumed synchronously, and candidate melds copy joker
+	// roles. Reuse bounded storage without retaining it in a proposed move.
+	var template [MaxNumber]Tile
 	for number := 1; number <= 13; number++ {
 		for mask := 1; mask < 16; mask++ {
-			roles := []Tile{}
+			roles := template[:0]
 			for i, c := range colors {
 				if mask&(1<<i) != 0 {
 					roles = append(roles, Tile{Color: c, Number: number})
@@ -353,7 +355,7 @@ func enumerateMelds(pool []Piece, used []bool, anchor int, budget *searchBudget,
 	for _, c := range colors {
 		for start := 1; start <= 11; start++ {
 			for end := start + 2; end <= 13 && end-start+1 <= available; end++ {
-				roles := []Tile{}
+				roles := template[:0]
 				for n := start; n <= end; n++ {
 					roles = append(roles, Tile{Color: c, Number: n})
 				}
