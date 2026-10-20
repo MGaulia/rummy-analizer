@@ -1,132 +1,97 @@
 # Rummy analyzer
 
-A small, dependency-free Go CLI and rules foundation for **Rummikub**.
-The CLI checks whether one collection **can form** a group or run, including
-jokers. The game package also validates whole-table layouts and edition-specific
-known inventory. Move search and photo input are separate feature layers.
+A Rummikub assistant that reads your table and rack, searches for a move that
+plays as many rack tiles as possible, and shows the resulting table. It supports
+jokers, table rearrangements, and the four-player (106 tiles) and six-player
+(160 tiles) editions. Every proposed move is checked for legality.
 
-## Run
+Use the **[browser UI](https://mgaulia.github.io/rummy-analizer/)** with photos,
+or the **[Go CLI](#cli)** with tile positions in JSON. Recognition and solving
+run locally; photos are never uploaded to a server.
 
-Requires Go 1.18 or newer.
+![Verified move showing the final table, amber outlines on played rack tiles, a joker role, and the remaining rack](docs/images/ui-move.png)
+
+*App screenshots use generated demo tiles. They illustrate the workflow, not
+real-photo recognition accuracy.*
+
+## UI
+
+1. **[Open the app](https://mgaulia.github.io/rummy-analizer/)** in Safari on your
+   iPhone or a desktop browser. Allow the local reader and solver to load.
+2. Under **Table**, choose **Add photo** for the existing melds. Under **Your
+   rack**, add a separate photo of your tiles.
+3. Review the readings. Readable tiles work immediately, without confirmation.
+   Edit any wrong color or number; for the table, check the **Meld** and **Order**
+   fields. Use **×** to remove a false detection and **+ Add tile** for a miss.
+   Unreadable or invalid entries show an error and must be corrected before solving.
+4. Keep **4 players**, or choose the six-player edition. **30-point opening
+   required** is on by default. Select **I have opened** if you opened on an
+   earlier turn, or turn the opening rule off to skip that phase.
+5. Choose **Find move**. Amber outlines mark tiles played from your rack; joker
+   captions show their assigned roles. **Remaining rack** shows what stays in
+   your hand. **Check table** validates the current layout without finding a move.
+
+![Browser UI with opening settings and separate demo table and rack images](docs/images/ui-overview.png)
+
+Take clear, upright photos with all tiles visible. Readings can be wrong, so
+check them against the images. A verified move is legal; if the result says
+**search incomplete**, a better move may still exist. An incomplete search does
+not prove that no legal move exists.
+
+After the initial download, reading and search use the bundled local code and
+model. Refreshing clears the session; offline reopening is not currently
+supported. **Reading report → Save report** downloads a diagnostic file containing
+your photos and readings. It stays local unless you choose to share it.
+
+## CLI
+
+Install a [supported Go release](https://go.dev/dl/) and clone the repository:
 
 ```sh
-go run .
+git clone https://github.com/MGaulia/rummy-analizer.git
+cd rummy-analizer
+```
+
+Run the included example, with the player already past the opening phase:
+
+```sh
+# Check the table and known tile inventory.
+go run . validate --edition=4 < testdata/positions/rearrangement.json
+
+# Find a move and print the result as JSON.
+go run . solve --edition=4 --opened < testdata/positions/rearrangement.json
+
+# Save the final table as a standalone SVG image.
+go run . solve --edition=4 --opened --format=svg \
+  < testdata/positions/rearrangement.json > final-table.svg
+```
+
+This example plays all four rack tiles. For your own position, follow the
+[example JSON](testdata/positions/rearrangement.json): `table` contains an array
+of melds, `rack` contains your tiles, and each physical tile has a unique `id`.
+Numbered tiles use `{"color":"blue","number":3}`; a joker uses `{"joker":true}`.
+Colors are `black`, `blue`, `orange`, and `red`; numbers run from 1 to 13.
+
+Position commands require **`--edition=4` or `--edition=6`**. The 30-point opening
+is required by default. **`--opened`** records that you opened on a previous turn;
+**`--opening-required=false`** skips opening restrictions entirely.
+
+JSON results distinguish `optimal` (maximum proved), `feasible_incomplete`
+(a legal move, possibly improvable), `no_move` (absence proved), and `incomplete`
+(no verified move found; the search was not conclusive). When a verified move is
+found, results include played tile IDs, the final table, remaining rack, and an
+SVG diagram. Search limits and some
+joker transitions can leave a result incomplete; see the [rule coverage](docs/rules.md).
+
+To check whether a single collection can form a meld, use the text interface:
+
+```sh
 printf 'blue 3\nblue 1\nblue 2\n' | go run .
 ```
 
-Enter one tile per line as `<color> <number>`, or `joker`. Canonical colors are
-`black`, `blue`, `orange`, and `red`; numbers are `1` through `13`. Color input is
-case-insensitive. Extra whitespace is allowed; signs and leading zeros are not.
+It reports `Can form group/run: true`. Interactive `go run .` accepts one tile
+per line, including `joker`, up to 13 tiles. Use `go run . -h` for command help.
 
-The CLI accumulates **one collection** and prints its feasibility after each
-tile. Start a fresh process to check another collection. Blank lines are ignored.
-Malformed input reports an error without adding a tile. End input with Ctrl-D
-(Unix) or Ctrl-Z followed by Enter (Windows). Piped input and a final line without
-a newline are supported.
-
-A session accepts at most 13 parsed tiles. A fourteenth tile ends the process
-with an error before it is appended; input is never silently truncated. Blank
-and malformed lines do not count toward this limit. This bounds the current
-single-collection CLI, not future table input or the domain analyzer API.
-
-After the example above, the output includes:
-
-```text
-[blue 3, blue 1, blue 2]
-Can form group/run: true
-```
-
-This is not an assertion that the displayed order is correct. Invalid collections
-include an explanatory reason; duplicate reports use one-based input positions.
-Jokers can fill missing numbers or colors. A joker by itself is too short to
-form a meld; it no longer reports an unsupported rule.
-
-### Explicit color aliases
-
-Legacy `grey`, `green`, and `purple` labels have no assumed physical-color
-mapping. Prefer canonical colors. For a custom label, explicitly choose its
-meaning, for example:
-
-```sh
-printf 'myblue 1\nmyblue 2\nmyblue 3\n' | go run . -color-aliases myblue=blue
-```
-
-Multiple mappings are comma-separated. Aliases are case-insensitive; conflicting
-aliases and attempts to reassign canonical colors or `joker` are rejected.
-Aliases normalize to canonical tile values, so two labels for the same color do
-not create distinct colors. See `go run . -h` for usage.
-
-## Structure
-
-- `internal/game`: tile values, duplicate-safe inventory, and meld analysis.
-- `internal/cli`: text parsing, explicit color aliases, formatting, and I/O.
-- `main.go`: process entry point only; `go run .` remains supported.
-
-`Inventory` has value semantics. `Consume` removes one copy; `ConsumeAll` consumes
-exactly the requested list (including its duplicate counts), or returns the
-original state unchanged on failure. Neither removes every matching value.
-`NewInventoryForEdition` selects the four-player pool (two copies, two jokers)
-or six-player pool (three copies, four jokers). `NewInventory` is the standard
-four-player convenience. Check combined table+rack multiplicity, not only each
-collection independently. Inventory counts alone do not establish move legality.
-
-`AnalyzeMeld` returns a meld kind or a structured issue with an issue code and
-zero-based tile references where applicable. `CanFormMeld`, `CanFormGroup`, and
-`CanFormRun` are boolean conveniences backed by that same rule implementation.
-`AnalyzeLayout` additionally checks displayed adjacency and optional joker
-roles. `ValidatePosition` checks meld boundaries, snapshot-local physical IDs,
-and combined table/rack counts. It returns concrete joker roles and marks
-ambiguous interpretations. Opening restrictions belong to moves, not tables.
-
-## Development
-
-```sh
-go test ./...
-go vet ./...
-go test -race ./...
-go test ./internal/game -run '^$' -bench . -benchmem
-go test ./internal/game -run '^$' -fuzz FuzzInventoryConsumption -fuzztime 10s
-go test ./internal/cli -run '^$' -fuzz FuzzParseTile -fuzztime 10s
-```
-
-No CI workflow or third-party dependency is required. See
-[rules and scope](docs/rules.md) and [architecture and migration](docs/architecture.md).
-
-## Compatibility decision
-
-This is a single-user application, not a supported public Go library. The old
-`model`, `mapper`, `check`, `combinations`, and `repository` packages have been
-removed; their public import paths and card-style constants are not retained.
-The obsolete `Delete`/`RemoveAll` behavior is not part of the game API. Existing
-text input must use canonical colors or an explicit alias; output now says
-`Can form group/run` rather than `Valid group/run`. The module path stays
-`github.com/MGaulia/rummy-analizer`.
-
-## Positions, legal moves, and exact diagrams
-
-The original `go run .` collection input remains supported. New commands require
-an explicit pool edition and accept identified JSON positions from stdin:
-
-```sh
-go run . validate --edition=6 < testdata/positions/rearrangement.json
-go run . solve --edition=4 --opened < testdata/positions/rearrangement.json
-go run . solve --edition=4 --opening-required=false --format=svg \
-  < testdata/positions/rearrangement.json > /tmp/final-table.svg
-```
-
-`solve` defaults to a rack-only 30-point opening, 200,000 work nodes, and a
-5-second deadline. `--opened` is separate player history; disabling opening
-skips its restrictions entirely. `--drawn` ends the turn. `--max-nodes` and
-`--time-limit` bound search; incomplete results never mean no move. JSON output
-contains the independently verified move, played occurrence IDs, final position,
-search status/reason/work, and an exact SVG. `--format=svg` requires a renderable
-result. `check-move` reads `{"position":{...},"move":{"table":[...]}}`, with
-optional release certificates in the move. See docs/rules.md for the current
-explicit table-joker transition coverage limit. An invalid request/move exits
-with an error; a valid incomplete/no-move search is a normal structured result.
-
-The offline phone integration uses this same Go boundary. Build its local
-WebAssembly bundle with `bash scripts/build-phone.sh`, and exercise actual engine
-execution/cancellation with `node scripts/check-phone-engine.cjs`. See
-[product scope](docs/product-spec.md) and [live milestones](docs/implementation-plan.md).
-Desktop/Wasm validation alone does not establish an offline iPhone product.
+Developer references: [checks](docs/development.md), [architecture](docs/architecture.md),
+[product scope](docs/product-spec.md), and [implementation status](docs/implementation-plan.md).
+Tile artwork: [KlaasYK's Printables model, CC BY-SA 4.0](docs/tile-art.md).
