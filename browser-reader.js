@@ -1,5 +1,5 @@
 /* Local tile proposals. No fetch, worker, remote inference, or game-rule guessing.
- * Every value, color, joker and meld boundary still requires user confirmation.
+ * Unreadable proposals stay empty; users can edit values and meld boundaries.
  */
 (function (root) {
   'use strict';
@@ -243,7 +243,7 @@
     }
     return {observations,recognizer:{name:'local-ivory-tiles-tesseract',pipelineRevision:3,coreVersion:'6.1.2',
       modelRevision:'87416418657359cb625c412a48b6e1d6d41c29bd',maxDimension:MAX_DIMENSION},
-      notice:`Proposed ${observations.length} tiles locally. Check every value, color, joker, missing tile and meld boundary. Scores are uncalibrated; confirm each tile before continuing.`};
+      notice:`Proposed ${observations.length} tiles locally. Scores are uncalibrated; unreadable values require editing.`};
   }
   const api={read,ready,colorOf,detect,group};
   root.RummyReader=api;
