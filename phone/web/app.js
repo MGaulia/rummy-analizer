@@ -11,8 +11,24 @@ window.rummyObservationReport = () => Object.fromEntries(['table','rack'].filter
 let currentJob = null;
 let nextJob = 0;
 let revision = 0;
+const photoRequests = {table:0,rack:0};
 const $ = id => document.getElementById(id);
-$('licenses').textContent=globalThis.RUMMY_GO_LICENSE||'License text is missing from this build.';
+$('licenses').textContent=(globalThis.RUMMY_GO_LICENSE||'License text is missing from this build.')+
+  (globalThis.RUMMY_READER_LICENSES?'\n\n'+globalThis.RUMMY_READER_LICENSES:'');
+if(window.webkit?.messageHandlers?.photo)$('reading-help').hidden=true;
+$('save-report').onclick=()=>{
+  const photos=rummyObservationReport();
+  for(const zone of Object.keys(photos))photos[zone].image=images[zone].src;
+  if(!Object.keys(photos).length){status('Choose a photo before saving a reading report.',true);return;}
+  const report={version:1,kind:'rummy-photo-reading-report',
+    preview_source:document.querySelector('meta[name="rummy-preview-source"]')?.content||null,
+    browser:navigator.userAgent,photos};
+  const url=URL.createObjectURL(new Blob([JSON.stringify(report)],{type:'application/json'}));
+  const link=node('a');link.href=url;link.download='rummy-reading-report.json';
+  document.body.append(link);link.click();link.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
+  status('Saved a reading report on this device. It includes your photos; share it only if you choose.');
+};
 function status(text, error=false) { $('status').textContent=text; $('status').classList.toggle('error',error); }
 function invalidate() { revision++; $('result').replaceChildren(); if(currentJob) rummyCancel(currentJob); }
 function node(tag, text, className) { const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(className)e.className=className;return e; }
@@ -31,10 +47,25 @@ for(const zone of ['table','rack']){
   $(zone+'-file').onchange=async event=>{
     try{
       const file=event.target.files[0];if(!file)return;
+      event.target.value='';
+      const request=++photoRequests[zone];
+      const cancelled=()=>photoRequests[zone]!==request;
+      sessions[zone]=null;images[zone]=null;invalidate();
+      $('save-report').disabled=!sessions.table&&!sessions.rack;
+      $(zone+'-photo').replaceChildren(node('p','Reading this photo locally…','notice'));
       const bytes=await file.arrayBuffer();
       const hash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(n=>n.toString(16).padStart(2,'0')).join('');
       const image=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file)});
-      await acceptNativePhoto({zone,source:hash,image,observations:[],notice:'Browser import has no recognizer. Tap every tile in the photo and enter its value; iPhone recognition uses local Apple Vision.'});
+      if(cancelled())return;
+      if(sessions[zone==='table'?'rack':'table']?.source===hash)throw new Error('Use separate table and rack photos');
+      const decoded=new Image();decoded.src=image;await decoded.decode();
+      let result;
+      try{
+        result=await RummyReader.read(decoded,{cancelled,progress:message=>{if(!cancelled())status(message)}});
+      }catch(error){
+        result={observations:[],notice:'Local reading could not finish: '+String(error)+'. Tap each tile to enter its value manually.'};
+      }
+      if(!cancelled())await acceptNativePhoto({zone,source:hash,image,...result});
     }catch(error){status(String(error),true);}
   };
 }
@@ -48,6 +79,7 @@ window.acceptNativePhoto=async payload=>{
     const image=new Image();image.src=payload.image;await image.decode();
     recognizers[zone]=payload.recognizer||null;
     sessions[zone]=new PhotoSession(zone,source,payload.observations||[]);images[zone]=image;
+    $('save-report').disabled=false;
     invalidate();drawPhoto(zone);
     status(payload.notice||'Review every tile, its color, and the table meld boundaries. Tap the photo to add missed tiles.');
   }catch(error){status(String(error),true);}
@@ -66,7 +98,7 @@ function drawPhoto(zone){
     const rect=observation.raw.rect||{x:0,y:0,width:1,height:1};
     const ctx=crop.getContext('2d');ctx.drawImage(image,rect.x*image.naturalWidth,rect.y*image.naturalHeight,rect.width*image.naturalWidth,rect.height*image.naturalHeight,0,0,120,150);
     const detail=node('div');
-    const guesses=(observation.raw.candidates||[]).map(c=>`${c.tile.joker?'joker':c.tile.color+' '+c.tile.number} (${Math.round(c.confidence*100)}%)`).join(', ');
+    const guesses=(observation.raw.candidates||[]).map(c=>`${c.tile.joker?'joker':c.tile.color+' '+c.tile.number} (score ${Math.round(c.confidence*100)})`).join(', ');
     detail.append(node('p',`Read: ${observation.raw.text||'uncertain'} · ${guesses||'no proposed value'}`,'raw-reading'));
     const fields=node('div',undefined,'tile-fields');
     const suggested=observation.correction?.tile||observation.raw.candidates?.[0]?.tile||{};
@@ -120,7 +152,14 @@ async function execute(operation){
       status(message);
     }else{status('Confirmed table is valid.')}
     $('result').replaceChildren();
-    if(response.svg){$('result').append(node('p','Scroll sideways to see the full table and rack.','notice'));const parsed=new DOMParser().parseFromString(response.svg,'image/svg+xml');$('result').append(document.importNode(parsed.documentElement,true));}
+    if(response.svg){
+      $('result').append(node('p','Scroll sideways to see the full table and rack.','notice'));
+      // Standalone CLI SVGs carry a style element; the browser uses its local
+      // stylesheet so the existing strict CSP does not block diagram styling.
+      const svg=response.svg.replace(/<style>[\s\S]*?<\/style>/g,'');
+      const parsed=new DOMParser().parseFromString(svg,'image/svg+xml');
+      $('result').append(document.importNode(parsed.documentElement,true));
+    }
   }catch(error){status(String(error),true)}finally{currentJob=null;$('cancel').disabled=true;$('solve').disabled=false;$('validate').disabled=false;}
 }
 $('solve').onclick=()=>execute('solve');$('validate').onclick=()=>execute('validate');$('cancel').onclick=()=>{if(currentJob){rummyCancel(currentJob);status('Cancelling; keeping the best verified move found so far…')}};

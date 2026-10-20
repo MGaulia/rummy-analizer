@@ -1,5 +1,194 @@
 # Implementation status
 
+## Red 11 original-photo regression (2026-10-20 UTC)
+
+- Owner supplied `rummy-reading-report.json` from preview source
+  `744f670966950d5373d1f462a7d36a1a8182af31`. Original images, manual ordered
+  labels and replay artifacts stay outside Git under `/workspace/rummy-review/red11`.
+  The report's browser is desktop Chrome, not an iPhone acceptance run.
+- Replayed the actual photo bytes against revision 2: all nine table tiles and
+  four rack tiles matched; rack red 11 had no proposal. Detection counts were
+  correct (nine table/five rack), including one joker and three table melds.
+  A tilted red tile includes a tall black wood sliver in its rectangular crop.
+  The old mask mixed every ink color, so this streak corrupted OCR and digit
+  counting even though the dominant-color proposal was already red.
+- Reader revision 3 uses the clearly dominant ink color for the OCR mask and
+  component geometry. Ambiguous color remains unresolved. No legality-based
+  guessing, value-based deduplication, or lower confidence threshold was added.
+- Added an actual-OCR synthetic streak regression, observed failing before the
+  fix; existing synthetic numbers/colors, identical touching copies, nested-joker,
+  truncation guard, repeat import, confirmation and real-engine solve checks pass.
+  Added `--expectations` for private hash-bound ordered tile/meld regression.
+  The real report assertion fails against the previous published package and
+  passes against revision 3: all 14 tiles, counts and suggested meld/orders match
+  independent visual labels. These two photos are not a representative dataset.
+- Clean tested/published source `7860dec5d2506932c08785a4b4ae4c66c060684e`,
+  tree `8ab0d99f140903648992da0dc9ac5b73648ba28c`. Go 1.27.2 linux/amd64,
+  Node v24.19.0, Python 3.12.14, desktop Chromium 154.0.8037.57. All passed:
+
+  ```sh
+  bash scripts/check.sh
+  bash scripts/build-safari-preview.sh /workspace/rummy-review/safari-preview-reader-revision3
+  node scripts/check-phone-engine.cjs
+  node scripts/check-photo-state.cjs
+  python3 scripts/check-phone-ui.py
+  python3 scripts/check-safari-preview.py /workspace/rummy-review/safari-preview-reader-revision3
+  python3 scripts/check-browser-reader.py --preview-directory /workspace/rummy-review/safari-preview-reader-revision3
+  python3 scripts/check-browser-reader.py --report /workspace/attachments/a44c4bfe-d20b-44b6-88a5-b3bff61f2c05/rummy-reading-report.json --expectations /workspace/rummy-review/red11/expected.json --output /workspace/rummy-review/red11/after.json
+  python3 scripts/check-browser-reader.py --preview-directory /workspace/rummy-review/safari-preview-reader-revision3 --report /workspace/attachments/a44c4bfe-d20b-44b6-88a5-b3bff61f2c05/rummy-reading-report.json --expectations /workspace/rummy-review/red11/expected.json --output /workspace/rummy-review/red11/package-after.json
+  python3 scripts/check-browser-reader.py --preview-directory /workspace/rummy-review/reader-revision3-live-package --report /workspace/attachments/a44c4bfe-d20b-44b6-88a5-b3bff61f2c05/rummy-reading-report.json --expectations /workspace/rummy-review/red11/expected.json --output /workspace/rummy-review/red11/live-after.json
+  ```
+
+  A separate reviewer also ran actual bundled OCR on synthetic 11 in each of four
+  colors with a competing-color streak: four correct single proposals, each with
+  two detected digits. No parser/inventory code changed; no new fuzz or benchmark
+  result is claimed. No native/device check ran.
+- Pages commit `b6acbb5fc8bd210f7d3d9438a27cd74b24e8e98e` fast-forwards
+  `9cb5b8e4d1c7ffdda34139273a3b33e3cd6aac85`; GitHub reports it built without
+  error. Downloaded all twelve manifest assets over public HTTPS, verified each
+  hash and the exact source metadata, then passed the real-photo regression
+  against that downloaded package. Preview:
+  <https://mgaulia.github.io/rummy-analizer/?v=7860dec5d250>.
+  #13 remains based on unmerged #12; merge order stays #12 then #13.
+  Native builds/device acceptance remain blocked by no Mac build machine.
+- Independent artwork milestone resumed after network publication: downloaded
+  the requested Printables model and verified its author-provided CC BY-SA 4.0
+  license. Mesh-based atlas proof rendering is running outside the repository.
+
+## Duplicate/partial reading regressions (2026-10-19, owner local date)
+
+- The owner reported two screenshot-confirmed defects with the same example
+  photos: a joker produced a second interior-face detection, and orange 12 was
+  proposed as 1 with score 90. The screenshot/original image bytes remain
+  unavailable to this runner, so exact real-photo reproduction is not claimed.
+- Reproduced the duplicate mechanism before the fix on a face-like synthetic
+  fixture: three physical tiles produced four proposals. Added a separate
+  fault-injection regression for a visible two-digit image with one OCR mode
+  returning partial 1 at score 90; the old selector accepted it. Other OCR modes
+  in that test still use the real bundled engine. This is selection-guard
+  verification, not a recognition accuracy measurement.
+- Reader revision 2 removes spatially contained tile-interior boxes before meld
+  grouping, keeps adjacent identical tile copies, widens the ink crop, compares
+  multiple OCR modes against tall glyph-component count, and uses per-digit OCR
+  or uncertainty for conflicts. No table legality is used to guess a reading.
+  Both regressions now pass, along with all 13 actual synthetic OCR values,
+  touching/identical tiles, repeated imports, confirmation and real-engine solve.
+- Added an explicit local **Photo reading wrong? → Save reading report** export
+  for the original selected photos, raw proposals and build/browser metadata.
+  No corrections are presented as model output. The user chooses whether to
+  share the downloaded JSON; there is no upload, network call or automatic
+  persistence. Local `--report` replay verifies photo hashes and reruns the
+  actual reader. Download contents/hashes are checked by the browser integration.
+- Exact tested/published source: `744f670966950d5373d1f462a7d36a1a8182af31`;
+  tree `7b0ea8ea6e33006e3b59853f6061d5cd3cde68e1`. Toolchain unchanged:
+  Go 1.27.2 linux/amd64, Node v24.19.0, Python 3.12.14,
+  desktop Chromium 154.0.8037.57. With the existing Go PATH/cache activation,
+  all final commands passed:
+
+  ```sh
+  bash scripts/check.sh
+  bash scripts/build-safari-preview.sh /workspace/rummy-review/safari-preview-reader-revision2
+  node scripts/check-phone-engine.cjs
+  node scripts/check-photo-state.cjs
+  python3 scripts/check-phone-ui.py
+  python3 scripts/check-safari-preview.py /workspace/rummy-review/safari-preview-reader-revision2
+  python3 scripts/check-browser-reader.py --preview-directory /workspace/rummy-review/safari-preview-reader-revision2
+  python3 scripts/check-browser-reader.py --report /workspace/rummy-review/revision2-five-report.json --output /workspace/rummy-review/revision2-five-proposals.json
+  python3 scripts/check-browser-reader.py --preview-directory /workspace/rummy-review/reader-revision2-live-package
+  ```
+
+  The report replay fixture is explicitly synthetic; all five manually specified
+  expected values matched. One earlier replay comparison failed because a reused
+  synthetic file had been overwritten by a two-tile debug case while the assertion
+  still expected five tiles. Fresh deterministic input resolved that test-artifact
+  mismatch; the two-tile report also replayed correctly. No real-photo claim.
+- Pages commit `9cb5b8e4d1c7ffdda34139273a3b33e3cd6aac85` fast-forwards
+  `75c5e96f0190da8d49e58d5dd8752d98ed02f831`. GitHub reports the exact new
+  commit `built` without error. Direct public HTTPS access now works. Downloaded
+  all twelve assets named in the live manifest, checked each SHA256 against the
+  tested package, and reran the actual reader/export regressions on those files.
+  Preview: <https://mgaulia.github.io/rummy-analizer/?v=744f67096695>.
+- #13 contains this follow-up and stays draft, based on unmerged #12. Printables
+  model artwork remains an independent pending milestone: its saved network
+  additions are not active in the enforced policy. Native build/device acceptance
+  and reproduction from the owner's actual original image bytes remain unrun.
+
+## Browser reading follow-up (2026-10-19, owner local date)
+
+- Owner reported that Safari did not read their tiles and supplied two inline
+  photos. The previous published preview intentionally had no automatic browser
+  recognizer. Visual transcription: rack red 11, black 9, blue/teal 2 and 3,
+  orange 8; table orange/black/red 12, black 8–joker–10, blue/black/orange 11.
+  These are manual observations, not program output. The inline originals are
+  not mounted under `/workspace/attachments` or otherwise accessible as files;
+  real-pixel evaluation on those exact examples remains blocked by original-file
+  access. Do not turn this transcription into a mocked recognition result.
+- Implemented a separate browser-reader branch on top of unmerged draft #12.
+  Real local Tesseract.js-core 6.1.2 and a pinned tessdata_fast model are bundled
+  as scripts with verified source checksums and Apache-2.0 notices. No workers,
+  runtime fetches, photo uploads, cloud inference or remote solver. Inputs are
+  bounded to 1400px; ivory segmentation, touching-strip seams, ink crops, OCR,
+  cyan/teal color proposals, low-confidence possible-joker detection and geometric
+  meld suggestions feed the existing raw/corrected confirmation boundary.
+- Actual-OCR tests initially exposed missing 5/9 readings under single-line
+  segmentation; a raw-line fallback fixes the synthetic regression. The new
+  integration check also exposed an existing CSP violation in the embedded SVG
+  style element. Browser rendering now removes the generated style before parsing
+  and uses the local stylesheet; standalone Go SVG output is unchanged. The
+  strict CSP is preserved. Synthetic reader, actual file import, confirmation,
+  real-engine opening and no-network/no-CSP-error checks passed before committing.
+- The owner also requested real official tiles for visualization. Inspected the
+  official site's home page, media searches and older asset records. Found product
+  photographs, joker logos and rulebook illustrations, but not a complete clean
+  individual tile-face atlas. Requested the intended official page URL using an
+  asynchronous question; original tile-art substitution remains pending that
+  asset/source. Do not silently replace it with generated/CSS tiles. Continue
+  browser reading and publication independently.
+- Owner supplied the desired source:
+  <https://www.printables.com/model/130082-multicolor-rummikub-tiles>. This
+  supersedes the request for an unspecified official tile-art page. The actual
+  request returned proxy CONNECT HTTP 403. Saved page/file/API domains
+  `printables.com`, `www.printables.com`, `media.printables.com`,
+  `files.printables.com`, `api.printables.com` alongside the existing three
+  allowed hosts. The draft save was confirmed; it requires user save/publication.
+  No token or existing binding was replaced. Blender and OpenSCAD are installed,
+  so local model inspection/rendering can proceed once model assets/license are
+  accessible. Do not invent a license or describe the current SVG as real art.
+- [Draft #13](https://github.com/MGaulia/rummy-analizer/pull/13) is the focused
+  reader change, based on `codex/iphone-photo-correction` (#12). Merge order is
+  #12 then #13; both stay unmerged. Exact tested/published source:
+  `d4aa14e9d1fa2ca8b3bca291423ba7c293f6a82a`; source tree
+  `6c86700bcd265070cd145f7788d960a84f2551d3`. Go 1.27.2 linux/amd64,
+  Node v24.19.0, Python 3.12.14, desktop Chromium 154.0.8037.57. With the existing
+  Go PATH/cache activation, all of these commands passed:
+
+  ```sh
+  bash scripts/check.sh
+  bash scripts/build-safari-preview.sh /workspace/rummy-review/safari-preview-local-reader
+  node scripts/check-phone-engine.cjs
+  node scripts/check-photo-state.cjs
+  python3 scripts/check-phone-ui.py
+  python3 scripts/check-safari-preview.py /workspace/rummy-review/safari-preview-local-reader
+  python3 scripts/check-browser-reader.py
+  python3 scripts/check-browser-reader.py --preview-directory /workspace/rummy-review/safari-preview-local-reader
+  ```
+
+- The final command also checks the actual published package, including its
+  script-loaded OCR/runtime/model bytes, with no mocked recognizer. Its generated
+  images remain explicitly synthetic. Original photo bytes, real-photo accuracy,
+  physical-iPhone execution, memory and latency remain unverified. Recognition
+  proposals never count as confirmed physical tile identities without review.
+- All 14 remote static files exactly match the checked package. Pages commit
+  `75c5e96f0190da8d49e58d5dd8752d98ed02f831` fast-forwards the previous
+  `eb2e7e041e64ab18df5ec187a22dcff67cd1a298`. GitHub's API reports that exact
+  commit `built` with no error. Preview:
+  <https://mgaulia.github.io/rummy-analizer/?v=d4aa14e9d1fa>.
+  Direct public-URL access from this workspace remains blocked by its pending
+  network policy; no live Safari or original-photo success is inferred from the
+  deployment result. Subsequent changes here only add the package-check option
+  and update documentation; the published web/runtime source remains the exact
+  checked source above.
+
 ## Current state after network publication (2026-10-19)
 
 - Published policy is enforced for api.github.com and rummikub.com; actual API

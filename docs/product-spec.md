@@ -46,10 +46,22 @@ interface and actual Go bridge are tested on desktop; native compilation, real
 recognition, physical-device memory/latency, and the end-to-end offline workflow
 are unverified. The owner confirmed there is no Mac build machine or real-photo
 dataset yet. PRs #9–#11 are merged into main; #12 targets main and remains a draft.
-The owner authorized a static GitHub Pages Safari preview of #12 for manual
-photo annotation and on-phone solver testing. It performs no browser recognition,
-does not persist photos/readings, and does not yet support offline reopening.
-Publishing that preview does not satisfy native or recognition acceptance.
+The owner authorized a static GitHub Pages Safari preview and then requested
+automatic browser tile reading. The browser-reader branch depends on #12 and
+bundles local Tesseract OCR, tile/ink segmentation, color proposals and suggested
+meld rows. Model/runtime downloads happen at build time; CSP still prohibits
+runtime connections, uploads and remote inference. All proposals require explicit
+confirmation. The preview does not automatically persist photos/readings or
+support offline reopening. An explicit local reading-report download includes
+selected originals, raw proposals and build/browser information for reproducible
+debugging; it never uploads or shares the report automatically. Synthetic actual-OCR checks do not establish real-photo accuracy,
+native acceptance, or measured iPhone memory/latency. The owner subsequently
+shared a reading report containing the two original examples. Reader revision 3
+passes exact local replay of their 14 manually labeled tiles, counts and suggested
+melds. This bounded real-photo regression is desktop evidence, not representative
+dataset evaluation or physical-iPhone acceptance. Dominant ink filtering prevents
+cross-color background slivers from contaminating number crops; same-color
+artifacts and other capture conditions remain unmeasured.
 
 The owner requested a Rummikub-style interface: green felt, ivory numbered
 tiles with red/blue/black/orange accents, and wooden rack details. Decorative
@@ -57,3 +69,10 @@ tiles are separate from the confirmed table/rack rendering. Phone layouts stack
 the two photo panels; wider layouts show them side by side. Local processing,
 explicit reading confirmation, search coverage messages, and edition/opening
 state remain part of the interface contract.
+The owner additionally requested actual tile artwork for the confirmed table and
+identified <https://www.printables.com/model/130082-multicolor-rummikub-tiles> as
+the desired source. Published network access now permits downloading the actual
+model files and inspecting their CC BY-SA 4.0 license. Local atlas rendering is
+in progress; the exact diagrams remain in place until integration is verified. Do not
+claim CSS boxes or generated replacement art are the requested model assets, and
+do not substitute the user's photos for them.
