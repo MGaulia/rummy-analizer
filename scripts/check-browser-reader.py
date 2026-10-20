@@ -68,7 +68,7 @@ with sync_playwright() as p:
         target = root / name
         assert target.resolve().is_relative_to(root)
         requested.append(name)
-        route.fulfill(status=200, body=target.read_bytes(), content_type={'.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css'}.get(target.suffix, 'text/plain'))
+        route.fulfill(status=200, body=target.read_bytes(), content_type={'.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png':'image/png'}.get(target.suffix, 'text/plain'))
 
     context.route('**/*', serve)
     page = context.new_page()
@@ -190,6 +190,6 @@ with sync_playwright() as p:
         print('Bundled OCR: all 13 synthetic numbers/colors, touching and identical tiles, cross-color background rejection, nested-joker suppression, high-score truncation fault injection, repeated file import, confirmation, and real-engine opening passed.')
     assert not errors, errors
     assert not console_errors, console_errors
-    assert set(requested) <= {'index.html','style.css','engine/wasm_exec.js','engine/wasm_data.js','engine.js','photo-state.js','browser-reader.js','app.js','recognition/reader-core.js','recognition/reader-data.js'}, requested
+    assert set(requested) <= {'index.html','style.css','engine/wasm_exec.js','engine/wasm_data.js','engine.js','photo-state.js','browser-reader.js','tile-art.js','tile-art/tiles-atlas.png','app.js','recognition/reader-core.js','recognition/reader-data.js'}, requested
     browser.close()
 print('All requests were bundled GET assets; no photo upload, external model fetch, remote solver, or CSP violation. Desktop execution; no general accuracy or physical-iPhone acceptance claim.')

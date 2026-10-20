@@ -35,12 +35,14 @@ OCR reader; its separate actual-pixel checks are documented below.
 
 Open the [Safari preview](https://mgaulia.github.io/rummy-analizer/) on any network.
 GitHub's Pages API confirms a successful build of `gh-pages` commit
-`9cb5b8e4d1c7ffdda34139273a3b33e3cd6aac85`, with HTTPS enforced. All twelve
-live HTTPS assets matched the tested package hashes, and the downloaded package
-passed the actual OCR/confirmation/solver/report regressions in desktop Chromium.
+`9d339f348aab8fe8ff40418a9acb61ef43189307`, with HTTPS enforced, publishing
+source `20f4f393215400f7666247593e8597e455bb7614`. All sixteen live HTTPS assets
+matched the tested package hashes. The downloaded package passed artwork checks
+and exact replay of all 14 tiles in the owner's original-photo report in desktop
+Chromium; the generated package also passed OCR/confirmation/solver regressions.
 Physical Safari execution of this revision remains unverified. No source merge
 was needed; #12 and its reader follow-up
-#13 remain unmerged drafts. Merge #12 before #13.
+#13 and the artwork follow-up #14 remain unmerged drafts. Merge #12 → #13 → #14.
 The current preview uses a green felt table, ivory numbered tiles, a wooden
 rack, and the four tile colors. Assets include a source-version query parameter
 to refresh the styling after publication. The design adapts to phone and desktop
@@ -56,6 +58,7 @@ bash scripts/build-safari-preview.sh /tmp/rummy-safari-preview
 python3 scripts/check-safari-preview.py /tmp/rummy-safari-preview
 python3 scripts/check-browser-reader.py
 python3 scripts/check-browser-reader.py --preview-directory /tmp/rummy-safari-preview
+python3 scripts/check-tile-art.py --preview-directory /tmp/rummy-safari-preview
 ```
 
 Use an empty output directory. Publish only its contents to the `gh-pages`
@@ -153,6 +156,13 @@ The truncation regression deliberately injects a high-scoring partial output in
 one OCR mode while other modes still run the real engine; this fault injection
 tests the selection guard and is separate from actual-OCR fixture checks. Neither
 that test nor the synthetic images establish general photo accuracy.
+
+The confirmed table and remaining rack now use local artwork rendered from the
+owner-selected [Printables model](https://www.printables.com/model/130082-multicolor-rummikub-tiles).
+Physical occurrences, played outlines and explicit joker roles remain exact.
+See [artwork source, license and reproduction](../docs/tile-art.md).
+`python3 scripts/check-tile-art.py` checks all numbered sprites and joker roles
+on a real Go/Wasm diagram; `--preview-directory` checks a generated/live package.
 
 ## Build the iOS integration
 

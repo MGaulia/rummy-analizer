@@ -64,7 +64,7 @@ button:disabled{opacity:.4;cursor:default;box-shadow:none}
 #status.error{color:#9b322f;background:#fff0e8;border-color:#e9bfb0;border-left-color:#ba4941}
 #result{max-width:100%;overflow:auto;margin-top:12px;overscroll-behavior-x:contain}
 #result:empty{margin:0}
-#result svg{display:block;width:100%;min-width:1020px}
+#result>svg{display:block;width:100%;min-width:1020px}
 #result svg text{font-family:system-ui,sans-serif}
 #result svg .heading{font-size:22px;fill:#162f24}
 #result svg .number{font-size:28px;font-weight:700}
@@ -90,6 +90,7 @@ button.confirmed{background:#eaf2df;border-color:#659871;color:#17623c;box-shado
 .preview-note code{font-size:11px}
 footer{font-size:11px;line-height:1.7;color:#bad2c0;text-align:center;padding:9px 15px 0}
 footer>p{font-size:14px;font-weight:600;color:#e5ecda;margin:5px 0 10px}
+footer a{color:#e5ecda}
 footer details{text-align:left;margin:20px auto 0;max-width:760px;border-top:1px solid #ffffff26;padding-top:10px}
 footer summary{cursor:pointer;min-height:44px;align-content:center}
 footer button{background:#f0c263;border-color:#d5a149;box-shadow:0 3px 0 #a47636;color:#3b301e}
@@ -99,3 +100,8 @@ footer pre{white-space:pre-wrap;font:11px/1.5 monospace;overflow-wrap:anywhere}
 @media(max-width:600px){main{padding-left:14px;padding-right:14px;padding-top:max(21px,env(safe-area-inset-top))}.top-bar{padding:0 3px 22px;gap:10px}.brand{font-size:22px;gap:10px}.brand-caption{font-size:8px;letter-spacing:1.5px}.brand-tile{width:31px;height:41px;font-size:25px}.local-badge{font-size:8px;letter-spacing:.6px;padding:9px}.hero{padding:28px 4px 27px;gap:9px}.hero-copy{min-width:0}h1{font-size:36px;letter-spacing:-1.6px}.eyebrow{font-size:8px;letter-spacing:1.35px;margin-bottom:12px}.hero-copy>p:last-child{font-size:12px;margin-top:14px}.hero-rack{width:145px;align-self:center}.rack-tiles{gap:3px;padding:0 4px}.game-tile{width:32px;height:49px;font-size:22px;letter-spacing:-1.8px;border-radius:4px;box-shadow:0 3px 0 #c5b99b,0 5px 7px #001c234a}.game-tile>span{font-size:5px;margin-top:5px}.game-tile.joker-tile{font-size:20px}.game-tile.joker-tile>span{font-size:4px;letter-spacing:.5px}.wooden-rack{height:14px;margin-top:-2px;border-bottom-width:2px}.hero-rack>p{font-size:7px;letter-spacing:.3px;margin-top:14px}.settings{display:block;padding:18px;border-top-width:3px}.edition-field{display:grid;grid-template-columns:76px minmax(0,1fr);align-items:center;font-size:13px;min-width:0;gap:12px}.rule-options{margin-top:16px;padding-top:12px;border-top:1px solid #dedecb;display:grid;gap:7px}.check{font-size:12px}.photo-grid{display:block}.section-title{gap:12px;margin-bottom:19px}.section-title h2{font-size:21px}.step-tile{width:34px;height:42px;font-size:25px}section{padding:20px;margin-bottom:17px;border-radius:13px}.empty-photo{min-height:190px;padding:22px 10px 16px}.empty{margin-top:17px}.empty-photo .notice br{display:none}.photo-actions>button{min-width:110px}.search-controls{gap:16px}.search-controls>label{width:100%}.search-controls .actions{width:100%;display:grid;grid-template-columns:1fr 1fr}.search-controls #cancel{grid-column:1/-1;min-height:42px;padding:10px}#status{margin-top:18px;font-size:12px}.tile-fields button{width:100%}.preview-note{padding:14px 17px;gap:2px 10px}.preview-note>div{min-width:180px}.preview-note summary{min-height:36px}.preview-note details{font-size:11px}footer{padding-left:6px;padding-right:6px}}
 @media(max-width:360px){h1{font-size:31px}.hero-rack{width:120px}.game-tile{width:27px;height:44px;font-size:19px}.game-tile.joker-tile{font-size:18px}.brand-caption{letter-spacing:1px}.local-badge{font-size:7px;padding:8px}.hero-copy>p:last-child{font-size:11px}}
 @media(prefers-reduced-motion:reduce){button{transition:none}}
+
+.hero-rack .tile-art-decoration{display:block;width:64px;height:96px;flex-shrink:0;overflow:hidden}
+@media(max-width:760px){.hero-rack .tile-art-decoration{width:50px;height:75px}}
+@media(max-width:600px){.hero-rack .tile-art-decoration{width:32px;height:48px}}
+@media(max-width:360px){.hero-rack .tile-art-decoration{width:28px;height:42px}}

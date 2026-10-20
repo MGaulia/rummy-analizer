@@ -158,6 +158,7 @@ async function execute(operation){
       // stylesheet so the existing strict CSP does not block diagram styling.
       const svg=response.svg.replace(/<style>[\s\S]*?<\/style>/g,'');
       const parsed=new DOMParser().parseFromString(svg,'image/svg+xml');
+      RummyTileArt.decorate(parsed.documentElement);
       $('result').append(document.importNode(parsed.documentElement,true));
     }
   }catch(error){status(String(error),true)}finally{currentJob=null;$('cancel').disabled=true;$('solve').disabled=false;$('validate').disabled=false;}

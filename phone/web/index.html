@@ -12,6 +12,7 @@
 <script defer src="engine.js"></script>
 <script defer src="photo-state.js"></script>
 <script defer src="browser-reader.js"></script>
+<script defer src="tile-art.js"></script>
 <script defer src="app.js"></script>
 </head>
 <body>
@@ -23,7 +24,7 @@
   </div>
   <div class="hero">
     <div class="hero-copy"><p class="eyebrow">LET’S SET THE TABLE</p><h1>A little help<br>at the table.</h1><p>Check your tiles. Find your move.<br>Keep the game going.</p></div>
-    <div class="hero-rack" aria-hidden="true"><div class="rack-tiles"><span class="game-tile red">10<span>●</span></span><span class="game-tile blue">10<span>●</span></span><span class="game-tile black">10<span>●</span></span><span class="game-tile orange joker-tile">★<span>JOKER</span></span></div><div class="wooden-rack"></div><p>Every tile has a place.</p></div>
+    <div class="hero-rack" aria-hidden="true"><div class="rack-tiles"><svg class="tile-art-decoration" viewBox="1728 0 192 288" focusable="false"><image href="tile-art/tiles-atlas.png" width="2688" height="1152"/></svg><svg class="tile-art-decoration" viewBox="1728 288 192 288" focusable="false"><image href="tile-art/tiles-atlas.png" width="2688" height="1152"/></svg><svg class="tile-art-decoration" viewBox="1728 576 192 288" focusable="false"><image href="tile-art/tiles-atlas.png" width="2688" height="1152"/></svg><svg class="tile-art-decoration" viewBox="2496 864 192 288" focusable="false"><image href="tile-art/tiles-atlas.png" width="2688" height="1152"/></svg></div><div class="wooden-rack"></div><p>Every tile has a place.</p></div>
   </div>
 </header>
 <section class="settings" aria-label="Game settings">
@@ -49,7 +50,7 @@
   <div class="search-controls"><label>Search effort<select id="budget"><option value="200000">Standard search</option><option value="2000000">Extended search</option></select></label><div class="actions"><button id="validate" class="secondary">Check table</button><button id="solve">Find move <span class="move-arrow" aria-hidden="true"></span></button><button id="cancel" class="secondary" disabled>Cancel search</button></div></div>
   <p id="status" role="status" aria-live="polite">Loading local engine…</p><div id="result"></div>
 </section>
-<footer><p>Just you, your tiles, and the next move.</p>Photos stay on your device. No account, upload, or remote solver. Recognition suggestions require your confirmation.<details id="reading-help"><summary>Photo reading wrong?</summary><p>Save a report containing your selected photos, raw readings and browser details. It stays on your device until you choose to share the file.</p><button id="save-report" disabled>Save reading report</button></details><details><summary>Open-source licenses</summary><pre id="licenses"></pre></details></footer>
+<footer><p>Just you, your tiles, and the next move.</p>Photos stay on your device. No account, upload, or remote solver. Recognition suggestions require your confirmation.<details id="reading-help"><summary>Photo reading wrong?</summary><p>Save a report containing your selected photos, raw readings and browser details. It stays on your device until you choose to share the file.</p><button id="save-report" disabled>Save reading report</button></details><details><summary>Tile artwork credits</summary><p>Multicolor Rummikub tiles by <a href="https://www.printables.com/model/130082-multicolor-rummikub-tiles">KlaasYK on Printables</a>, licensed <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Adapted by reorienting the original meshes, assigning ivory bodies and four ink colors, and rendering a local sprite atlas. The adapted artwork is also CC BY-SA 4.0.</p></details><details><summary>Open-source licenses</summary><pre id="licenses"></pre></details></footer>
 </main>
 </body>
 </html>

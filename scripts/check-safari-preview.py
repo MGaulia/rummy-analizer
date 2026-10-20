@@ -41,7 +41,7 @@ with sync_playwright() as p:
         name = request.url.removeprefix(base).split('?')[0] or 'index.html'
         assert name in metadata['files_sha256'], 'Unexpected asset: ' + name
         target = root / name
-        kind = {'.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css'}
+        kind = {'.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png':'image/png'}
         route.fulfill(status=200, body=target.read_bytes(),
                       content_type=kind.get(target.suffix, 'text/plain'))
 
@@ -72,6 +72,8 @@ with sync_playwright() as p:
     assert '3 rack tiles' in page.locator('#status').inner_text()
     assert page.locator('#result [data-played="true"]').count() == 3
     assert page.locator('#result [data-piece-id]').count() == 3
+    assert page.locator('#result .tile-art-sprite image').count() == 3
+    assert page.locator('#result .tile-art-played[fill="none"]').count() == 3
     assert not errors, errors
     assert len(requests) >= 7, requests
     browser.close()

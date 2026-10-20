@@ -27,9 +27,10 @@ commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(
 tree = subprocess.check_output(['git', 'rev-parse', 'HEAD^{tree}'], text=True).strip()
 if subprocess.check_output(['git', 'status', '--porcelain', '--untracked-files=no']):
     raise SystemExit('Commit tracked source changes before building a published preview.')
-assets = ['index.html', 'style.css', 'engine.js', 'photo-state.js', 'browser-reader.js', 'app.js',
+assets = ['index.html', 'style.css', 'engine.js', 'photo-state.js', 'browser-reader.js', 'tile-art.js', 'app.js',
           'engine/wasm_exec.js', 'engine/wasm_data.js', 'engine/GO-LICENSE.txt',
-          'recognition/reader-core.js', 'recognition/reader-data.js', 'recognition/READER-LICENSES.txt']
+          'recognition/reader-core.js', 'recognition/reader-data.js', 'recognition/READER-LICENSES.txt',
+          'tile-art/tiles-atlas.png', 'tile-art/tiles-atlas.json', 'tile-art/ATTRIBUTION.txt']
 for name in assets:
     target = destination / name
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -65,6 +66,8 @@ for name in assets:
         attribute = 'href' if name.endswith('.css') else 'src'
         page = page.replace(attribute + '="' + name + '"',
                             attribute + '="' + name + '?v=' + commit[:12] + '"')
+page = page.replace('href="tile-art/tiles-atlas.png"',
+                    'href="tile-art/tiles-atlas.png?v=' + commit[:12] + '"')
 index.write_text(page)
 (destination / '.nojekyll').touch()
 metadata = {

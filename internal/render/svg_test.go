@@ -19,6 +19,7 @@ func TestExactOccurrenceDiagram(t *testing.T) {
 	decoder := xml.NewDecoder(strings.NewReader(svg))
 	seen := map[string]int{}
 	played := 0
+	metadata := map[string]map[string]string{}
 	for {
 		token, err := decoder.Token()
 		if err == io.EOF {
@@ -31,13 +32,18 @@ func TestExactOccurrenceDiagram(t *testing.T) {
 		if !ok {
 			continue
 		}
+		attrs := map[string]string{}
 		for _, attr := range element.Attr {
+			attrs[attr.Name.Local] = attr.Value
 			if attr.Name.Local == "data-piece-id" {
 				seen[attr.Value]++
 			}
 			if attr.Name.Local == "data-played" && attr.Value == "true" {
 				played++
 			}
+		}
+		if id, ok := attrs["data-piece-id"]; ok {
+			metadata[id] = attrs
 		}
 	}
 	for _, id := range []string{`a"<&`, "b", "j", "rack-joker"} {
@@ -47,6 +53,17 @@ func TestExactOccurrenceDiagram(t *testing.T) {
 	}
 	if len(seen) != 4 || played != 1 || !strings.Contains(svg, "Joker as blue 3") || !strings.Contains(svg, "unassigned") {
 		t.Fatal("missing exact labels or additions")
+	}
+	for id, want := range map[string][]string{
+		`a"<&`:       {"blue", "1", "false", "", "0"},
+		"j":          {"", "0", "true", "blue", "3"},
+		"rack-joker": {"", "0", "true", "", "0"},
+	} {
+		for i, key := range []string{"data-tile-color", "data-tile-number", "data-joker", "data-role-color", "data-role-number"} {
+			if got := metadata[id][key]; got != want[i] {
+				t.Errorf("piece %q %s = %q, want %q", id, key, got, want[i])
+			}
+		}
 	}
 	again, _ := SVG(position, 4, []string{"b"})
 	if again != svg {

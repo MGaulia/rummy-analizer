@@ -44,8 +44,10 @@ using native camera/import/Vision proposals and the bundled Go/Wasm engine; this
 is not a measured final minimum device/OS or an accepted model choice. The local
 interface and actual Go bridge are tested on desktop; native compilation, real
 recognition, physical-device memory/latency, and the end-to-end offline workflow
-are unverified. The owner confirmed there is no Mac build machine or real-photo
-dataset yet. PRs #9–#11 are merged into main; #12 targets main and remains a draft.
+are unverified. There is no Mac build machine; a representative recognition
+dataset beyond the two shared examples remains unavailable. PRs #9–#11 are
+merged into main. Draft dependencies/merge order are #12 → #13 → #14; all remain
+unmerged, with #12 targeting main.
 The owner authorized a static GitHub Pages Safari preview and then requested
 automatic browser tile reading. The browser-reader branch depends on #12 and
 bundles local Tesseract OCR, tile/ink segmentation, color proposals and suggested
@@ -72,7 +74,9 @@ state remain part of the interface contract.
 The owner additionally requested actual tile artwork for the confirmed table and
 identified <https://www.printables.com/model/130082-multicolor-rummikub-tiles> as
 the desired source. Published network access now permits downloading the actual
-model files and inspecting their CC BY-SA 4.0 license. Local atlas rendering is
-in progress; the exact diagrams remain in place until integration is verified. Do not
-claim CSS boxes or generated replacement art are the requested model assets, and
-do not substitute the user's photos for them.
+model files and inspecting their CC BY-SA 4.0 license. A locally rendered atlas
+now uses the author's actual numeral, joker and tile-body meshes. Browser/app
+diagrams decorate validated Go positions with these bundled images, preserving
+each occurrence, played marker and explicit joker role. See docs/tile-art.md for
+source/license evidence, pinned mesh hash and reproducible Blender rendering.
+No user photos are used as artwork. The CLI SVG remains self-contained.

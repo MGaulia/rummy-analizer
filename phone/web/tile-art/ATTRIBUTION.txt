@@ -1,0 +1,22 @@
+Multicolor Rummikub tiles — KlaasYK
+https://www.printables.com/model/130082-multicolor-rummikub-tiles
+Retrieved 2026-10-20. Source geometry and adapted artwork: CC BY-SA 4.0.
+https://creativecommons.org/licenses/by-sa/4.0/
+
+Modified: reoriented the author's original OBJ meshes, assigned ivory plastic
+and red/blue/black/orange inlay materials, tilted and lit the tiles, and rendered
+56 transparent sprites using Blender 4.3.2/Cycles CPU with a fixed seed.
+No font-generated numerals, substitute boxes, or user photos are in this atlas.
+The adaptation is distributed under the same CC BY-SA 4.0 license.
+
+Original mesh:
+https://files.printables.com/media/prints/130082/stls/1246447_3ba28a3e-b369-4652-887f-75c7ba08219f/rummikub_joker.obj
+SHA256: cd92b514f2f435f1877b64e70e71c14716319e3bebdfa73c654f81cec905d1bc
+Atlas PNG SHA256: 37dfd3f03bd4d6281c4f359c10f2cdd06adbe716d274bfed1011496d332323a6
+
+The author-provided Printables model PDF (page 3) states Creative Commons 4.0
+International, Attribution-ShareAlike, and links to the license above. The
+source OBJ references an MTL file not supplied by the author; materials were
+assigned for this render. See docs/tile-art.md for reproduction commands.
+This license notice applies to these artwork assets; it does not relicense the
+application's separate source code or dependencies.
