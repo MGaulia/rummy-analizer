@@ -17,6 +17,13 @@
     // between conflicting candidates or a fallback after an invalid candidate.
     return validTile(tile) && candidates.every(c => validTile(c.tile) && sameTile(tile,c.tile)) ? tile : null;
   }
+  function observationReading(observation, index) {
+    return observation.correction || {
+      tile: proposedTile(observation.raw),
+      meld: observation.raw.suggestedMeld,
+      order: observation.raw.suggestedOrder || index + 1
+    };
+  }
   class PhotoSession {
     constructor(zone, source, observations = [], {error = ''} = {}) {
       if (!['table', 'rack'].includes(zone) || !source) throw new Error('Photo needs a zone and source identity');
@@ -31,41 +38,43 @@
       return id;
     }
     edit(id, tile, meld, order) {
-      const o = this.observations.find(o => o.id === id);
-      if (!o) throw new Error('Unknown observation');
-      if (order === undefined) order = o.raw.suggestedOrder || this.observations.indexOf(o) + 1;
+      const index = this.observations.findIndex(o => o.id === id);
+      if (index < 0) throw new Error('Unknown observation');
+      const o = this.observations[index];
+      if (order === undefined) order = o.raw.suggestedOrder || index + 1;
       // Store invalid/blank drafts too: clearing an input must never fall back to
       // a stale OCR proposal. pieces() supplies the actionable validation error.
       o.correction = {order, tile: tile ? clone(tile) : {}, meld: this.zone === 'table' ? meld : null};
       o.excluded = false;
-    }
-    correct(id, tile, meld, order) {
-      if (!validTile(tile) || (this.zone === 'table' && (!Number.isInteger(meld) || meld < 1))) throw new Error('Enter a valid tile and table meld number');
-      if (this.zone === 'table' && order !== undefined && (!Number.isInteger(order) || order < 1)) throw new Error('Enter a tile order within the meld');
-      this.edit(id,tile,meld,order);
     }
     exclude(id, excluded = true) {
       const o = this.observations.find(o => o.id === id); if (!o) throw new Error('Unknown observation');
       o.excluded = Boolean(excluded);
     }
     reading(id) {
-      const o = this.observations.find(o => o.id === id);
-      if (!o) throw new Error('Unknown observation');
-      return clone(o.correction || {tile:proposedTile(o.raw), meld:o.raw.suggestedMeld,
-        order:o.raw.suggestedOrder || this.observations.indexOf(o)+1});
+      const index = this.observations.findIndex(o => o.id === id);
+      if (index < 0) throw new Error('Unknown observation');
+      return clone(observationReading(this.observations[index], index));
     }
     pieces() {
       if (this.readError) throw new Error(`Could not read the ${this.zone} photo: ${this.readError}`);
-      const active = this.observations.filter(o => !o.excluded);
-      if (this.zone === 'rack' && !active.length) throw new Error('No rack tiles were read. Add a tile or choose another rack photo.');
-      return active.map(o => {
-        const index = this.observations.indexOf(o) + 1;
-        const value = this.reading(o.id);
-        if (!validTile(value.tile)) throw new Error(`Could not read ${this.zone} tile ${index}. Edit its color and number or remove it.`);
-        if (this.zone === 'table' && (!Number.isInteger(value.meld) || value.meld < 1)) throw new Error(`Enter the meld number for table tile ${index}.`);
-        if (this.zone === 'table' && (!Number.isInteger(value.order) || value.order < 1)) throw new Error(`Enter the order for table tile ${index}.`);
-        return {id:o.id, tile:clone(value.tile), meld:this.zone === 'table' ? value.meld : null, order:value.order};
-      });
+      const pieces = [];
+      for (const [index, observation] of this.observations.entries()) {
+        if (observation.excluded) continue;
+        const value = clone(observationReading(observation, index));
+        const number = index + 1;
+        if (!validTile(value.tile)) throw new Error(`Could not read ${this.zone} tile ${number}. Edit its color and number or remove it.`);
+        if (this.zone === 'table' && (!Number.isInteger(value.meld) || value.meld < 1)) throw new Error(`Enter the meld number for table tile ${number}.`);
+        if (this.zone === 'table' && (!Number.isInteger(value.order) || value.order < 1)) throw new Error(`Enter the order for table tile ${number}.`);
+        pieces.push({
+          id: observation.id,
+          tile: value.tile,
+          meld: this.zone === 'table' ? value.meld : null,
+          order: value.order
+        });
+      }
+      if (this.zone === 'rack' && !pieces.length) throw new Error('No rack tiles were read. Add a tile or choose another rack photo.');
+      return pieces;
     }
   }
   function positionFromPhotos(table, rack, includeRack = true) {

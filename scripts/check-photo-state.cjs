@@ -11,11 +11,21 @@ assert.notEqual(table.pieces()[0].id,rack.pieces()[0].id);
 assert.equal(table.observations[0].correction,null,'Automatic reading must not be labeled a user correction');
 raw.candidates[0].tile.color='black';
 assert.equal(table.observations[0].raw.candidates[0].tile.color,'red','Original input cannot mutate stored raw output');
-table.correct(table.observations[0].id,{color:'blue',number:1},1,1);
+const proposedPieces = table.pieces();
+proposedPieces[0].tile.color='orange';
+assert.equal(table.pieces()[0].tile.color,'red','Returned pieces cannot mutate stored proposals');
+table.edit(table.observations[0].id,{color:'blue',number:1},1,1);
 assert.equal(table.pieces()[0].tile.color,'blue');
 assert.equal(table.observations[0].raw.candidates[0].tile.color,'red','Editing cannot change raw recognition');
-assert.throws(()=>table.correct(table.observations[0].id,{color:'grey',number:1},1));
-assert.throws(()=>table.correct(table.observations[0].id,{color:'blue',number:1},0));
+const correctedPieces = table.pieces();
+correctedPieces[0].tile.number=13;
+const correctedReading = table.reading(table.observations[0].id);
+correctedReading.tile.color='orange';
+assert.deepEqual(table.pieces()[0].tile,{color:'blue',number:1},'Returned pieces/readings cannot mutate stored corrections');
+table.edit(table.observations[0].id,{color:'grey',number:1},1);
+assert.throws(()=>table.pieces(),/Could not read table tile 1/);
+table.edit(table.observations[0].id,{color:'blue',number:1},0);
+assert.throws(()=>table.pieces(),/meld number for table tile 1/);
 // Every draft edit, including blanks and invalid values, overrides stale OCR.
 table.edit(table.observations[0].id,{color:'blue',number:0},1,1);
 assert.throws(()=>positionFromPhotos(table,rack),/table tile 1/);
@@ -56,6 +66,28 @@ assert.equal(copies.pieces().length,2);
 assert.notEqual(copies.pieces()[0].id,copies.pieces()[1].id);
 copies.exclude(copies.observations[0].id,true);
 assert.equal(copies.pieces()[0].id,copies.observations[1].id);
+// Removal must preserve original numbering, fallback order and physical IDs.
+const numbered = new PhotoSession('rack','numbered',[observation('red',1),{candidates:[]}]);
+const secondId = numbered.observations[1].id;
+numbered.exclude(numbered.observations[0].id);
+assert.throws(()=>numbered.pieces(),/rack tile 2/);
+numbered.edit(secondId,{joker:true});
+assert.equal(numbered.pieces()[0].id,secondId);
+assert.equal(numbered.pieces()[0].order,2);
+numbered.exclude(secondId);
+assert.throws(()=>numbered.pieces(),/No rack tiles/);
+// Rack ordering is not used for game input, but returned metadata must remain
+// detached from raw observations/corrections and retain JSON normalization.
+const rackMetadata = new PhotoSession('rack','metadata',[observation('blue',4,1,{value:1})]);
+rackMetadata.pieces()[0].order.value=99;
+assert.deepEqual(rackMetadata.observations[0].raw.suggestedOrder,{value:1},'Returned order metadata cannot mutate raw observations');
+rackMetadata.edit(rackMetadata.observations[0].id,{color:'blue',number:4},undefined,{value:2});
+rackMetadata.pieces()[0].order.value=99;
+assert.deepEqual(rackMetadata.reading(rackMetadata.observations[0].id).order,{value:2},'Returned order metadata cannot mutate corrections');
+for(const order of [NaN,Infinity,-Infinity]){
+  rackMetadata.edit(rackMetadata.observations[0].id,{color:'blue',number:4},undefined,order);
+  assert.equal(rackMetadata.pieces()[0].order,null,'Nonfinite corrected order retains JSON normalization');
+}
 const ordered = new PhotoSession('table','ordered',[observation('blue',2,1,2),observation('blue',1,1,1),observation('blue',3,1,3)]);
 assert.deepEqual(positionFromPhotos(ordered,null,false).table[0].map(p=>p.tile.number),[1,2,3]);
 ordered.edit(ordered.observations[2].id,{color:'blue',number:3},1,1);
