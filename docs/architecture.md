@@ -74,13 +74,13 @@ configured as aliases. Error strings and result labels changed to reflect the ne
 semantics. `go run .`, streaming input, EOF behavior, and recovery after malformed
 input remain supported.
 
-## Next feature boundary
+## Move and photo boundaries
 
-Use structured table validation for move search,
-then a photo adapter feeding the same representation. Keep uncertain image
-readings separate from confirmed tile values. Define the search objective and
-report whether a result is optimal, merely feasible, incomplete/timed out, or a
-proven absence of moves. Search statuses belong to the search layer, not meld analysis.
+Structured position validation feeds move search; photo adapters build the same
+identified position representation. Raw readings remain separate from edited
+values. Search maximizes rack tiles played and distinguishes optimal, feasible
+but incomplete, incomplete without a move, and proven absence of a move. Search
+statuses belong to the search layer, not meld analysis.
 
 ## Application, rendering, and offline phone adapters
 

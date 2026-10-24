@@ -1,5 +1,131 @@
 # Implementation status
 
+## Cleanup merge approval (2026-10-24, owner local date)
+
+The owner explicitly approved merging #19 → #20 → #21 into main. All three are
+independent; preserve their commits and original branches. Their linked GitHub
+PR records provide the merge commits and current merge status. The checkpoints
+below record the original review verification; fresh merged-main checks and
+ancestry verification are recorded on the PRs after merging. This approval
+supersedes the historical keep-unmerged instruction for these three PRs.
+The published Pages package is unchanged by source merges.
+
+## Focused code cleanup (2026-10-20, owner local date)
+
+The owner requested a review for useful cleanup and optimization. Fresh main
+`c1377eb896ac696c990417944d3feb1be0608feb` had a clean worktree, no open PRs,
+and passed `bash scripts/check.sh` before edits. Independent reviews selected
+three concrete changes; no framework, dependencies, CI or broad rewrite was
+introduced. The CLI, recognition thresholds and game rules stay unchanged.
+
+| Reviewed PR | Scope | Tested source commit | Source tree |
+| --- | --- | --- | --- |
+| [#19](https://github.com/MGaulia/rummy-analizer/pull/19) | Search allocations | 56b6bb5df00dd2afbe48d13ef942c4bd4a8357ef | eb9ae4a523cd0804ffa0fe601511691406f16a94 |
+| [#20](https://github.com/MGaulia/rummy-analizer/pull/20) | Reused job-ID cancellation | 66076d9d7af92403388a235bfce95324235f6f1b | 290a8eadf3e9084a0e641868ed7056fad5173c87 |
+| [#21](https://github.com/MGaulia/rummy-analizer/pull/21) | Photo lifecycle/state and dead styles | 555d02c702718896c497e40c9a3f578c37540634 | ed9ec4f97964f3517eb3c5f19f4ed243df34f856 |
+
+All three target main directly and are independent. Suggested review/merge order
+is #19 → #20 → #21; no PR requires another. The owner approved merging all
+three on 2026-10-24. This documentation checkpoint is in #19 to avoid overlapping
+status-file edits across the independent PRs. The verification below was before
+merging; the published Pages app is unchanged and no deployment occurred.
+
+### Changes and before/after evidence
+
+- Search allocated a per-candidate index slice that its only caller ignored and
+  repeatedly grew short-lived group/run template slices. Removed the callback
+  argument/bookkeeping and reused bounded template storage. Template order,
+  budget ticks, physical IDs and copied joker roles are preserved. Existing
+  independent-reference search tests pass; public and 22-tile report CLI JSON/SVG
+  are byte-identical before/after, including moves and 1,296/194,009 work counts.
+  Both returned moves separately pass check-move.
+- The Wasm bridge canceled a prior request when its ID was reused, but the old
+  completion could delete the replacement's cancel handler. A bounded actual-Wasm
+  test fails before the fix (`node_limit` instead of `canceled`) and passes with
+  pointer-owned jobs that remove only their own map entry. Both replaced and
+  replacement requests cancel; retained moves independently validate. The test
+  uses 16,384 nodes per request rather than timing-dependent success. Five
+  additional bounded runs passed. Updated stale Web Worker comments.
+- Browser imports decoded the same data URI twice. A new actual-browser regression
+  fails before the fix (2 explicit decode calls, expected 1). Browser imports now
+  reuse the decoded Image; native payloads still decode their incoming bytes.
+  Common installation retains source-distinctness and stale-request guards.
+  Photo observations resolve in one indexed pass with one detached reading copy;
+  removed the unused confirmation-era correct() method and unreachable error
+  branch. Confirmed-unused photo/confirmation selectors and color tokens were
+  removed while retaining the supported SVG decoration/fallback path.
+- Independent review caught a metadata alias in the intermediate photo refactor:
+  an object-valued rack order could expose stored raw data to mutation. A new
+  regression fails on intermediate d1cbd33, passes against original c1377eb, and
+  passes after the final clone-once boundary. Raw/corrected metadata isolation,
+  nonfinite order normalization, error numbering and physical IDs after exclusions
+  remain covered. The PR was opened with the corrected head; no deployment occurred.
+
+### Measured search allocations
+
+Go 1.27.2 linux/amd64, AMD EPYC 9V74, default benchmark suffix `-5`. The existing
+benchmark ran for five 1-second samples before and after the search-only change:
+
+```sh
+go test -mod=readonly ./internal/game -run '^$' -bench '^BenchmarkSearchRearrangement$' -benchmem -benchtime=1s -count=5
+```
+
+| Existing rearrangement benchmark | Before | After |
+| --- | ---: | ---: |
+| Allocations/op (all five samples) | 2,094 | 107 |
+| Allocated bytes/op (all five samples) | 141,833 | 12,600 |
+| Median ns/op | 101,681 | 35,504 |
+| Timing range ns/op | 100,930–110,032 | 30,091–51,249 |
+
+This is 94.9% fewer allocations and 91.1% fewer allocated bytes in this one native
+benchmark. Timing varies on the shared host; it is not a phone or whole-app speed
+measurement. Raw samples are under /workspace/rummy-review/cleanup/search.
+
+### Final combined verification
+
+Each listed clean PR source passed `bash scripts/check.sh`. A separate local
+integration branch combined all three without conflicts. Its clean tested commit
+is `b66fe0ba00a0fa39c0314d648c9fce376f5738bb`, tree
+`8c93c5b1e7406175f36781dcd395cc4264969254`. Final commands below all passed with
+Go 1.27.2 linux/amd64, Node v24.19.0, Python 3.12.14 and Chromium 154.0.8037.57.
+Existing Go PATH/cache activation and the hash-bound private report/label paths
+from the revision-4 release apply:
+
+```sh
+bash scripts/check.sh
+bash scripts/build-safari-preview.sh /workspace/rummy-review/cleanup/integration-preview-final
+node scripts/check-phone-engine.cjs
+node scripts/check-photo-state.cjs
+python3 scripts/check-browser-reader.py --preview-directory /workspace/rummy-review/cleanup/integration-preview-final
+python3 scripts/check-phone-ui.py
+python3 scripts/check-phone-startup.py
+python3 scripts/check-safari-preview.py /workspace/rummy-review/cleanup/integration-preview-final
+python3 scripts/check-table-view.py --preview-directory /workspace/rummy-review/cleanup/integration-preview-final --screenshot /workspace/rummy-review/cleanup/combined-board.png
+python3 scripts/check-tile-art.py --preview-directory /workspace/rummy-review/cleanup/integration-preview-final
+python3 scripts/check-reading-flow.py --preview-directory /workspace/rummy-review/cleanup/integration-preview-final --report "$new_report" --expectations "$new_labels" --expected-played 1 --output /workspace/rummy-review/cleanup/new-photo-flow.json
+python3 scripts/check-reading-flow.py --preview-directory /workspace/rummy-review/cleanup/integration-preview-final --report "$prior_report" --expectations "$prior_labels" --expected-played 4 --output /workspace/rummy-review/cleanup/prior-photo-flow.json
+python3 /workspace/rummy-review/cleanup/screenshots/capture.py
+```
+
+Full checks include uncached Go tests, vet, races, CLI and exact rendering.
+Actual local OCR retains all thirteen synthetic numbers/colors at three exposure
+levels, separate/touching duplicates and joker/truncation cases. New tests cover
+single-decode imports, incoming native decoding and delayed stale-result
+replacement. State/startup/UI guards and both real-photo flows pass. The four
+original photos retain all 36 ordered occurrences and independently verified
+opening-state/move outcomes (22-tile case optimum one; 14-tile case optimum four).
+Optimal, feasible/incomplete and proven absence remain distinct; a timeout is
+never treated as no move.
+
+The responsive/layout/art checks retain all numbered faces, physical jokers,
+occurrences and roles at 320/390/768/1200px. Both generated demo-game screenshots
+are pixel-identical to the existing README images after the combined changes.
+Private source hashes, outputs, before/after regression logs and screenshot
+comparison are under /workspace/rummy-review/cleanup; no private inputs were
+committed. No parser/inventory changes require fresh fuzzing. Native compilation,
+physical-iPhone performance/offline acceptance and representative photo accuracy
+remain unverified, with the previously recorded hardware/data prerequisites.
+
 ## README: UI and CLI entry points (2026-10-20, owner local date)
 
 - The owner requested a clearer user README with game images and just two paths:
