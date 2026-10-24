@@ -57,7 +57,8 @@ merged into main. The owner authorized merging the remaining stack on
 2026-10-20; #12 → #13 → #14 → #15 → #16 landed in that order, each directly into
 main. Merged source and fresh verification are recorded in the implementation
 plan; merging does not establish native/device acceptance.
-Maintenance PRs #19–#21 independently target main and remain under review.
+The owner approved merging independent maintenance PRs #19–#21 into main on
+2026-10-24. Their GitHub records provide the current merge status.
 Their contracts preserve search enumeration and work accounting, physical identities,
 raw/correction isolation and current photo-error behavior. They remove unused
 search allocations, avoid repeated photo decoding and preserve cancellation

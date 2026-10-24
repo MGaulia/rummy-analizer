@@ -1,5 +1,15 @@
 # Implementation status
 
+## Cleanup merge approval (2026-10-24, owner local date)
+
+The owner explicitly approved merging #19 → #20 → #21 into main. All three are
+independent; preserve their commits and original branches. Their linked GitHub
+PR records provide the merge commits and current merge status. The checkpoints
+below record the original review verification; fresh merged-main checks and
+ancestry verification are recorded on the PRs after merging. This approval
+supersedes the historical keep-unmerged instruction for these three PRs.
+The published Pages package is unchanged by source merges.
+
 ## Focused code cleanup (2026-10-20, owner local date)
 
 The owner requested a review for useful cleanup and optimization. Fresh main
@@ -8,17 +18,17 @@ and passed `bash scripts/check.sh` before edits. Independent reviews selected
 three concrete changes; no framework, dependencies, CI or broad rewrite was
 introduced. The CLI, recognition thresholds and game rules stay unchanged.
 
-| Pending PR | Scope | Tested source commit | Source tree |
+| Reviewed PR | Scope | Tested source commit | Source tree |
 | --- | --- | --- | --- |
 | [#19](https://github.com/MGaulia/rummy-analizer/pull/19) | Search allocations | 56b6bb5df00dd2afbe48d13ef942c4bd4a8357ef | eb9ae4a523cd0804ffa0fe601511691406f16a94 |
 | [#20](https://github.com/MGaulia/rummy-analizer/pull/20) | Reused job-ID cancellation | 66076d9d7af92403388a235bfce95324235f6f1b | 290a8eadf3e9084a0e641868ed7056fad5173c87 |
 | [#21](https://github.com/MGaulia/rummy-analizer/pull/21) | Photo lifecycle/state and dead styles | 555d02c702718896c497e40c9a3f578c37540634 | ed9ec4f97964f3517eb3c5f19f4ed243df34f856 |
 
 All three target main directly and are independent. Suggested review/merge order
-is #19 → #20 → #21; no PR requires another. Keep all unmerged until the owner
-requests merging. This documentation checkpoint is in #19 to avoid overlapping
-status-file edits across the independent PRs. Main and the published Pages app
-remain unchanged; no deployment occurred.
+is #19 → #20 → #21; no PR requires another. The owner approved merging all
+three on 2026-10-24. This documentation checkpoint is in #19 to avoid overlapping
+status-file edits across the independent PRs. The verification below was before
+merging; the published Pages app is unchanged and no deployment occurred.
 
 ### Changes and before/after evidence
 
