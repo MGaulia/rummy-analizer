@@ -1,6 +1,6 @@
 //go:build js && wasm
 
-// The phone web view runs this Go engine locally in a Web Worker.
+// The phone web view runs this Go engine locally through its JavaScript bridge.
 package main
 
 import (
@@ -14,18 +14,22 @@ import (
 )
 
 func main() {
+	type job struct {
+		cancel context.CancelFunc
+	}
 	var mu sync.Mutex
-	active := map[string]context.CancelFunc{}
+	active := map[string]*job{}
 	execute := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		id, raw := args[0].String(), args[1].String()
 		executor := js.FuncOf(func(this js.Value, promiseArgs []js.Value) interface{} {
 			resolve := promiseArgs[0]
 			ctx, cancel := context.WithCancel(context.Background())
+			current := &job{cancel: cancel}
 			mu.Lock()
 			if previous := active[id]; previous != nil {
-				previous()
+				previous.cancel()
 			}
-			active[id] = cancel
+			active[id] = current
 			mu.Unlock()
 			go func() {
 				defer cancel()
@@ -41,7 +45,9 @@ func main() {
 					encoded = []byte(`{"error":"response encoding failed"}`)
 				}
 				mu.Lock()
-				delete(active, id)
+				if active[id] == current {
+					delete(active, id)
+				}
 				mu.Unlock()
 				resolve.Invoke(string(encoded))
 			}()
@@ -54,7 +60,7 @@ func main() {
 	cancel := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		mu.Lock()
 		if stop := active[args[0].String()]; stop != nil {
-			stop()
+			stop.cancel()
 		}
 		mu.Unlock()
 		return nil
