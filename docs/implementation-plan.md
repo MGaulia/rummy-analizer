@@ -1,5 +1,65 @@
 # Implementation status
 
+## Published merged cleanup build
+
+The owner requested publication of the latest main. A fresh clean checkout used
+source `80d8a562f37ab7d0a6356edbb5f17094e4c27b58`, tree
+`858da9e4356860fc3088bd50b8e26a33d56214c9`, including merged #19–#21. Required
+core checks and package verification all passed before publication. No runtime
+source or hosting configuration changed during this release.
+
+Pages commit `168c02f1af8fe178cd57cb1b92430305aab65993` fast-forwards
+`f18fab4fae4991adc54119187dbeff38f3a94b60`. GitHub reported that exact commit
+built without error, with HTTPS enforced. All seventeen public manifest assets
+matched the clean package SHA256 hashes; metadata and `.nojekyll` also matched.
+Only nineteen static files were published. Independent audit confirmed local,
+versioned resources, the existing no-connect/no-worker CSP, explicit bundled
+OCR/Wasm/model inputs, and intact Go/OCR/artwork notices. No original photos,
+reports, source/debug files, credentials or repository metadata were packaged.
+
+Live: <https://mgaulia.github.io/rummy-analizer/?v=80d8a562f37a>.
+Go 1.27.2 linux/amd64, Node v24.19.0, Python 3.12.14, Chromium 154.0.8037.57.
+The following commands passed on that clean source/package (existing Go
+PATH/cache activation applies):
+
+```sh
+bash scripts/check.sh
+bash scripts/build-safari-preview.sh /workspace/rummy-review/publish-nov02/package
+node scripts/check-phone-engine.cjs
+node scripts/check-photo-state.cjs
+python3 scripts/check-browser-reader.py --preview-directory /workspace/rummy-review/publish-nov02/package
+python3 scripts/check-safari-preview.py /workspace/rummy-review/publish-nov02/package
+python3 scripts/check-table-view.py --preview-directory /workspace/rummy-review/publish-nov02/package --screenshot /workspace/rummy-review/publish-nov02/package-board.png
+python3 scripts/check-tile-art.py --preview-directory /workspace/rummy-review/publish-nov02/package
+python3 scripts/check-reading-flow.py --preview-directory /workspace/rummy-review/publish-nov02/package --report /workspace/rummy-review/publish-nov02/preserved-photo-replay.json --expectations /workspace/rummy-review/iphone-report3/expected.json --expected-played 1 --output /workspace/rummy-review/publish-nov02/new-photo-flow.json
+python3 scripts/check-reading-flow.py --preview-directory /workspace/rummy-review/publish-nov02/package --report /workspace/attachments/a44c4bfe-d20b-44b6-88a5-b3bff61f2c05/rummy-reading-report.json --expectations /workspace/rummy-review/red11/expected.json --expected-played 4 --output /workspace/rummy-review/publish-nov02/prior-photo-flow.json
+python3 /workspace/rummy-review/publish-nov02/verify-live.py
+python3 scripts/check-reading-flow.py --preview-directory /workspace/rummy-review/publish-nov02/live-package --report /workspace/rummy-review/publish-nov02/preserved-photo-replay.json --expectations /workspace/rummy-review/iphone-report3/expected.json --expected-played 1 --output /workspace/rummy-review/publish-nov02/live-new-photo-flow.json
+python3 scripts/check-reading-flow.py --preview-directory /workspace/rummy-review/publish-nov02/live-package --report /workspace/attachments/a44c4bfe-d20b-44b6-88a5-b3bff61f2c05/rummy-reading-report.json --expectations /workspace/rummy-review/red11/expected.json --expected-played 4 --output /workspace/rummy-review/publish-nov02/live-prior-photo-flow.json
+python3 scripts/check-table-view.py --preview-directory /workspace/rummy-review/publish-nov02/live-package --screenshot /workspace/rummy-review/publish-nov02/live-board.png
+```
+
+The original temporary upload path for the later reading report had expired,
+so the first attempted replay command failed with FileNotFoundError. Its two
+preserved original JPEGs still matched the SHA256 values in the independent
+labels. A private replay container embeds those exact bytes; it reconstructs no
+old observations, settings or search outcomes. Both full replay commands above
+then passed, on the package and again on live downloaded files. The earlier
+report remained available. All 36 ordered photo occurrences are correct; moves
+under all three opening states independently validate and preserve physical IDs.
+
+Core checks include uncached tests/vet/races/CLI/rendering. Actual bundled OCR
+checks cover exposure, duplicate/joker/truncation cases and single-decode,
+native-payload and stale-import handling. Go/Wasm tests retain same-ID cancellation
+and independent move validation. Responsive/artwork checks pass at
+320/390/768/1200px, with exact roles and no internal meld scrollbars. Logs,
+source/deployment/hash metadata and private replay provenance are under
+/workspace/rummy-review/publish-nov02. No parser/inventory changes or performance
+claims required new fuzz/benchmark runs. Native builds, measured physical-iPhone
+performance/offline acceptance and representative photo accuracy remain unverified.
+This release-evidence follow-up changes documentation only; the deployed source
+stays pinned to the main commit above.
+
 ## Cleanup merge approval (2026-10-24, owner local date)
 
 The owner explicitly approved merging #19 → #20 → #21 into main. All three are
