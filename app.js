@@ -60,14 +60,29 @@ for(const zone of ['table','rack'])$(zone+'-file').onchange=async event=>{
     const hash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(n=>n.toString(16).padStart(2,'0')).join('');
     const image=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file)});
     if(cancelled())return;
-    if(sessions[zone==='table'?'rack':'table']?.source===hash)throw new Error('Use separate table and rack photos.');
+    checkPhotoSource(zone,hash);
     const decoded=new Image();decoded.src=image;await decoded.decode();
     let result;
     try{result=await RummyReader.read(decoded,{cancelled,progress:message=>{if(!cancelled())status(message)}});}
     catch(error){if(cancelled())return;result={observations:[],readError:String(error?.message||error||'Try another photo.')};}
-    if(!cancelled())await acceptNativePhoto({zone,source:hash,image,...result},()=>!cancelled());
+    if(!cancelled())installPhoto({zone,source:hash,...result},decoded);
   }catch(error){if(cancelled())return;$(zone+'-photo').replaceChildren(node('p',error.message,'reading-error'));status(error.message,true);}
 };
+function checkPhotoSource(zone, source){
+  if(!['table','rack'].includes(zone))throw new Error('Invalid photo zone.');
+  if(sessions[zone==='table'?'rack':'table']?.source===source)throw new Error('Use separate table and rack photos.');
+}
+function installPhoto(payload, image){
+  const {zone,source}=payload;
+  checkPhotoSource(zone,source);
+  recognizers[zone]=payload.recognizer||null;
+  sessions[zone]=new PhotoSession(zone,source,payload.observations||[],{error:payload.readError||''});
+  images[zone]=image;
+  $('save-report').disabled=false;
+  invalidate();
+  drawPhoto(zone);
+  readingStatus();
+}
 window.acceptNativePhoto=async(payload,isCurrent=()=>true)=>{
   try{
     if(!isCurrent())return;
@@ -76,13 +91,11 @@ window.acceptNativePhoto=async(payload,isCurrent=()=>true)=>{
       if(sessions[zone]!==undefined){sessions[zone]=null;images[zone]=null;invalidate();}
       throw new Error(payload.error);
     }
-    const {zone,source}=payload;if(!['table','rack'].includes(zone))throw new Error('Invalid photo zone.');
-    if(sessions[zone==='table'?'rack':'table']?.source===source)throw new Error('Use separate table and rack photos.');
+    const {zone,source}=payload;
+    checkPhotoSource(zone,source);
     const image=new Image();image.src=payload.image;await image.decode();
     if(!isCurrent())return;
-    recognizers[zone]=payload.recognizer||null;
-    sessions[zone]=new PhotoSession(zone,source,payload.observations||[],{error:payload.readError||''});images[zone]=image;
-    $('save-report').disabled=false;invalidate();drawPhoto(zone);readingStatus();
+    installPhoto(payload,image);
   }catch(error){if(isCurrent())status(error.message,true);}
 };
 function drawPhoto(zone){
@@ -99,7 +112,6 @@ function drawPhoto(zone){
   const add=node('button','+ Add tile','add-tile secondary');add.onclick=()=>{
     session.add({x:.45,y:.43,width:.1,height:.14});invalidate();drawPhoto(zone);readingStatus();
   };summary.append(add);parent.append(preview,summary);
-  if(session.readError)parent.append(node('p',session.readError,'reading-error'));
   const list=node('div',undefined,'tile-list');parent.append(list);
   for(const [index,observation] of session.observations.entries()){
     if(observation.excluded)continue;
