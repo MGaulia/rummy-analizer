@@ -64,6 +64,12 @@ raw/correction isolation and current photo-error behavior. They remove unused
 search allocations, avoid repeated photo decoding and preserve cancellation
 ownership when a request ID is reused. Combined verification and merge guidance
 are recorded in the implementation plan; native/device acceptance is unchanged.
+The public Pages build now publishes merged main
+`80d8a562f37ab7d0a6356edbb5f17094e4c27b58`, including #19–#21. Release commit
+`168c02f1af8fe178cd57cb1b92430305aab65993` contains only the tested static assets;
+all live manifest hashes match. Both original-photo flows passed on the downloaded
+live package. This remains desktop verification, with phone acceptance pending.
+
 The owner authorized a static GitHub Pages Safari preview and then requested
 automatic browser tile reading. The integrated browser reader
 bundles local Tesseract OCR, tile/ink segmentation, color proposals and suggested
