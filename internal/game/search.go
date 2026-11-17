@@ -105,7 +105,7 @@ func Search(ctx context.Context, before Position, rules Rules, turn Turn, option
 	pool = append(pool, before.Rack...)
 	best, partitionUpperBound := 0, 0
 	witnessLimited := false
-	walkPartitions(pool, required, budget, func(table [][]Piece) bool {
+	visit := func(table [][]Piece) bool {
 		candidatePlayed := -required
 		for _, meld := range table {
 			candidatePlayed += len(meld)
@@ -185,7 +185,16 @@ func Search(ctx context.Context, before Position, rules Rules, turn Turn, option
 			result.Verified = &checked
 		}
 		return best == len(before.Rack)
-	})
+	}
+	allNumbered := !opening && required > 0
+	for _, piece := range pool {
+		allNumbered = allNumbered && piece.Tile.Kind == Numbered
+	}
+	if allNumbered {
+		walkNumberedPartitions(pool, required, budget, visit)
+	} else {
+		walkPartitions(pool, required, budget, visit)
+	}
 	result.Nodes = budget.nodes
 	if budget.stopped == "" {
 		bound := partitionUpperBound
