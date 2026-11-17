@@ -15,30 +15,33 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageEnhance, ImageFont
 from playwright.sync_api import sync_playwright
 
+from photo_regression import assert_reading, asset_names
+
 parser = argparse.ArgumentParser(description=__doc__)
 input_group=parser.add_mutually_exclusive_group()
 input_group.add_argument('--image', type=Path)
 input_group.add_argument('--report', type=Path, help='Rerun raw local photos from an explicitly saved phone reading report')
 parser.add_argument('--zone', choices=['table', 'rack'], default='rack')
 parser.add_argument('--output', type=Path)
-parser.add_argument('--expectations', type=Path, help='External, manually labeled exact photo regression (source hash, zone and ordered tiles/melds)')
+parser.add_argument('--expectations', type=Path, help='External hash-bound labels; ordered by default, with optional table-meld/rack-multiset comparison')
 parser.add_argument('--preview-directory', type=Path, help='Check the exact generated Pages package instead of source assets')
 args = parser.parse_args()
 if args.expectations and not (args.image or args.report):
     parser.error('--expectations requires --image or --report')
 root = args.preview_directory.resolve() if args.preview_directory else Path(__file__).resolve().parents[1] / 'phone/web'
+allowed_assets = asset_names(root)
 font_path = '/usr/share/fonts/truetype/open-sans/OpenSans-ExtraBold.ttf'
 font = ImageFont.truetype(font_path, 70)
 colors = {'red': '#e00b20', 'black': '#080808', 'blue': '#078b92', 'orange': '#ff6310'}
 
 
-def fixture(values, touching=False, joker=False):
+def fixture(values, touching=False, joker=False, tile_width=145, face='#f8efdb'):
     image = Image.new('RGB', (1200, 1100), (170, 120, 75))
     draw = ImageDraw.Draw(image)
     for i, (number, color) in enumerate(values):
-        x, y = 55+(i % 7)*(145 if touching else 160), 110+(i//7)*370
-        draw.rounded_rectangle((x, y, x+145, y+220), radius=8, fill='#f8efdb')
-        draw.text((x+73, y+52), str(number), font=font, fill=colors[color], anchor='mt')
+        x, y = 55+(i % 7)*(tile_width if touching else tile_width+15), 110+(i//7)*370
+        draw.rounded_rectangle((x, y, x+tile_width, y+220), radius=8, fill=face)
+        draw.text((x+(tile_width+1)//2, y+52), str(number), font=font, fill=colors[color], anchor='mt')
     if joker:
         x, y = 55+3*160, 480
         draw.rounded_rectangle((x, y, x+145, y+220), radius=8, fill='#f8efdb')
@@ -65,6 +68,7 @@ with sync_playwright() as p:
         url = route.request.url
         assert url.startswith('https://rummy.test/'), 'Unexpected network destination: '+url
         name = url.removeprefix('https://rummy.test/').split('?')[0] or 'index.html'
+        assert name in allowed_assets, 'Unexpected app resource: ' + name
         target = root / name
         assert target.resolve().is_relative_to(root)
         requested.append(name)
@@ -78,7 +82,11 @@ with sync_playwright() as p:
     if not page.evaluate('Boolean(globalThis.TesseractCore && globalThis.RUMMY_READER_MODEL)'):
         page.add_script_tag(url='https://rummy.test/recognition/reader-core.js')
         page.add_script_tag(url='https://rummy.test/recognition/reader-data.js')
-    read = '''async url => { const image=new Image();image.src=url;await image.decode();return RummyReader.read(image); }'''
+    read = '''async input => {
+      const {uri,zone='table'}=typeof input==='string'?{uri:input}:input;
+      const image=new Image();image.src=uri;await image.decode();
+      return RummyReader.read(image,{zone});
+    }'''
     if args.image or args.report:
         if args.image:
             data=args.image.read_bytes()
@@ -95,7 +103,7 @@ with sync_playwright() as p:
             assert uri.startswith('data:image/') and ';base64,' in uri, 'Report must contain local image bytes'
             data=base64.b64decode(uri.split(';base64,',1)[1],validate=True)
             assert hashlib.sha256(data).hexdigest()==sample['source'], 'Photo checksum mismatch'
-            result=page.evaluate(read,uri)
+            result=page.evaluate(read,{'uri':uri,'zone':sample['zone']})
             predictions[ident]={'source':sample['source'],'zone':sample['zone'],**result}
         output = json.dumps(predictions, indent=2)
         if args.output:
@@ -107,11 +115,8 @@ with sync_playwright() as p:
             assert set(predictions)==set(expected), 'Regression photo set changed'
             for ident,result in predictions.items():
                 truth=expected[ident]
-                assert result['source']==truth['source'] and result['zone']==truth['zone'], ('Regression source mismatch',ident)
-                actual=[{'tile':o['candidates'][0]['tile'] if o['candidates'] else None,
-                         'meld':o['suggestedMeld'],'order':o['suggestedOrder']} for o in result['observations']]
-                assert actual==truth['tiles'], ('Exact photo regression failed',ident,{'expected':truth['tiles'],'actual':actual})
-            print('Exact external photo regression passed: '+str(len(predictions))+' photos, '+str(sum(len(t['tiles']) for t in expected.values()))+' ordered tiles/melds; source hashes matched.')
+                assert_reading(result, truth)
+            print('External photo regression passed: '+str(len(predictions))+' photos, '+str(sum(len(t['tiles']) for t in expected.values()))+' exact occurrences; configured ordering/meld checks and source hashes matched.')
     else:
         assert page.locator('#edition').input_value() == '4', 'Four-player edition must be the default'
         assert page.locator('#budget, #drawn').count() == 0, 'Search effort and drawn-turn controls must not be exposed'
@@ -128,6 +133,22 @@ with sync_playwright() as p:
                 actual = [o['candidates'][0]['tile'] if o['candidates'] else None for o in result['observations']]
                 expected = [{'number': n, 'color': c} for n, c in values]
                 assert actual == expected, {'touching': touching, 'exposure': exposure, 'expected': expected, 'actual': actual, 'raw': result['observations']}
+        # Independently generated mechanism regressions; no private photo pixels.
+        # Warm ivory may be yellow under room lighting. Narrow projected faces
+        # and a quarter-turn must preserve physical count and complete numerals.
+        examples = [(10, 'black'), (11, 'black'), (12, 'black')]
+        mechanisms = {
+            'warm ivory': fixture(examples, touching=True, face=(220,190,150)),
+            'narrow touching faces': fixture(examples, touching=True, tile_width=110),
+            'quarter-turn clockwise': fixture(examples, touching=True).transpose(Image.Transpose.ROTATE_270),
+            'quarter-turn counterclockwise': fixture(examples, touching=True).transpose(Image.Transpose.ROTATE_90),
+        }
+        expected = [{'number': number, 'color': color} for number, color in examples]
+        for mechanism, image in mechanisms.items():
+            data = payload(image)['buffer']
+            result = page.evaluate(read, 'data:image/png;base64,'+base64.b64encode(data).decode())
+            actual = [o['candidates'][0]['tile'] if o['candidates'] else None for o in result['observations']]
+            assert actual == expected, {'mechanism': mechanism, 'expected': expected, 'actual': actual}
         # Spatial suppression must preserve separate physical copies, even when
         # their values/colors match and their faces touch.
         data = payload(fixture([(11, 'red'), (11, 'red'), (10, 'black')], touching=True))['buffer']
@@ -247,6 +268,25 @@ with sync_playwright() as p:
           finally {api.SetVariable=set;api.GetUTF8Text=text;api.MeanTextConf=score;}
         }''', 'data:image/png;base64,'+base64.b64encode(data).decode())
         assert result['observations'][0]['candidates'][0]['tile']['number'] == 12, ('A high-scoring partial digit cannot override two visible digits', result)
+        # Fault injection, not OCR accuracy: an ambiguous connected wide mark
+        # has no supported one/two-digit structure. A confident OCR guess must
+        # not silently turn that mark into a numbered tile.
+        image = fixture([])
+        draw = ImageDraw.Draw(image)
+        draw.rounded_rectangle((55,110,200,330),radius=8,fill='#f8efdb')
+        draw.rectangle((85,155,105,235),fill='#080808')
+        draw.rectangle((145,155,165,235),fill='#080808')
+        draw.rectangle((85,185,165,205),fill='#080808')
+        data = payload(image)['buffer']
+        result = page.evaluate('''async url => {
+          const {api}=await RummyReader.ready();
+          const text=api.GetUTF8Text.bind(api),score=api.MeanTextConf.bind(api);
+          api.GetUTF8Text=()=> '12\\n';api.MeanTextConf=()=>95;
+          try {const image=new Image();image.src=url;await image.decode();return await RummyReader.read(image);}
+          finally {api.GetUTF8Text=text;api.MeanTextConf=score;}
+        }''', 'data:image/png;base64,'+base64.b64encode(data).decode())
+        assert len(result['observations']) == 1 and result['observations'][0]['digitCount'] == 0, result
+        assert result['observations'][0]['candidates'] == [], ('Unknown digit structure must reject a confident guess', result)
         # Figure-like joker art remains a raw proposal, isolated from UI edits.
         data = payload(fixture([(8, 'black'), (10, 'black')], joker=True))['buffer']
         result = page.evaluate(read, 'data:image/png;base64,'+base64.b64encode(data).decode())
@@ -267,9 +307,28 @@ with sync_playwright() as p:
             assert sample['zone']==zone and 'recognizer' in sample
             assert all('correction' not in observation for observation in sample['observations'])
         assert len(saved['photos']['rack']['observations'])==3
-        print('Bundled OCR: all 13 synthetic numbers/colors at normal/dim exposure, touching and identical tiles, cross-color background rejection, nested-joker suppression, high-score truncation fault injection, single-decode file import, native payload decoding, reimport/superseded reading isolation, automatic readable tiles, unreadable-tile errors/direct edits/removal, and real-engine opening passed.')
+        print('Bundled OCR: all 13 synthetic numbers/colors at normal/dim exposure, touching and identical tiles, cross-color background rejection, nested-joker suppression, unknown-structure/truncation and resource fault guards, single-decode file import, native payload decoding, reimport/superseded reading isolation, automatic readable tiles, unreadable-tile errors/direct edits/removal, and real-engine opening passed.')
+        # Resource failures must reject the read, including asynchronous script
+        # startup. Fault injection checks rejection/limits, not recognition.
+        for fault, message in [('allocation','forced vision allocation failure'), ('faces','Too many tile faces')]:
+            page.reload()
+            page.evaluate('''fault=>{
+              if(fault==='allocation')RummyVisionRuntime=()=>{throw new Error('forced vision allocation failure')};
+              else {
+                RummyVisionRuntime=()=>({then:callback=>callback()});
+                RummyTileGeometry.detect=async()=>({boxes:Array.from({length:161},()=>({}))});
+              }
+            }''', fault)
+            failure=page.evaluate('''async uri=>{
+              const image=new Image();image.src=uri;await image.decode();
+              return Promise.race([
+                RummyReader.read(image).then(()=> 'unexpected success',error=>error.message),
+                new Promise(resolve=>setTimeout(()=>resolve('read stayed pending'),1500))
+              ]);
+            }''', 'data:image/png;base64,'+base64.b64encode(payload(fixture([(8,'black')]))['buffer']).decode())
+            assert message in failure, {'fault':fault,'actual':failure}
     assert not errors, errors
     assert not console_errors, console_errors
-    assert set(requested) <= {'index.html','style.css','engine/wasm_exec.js','engine/wasm_data.js','engine.js','photo-state.js','browser-reader.js','tile-art.js','table-view.js','tile-art/tiles-atlas.png','app.js','recognition/reader-core.js','recognition/reader-data.js'}, requested
+    assert set(requested) <= allowed_assets, requested
     browser.close()
 print('All requests were bundled GET assets; no photo upload, external model fetch, remote solver, or CSP violation. Desktop execution; no general accuracy or physical-iPhone acceptance claim.')
