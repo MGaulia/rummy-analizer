@@ -1114,10 +1114,13 @@ outputs is in Git, PR attachments or a static package.
 | [#23](https://github.com/MGaulia/rummy-analizer/pull/23) | Numbered-table exact partition search | `7b6bb99a5426d43ca4e5c2f6b366f75e7f401d05` | `9db7e01a801ef515cd24210dba7104ed83e21ae3` |
 | [#24](https://github.com/MGaulia/rummy-analizer/pull/24) | Local perspective recognition, uncertainty and report replay | `9b4b857f20bfeb90eb05f20c6c3d447ebd0e9899` | `36bef148ec984dfc10779764dd87d0748b5322d4` |
 
-Both target main directly and remain unmerged. Merge #23 before #24 for the full
-large-table photo-to-move fixes; no Git stacking dependency is required. Preserve
-#22 and unrelated branches. This entry is a documentation follow-up to the
-listed tested code; no deployment occurred.
+Both target main directly. The owner subsequently requested “Merge all open”,
+authorizing #22 → #23 → #24 into main and superseding the keep-unmerged instruction
+for these PRs. Their linked GitHub records provide current merge status and
+commits. Preserve original commits, branches and unrelated work. The checkpoints
+above and below record verification before merging; fresh merged-main checks are
+recorded with their exact source under the private verification directory and in
+the PR descriptions. Source merging does not publish GitHub Pages.
 
 ### Completed milestones
 
@@ -1243,8 +1246,8 @@ synthetic mechanism tests are labeled separately.
 
 ### Pending and unavailable acceptance work
 
-Review/merge/publish of #23 and #24 is pending owner action. Five glare-heavy
-readings require the supported correction flow; broader recognition accuracy
+The owner authorized merging all open PRs (#22–#24); publication remains pending.
+Five glare-heavy readings require the supported correction flow; broader recognition accuracy
 needs representative additional captures, including difficult joker/occlusion
 cases. The added vision script is about 10.9 MB uncompressed and its initial heap
 is 128 MiB (pinned runtime growth ceiling 1 GiB). Physical-iPhone latency, peak

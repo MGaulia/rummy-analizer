@@ -125,9 +125,10 @@ No user photos are used as artwork. The CLI SVG remains self-contained.
 
 The next independent review units are the numbered-table solver fix in
 [#23](https://github.com/MGaulia/rummy-analizer/pull/23) and browser reader revision
-5 in [#24](https://github.com/MGaulia/rummy-analizer/pull/24). Neither is merged or published by this work. Apply both for the complete
-photo/correction-to-move fixes; merge the solver first, then the reader. Preserve
-the unrelated publication-history PR #22.
+5 in [#24](https://github.com/MGaulia/rummy-analizer/pull/24). The owner subsequently authorized
+merging all open PRs in the order #22 → #23 → #24. Their GitHub records provide
+current merge status and commits. Source merges do not publish GitHub Pages;
+apply both solver and reader fixes for the complete photo/correction-to-move flow.
 
 Ordinary no-joker turns now have a count-based exact partition path covering all
 65 groups and 264 runs, with mandatory table occurrences and optional rack
