@@ -1095,3 +1095,160 @@ phone acceptance remain unrun. Temporary-loose-tile certificate completeness
 also remains an explicit engine limitation; unresolved bounds stay incomplete.
 Open PR bodies are updated with these limits and dependencies. #12 stays draft.
 Main and #9 were rechecked unchanged; no PR was merged, force-pushed, or deployed.
+
+## Private photo reports and large-table moves (2026-11-16, owner local date)
+
+Reviewed current main `80d8a562f37ab7d0a6356edbb5f17094e4c27b58`, its merged
+work and the unrelated open publication-history PR #22. The clean baseline
+passed `bash scripts/check.sh`. Replaying the four new reports against the
+immutable published baseline reproduced all four failures: table counts were
+28/65/32/3 instead of 76/84/40/3; rack counts were 4/2/2/23 instead of 3/1/7/13.
+Independent photo annotations and a separate local mathematical solver were
+prepared before changing recognition/search. None of those private inputs or
+outputs is in Git, PR attachments or a static package.
+
+### Review units and merge order
+
+| PR | Scope | Clean tested code commit | Source tree |
+| --- | --- | --- | --- |
+| [#23](https://github.com/MGaulia/rummy-analizer/pull/23) | Numbered-table exact partition search | `7b6bb99a5426d43ca4e5c2f6b366f75e7f401d05` | `9db7e01a801ef515cd24210dba7104ed83e21ae3` |
+| [#24](https://github.com/MGaulia/rummy-analizer/pull/24) | Local perspective recognition, uncertainty and report replay | `9b4b857f20bfeb90eb05f20c6c3d447ebd0e9899` | `36bef148ec984dfc10779764dd87d0748b5322d4` |
+
+Both target main directly and remain unmerged. Merge #23 before #24 for the full
+large-table photo-to-move fixes; no Git stacking dependency is required. Preserve
+#22 and unrelated branches. This entry is a documentation follow-up to the
+listed tested code; no deployment occurred.
+
+### Completed milestones
+
+1. The browser finder now detects perspective quads, separates touching faces,
+   suppresses spatial duplicates and excludes background table tiles from rack
+   readings. All eight new photos have exact physical counts and table meld
+   memberships/order. Detection stays at 1400px; 2800px rectified source crops
+   retain numeral detail. Rack rails no longer cause false quarter-turns.
+2. Local lighting/color normalization retains faint strokes. OCR checks digit
+   structure before accepting a number; an unsupported shape remains unreadable.
+   An illumination fallback requires agreement across at least two of three
+   bounded windows and rejects eligible disagreements. No game-rule inference
+   repairs a reading. A generic fault regression accepted a confident invented
+   number before the structure guard and rejects it afterward. Warm-ivory,
+   narrow touching and both quarter-turn mechanism tests also run actual OCR.
+3. Ordinary no-joker moves use all 65 groups and 264 runs in a duplicate-aware
+   count partition with mandatory table tiles, optional rack tiles and stable
+   physical IDs. Every candidate still uses the separate transition validator.
+   Opening/joker paths and the 200,000-node setting remain intact. A generic
+   96-tile regression failed before the change; 126 independent small-oracle
+   cases, third copies, partial optima, absence, cancellation and retained-best
+   checks pass. Native and actual Go/Wasm results agree with independently
+   proven reference optima on the four corrected positions. Resource stops
+   retain incomplete status.
+4. Report tests import original local bytes through real file pickers, apply
+   saved rule/player state and independently check the returned moves and
+   rendering. Optional hash/rectangle-bound corrections use the actual UI and
+   cannot override accepted values. Search is blocked before those edits; raw
+   OCR remains unchanged. Manual edits are reported separately from recognition.
+5. The pinned OpenCV runtime is bundled at build time with its license and
+   CSP-safe bindings. All generated assets stay local. The explicit package
+   contains 19 approved assets plus metadata and `.nojekyll`; all hashes match.
+   Independent inspection found no originals, encoded photos, source identifiers,
+   crops, labels, derived templates, symlinks or extra payloads in that package.
+
+### Actual new-report results
+
+The combined clean verification commit is
+`5615e56b2fbe3d3e5bd79e0ce444643cf178e089`, tree
+`b3be6b1707e39fd71c67f117d5cb152249a38eea`. Its private package and all checks below
+use the exact committed application bytes. Independent per-face annotations,
+not a value multiset alone, establish these accepted readings:
+
+| Private case | Occurrences | Correct automatic values | Unreadable / direct edits | Saved-state result | Nodes |
+| --- | ---: | ---: | ---: | --- | ---: |
+| A | 79 | 78 | 1 | Proven optimal, 3 played, empty rack | 61,919 |
+| B | 85 | 81 | 4 | Proven no move for the unopened player | 2 |
+| C | 47 | 47 | 0 | Proven optimal, 1 played, 6 remain | 1,864 |
+| D | 16 | 16 | 0 | Proven optimal, 1 played, 12 remain | 477 |
+
+All 227 occurrences are detected, with zero accepted wrong values in this set.
+Five reflected numerals still need direct editing or clearer photos; A/B are
+correction-flow passes, not fully automatic recognition passes. C/D read fully.
+The actual B player state requires a rack-only opening; opened/disabled reference
+variants separately prove one tile can be played. No reported timeout is called
+no-move. Each proposed move passes an independent check-move invocation, exact
+physical conservation, played markers, final melds, joker captions and rack order.
+
+Both previous real-photo flows also pass: 14 and 22 exact occurrences, including
+both jokers, all three opening states and proven optima of four and one. The
+22-tile table uses private comparison metadata ignoring arbitrary global meld
+IDs only; within-meld order, boundaries and duplicate multiplicities remain exact.
+No label values were changed to match predictions. Across these twelve photos,
+258 of 263 values read correctly and five remain explicit errors. This is bounded
+desktop regression evidence, not representative accuracy or phone acceptance.
+
+### Reproduction and verification
+
+Toolchain: Go 1.27.2 linux/amd64, Node 24.19.0, Python 3.12.14,
+Playwright 1.62.0, Chromium 154.0.8037.57, Tesseract.js-core 6.1.2,
+OpenCV.js 4.12.0-release.1. `bash scripts/check.sh` passed on the clean baseline,
+both focused code checkpoints and the combined commit: formatting, uncached Go
+tests, vet, races, executable/CLI behavior and rendering. Parser/inventory code
+is unchanged; no fresh parser/inventory fuzz result is claimed.
+
+These checks completed successfully on the combined commit. The paths below
+use `/external/...` placeholders for the private workspace destinations recorded
+in the logs; choose an empty package directory outside the checkout:
+
+```sh
+bash scripts/check.sh
+bash scripts/build-safari-preview.sh /external/preview
+node scripts/check-phone-engine.cjs
+node scripts/check-photo-state.cjs
+python3 -m unittest discover -s scripts -p test_photo_regression.py -v
+python3 -m unittest discover -s scripts -p test_photo_evaluation.py -v
+python3 scripts/check-browser-reader.py --preview-directory /external/preview
+python3 scripts/check-phone-ui.py
+python3 scripts/check-phone-startup.py
+python3 scripts/check-safari-preview.py /external/preview
+python3 scripts/check-table-view.py --preview-directory /external/preview
+python3 scripts/check-tile-art.py --preview-directory /external/preview
+```
+
+The 11 regression-helper and two evaluator unit tests pass. Actual synthetic OCR
+retains all 13 numbers/colors at three exposures, touching/identical occurrences,
+jokers and both quarter-turns. Structure/truncation fault guards, allocation-error
+rejection, the 160-face cap, reimport/stale results and direct-edit errors pass.
+Actual Wasm checks retain cancellation, best-so-far moves and physical joker
+roles. Layout/art checks pass at 320/390/768/1200px. An independent external-script
+smoke initializes the packaged OCR/OpenCV under production CSP, exercises used
+bindings and deletes all owned test objects. All browser requests in these tests
+are intercepted local GET assets; uploads, external inference/model requests and
+remote solving are disallowed.
+
+All four original-report UI checks also completed, with independent labels and
+correction plans held privately. These equivalent commands use path placeholders:
+
+```sh
+rummy_cases=/external/private-reports
+rummy_preview=/external/preview
+python3 scripts/check-reading-reports.py --preview-directory "$rummy_preview" --report "$rummy_cases/a/report.json" --expectations "$rummy_cases/a/expected.json" --corrections "$rummy_cases/a/final-corrections.json" --expected-status optimal --expected-played 3 --output "$rummy_cases/a/result.json"
+python3 scripts/check-reading-reports.py --preview-directory "$rummy_preview" --report "$rummy_cases/b/report.json" --expectations "$rummy_cases/b/expected.json" --corrections "$rummy_cases/b/final-corrections.json" --expected-status no_move --expected-played 0 --output "$rummy_cases/b/result.json"
+python3 scripts/check-reading-reports.py --preview-directory "$rummy_preview" --report "$rummy_cases/c/report.json" --expectations "$rummy_cases/c/expected.json" --expected-status optimal --expected-played 1 --output "$rummy_cases/c/result.json"
+python3 scripts/check-reading-reports.py --preview-directory "$rummy_preview" --report "$rummy_cases/d/report.json" --expectations "$rummy_cases/d/expected.json" --expected-status optimal --expected-played 1 --output "$rummy_cases/d/result.json"
+```
+
+Exact workspace commands, raw outputs, source/input hashes, before/after evidence,
+independent physical/oracle audits and package audits remain under
+`/workspace/rummy-review/nov17-examples`, outside Git and publication assets.
+These local tests use actual original images and the real Go/Wasm engine;
+synthetic mechanism tests are labeled separately.
+
+### Pending and unavailable acceptance work
+
+Review/merge/publish of #23 and #24 is pending owner action. Five glare-heavy
+readings require the supported correction flow; broader recognition accuracy
+needs representative additional captures, including difficult joker/occlusion
+cases. The added vision script is about 10.9 MB uncompressed and its initial heap
+is 128 MiB (pinned runtime growth ceiling 1 GiB). Physical-iPhone latency, peak
+memory, cancellation and networking-disabled acceptance remain unrun. The owner
+has an iPhone but no available Mac/Xcode build machine; native build/signing and
+native-device acceptance remain unavailable. No native/device, general optimal
+joker-transition coverage or offline-reopening claim is added by these PRs.

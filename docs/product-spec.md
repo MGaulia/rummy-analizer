@@ -125,7 +125,7 @@ No user photos are used as artwork. The CLI SVG remains self-contained.
 
 The next independent review units are the numbered-table solver fix in
 [#23](https://github.com/MGaulia/rummy-analizer/pull/23) and browser reader revision
-5. Neither is merged or published by this work. Apply both for the complete
+5 in [#24](https://github.com/MGaulia/rummy-analizer/pull/24). Neither is merged or published by this work. Apply both for the complete
 photo/correction-to-move fixes; merge the solver first, then the reader. Preserve
 the unrelated publication-history PR #22.
 
