@@ -119,3 +119,37 @@ diagrams decorate validated Go positions with these bundled images, preserving
 each occurrence, played marker and explicit joker role. See docs/tile-art.md for
 source/license evidence, pinned mesh hash and reproducible Blender rendering.
 No user photos are used as artwork. The CLI SVG remains self-contained.
+
+
+## Private-report regression follow-up
+
+The next independent review units are the numbered-table solver fix in
+[#23](https://github.com/MGaulia/rummy-analizer/pull/23) and browser reader revision
+5. Neither is merged or published by this work. Apply both for the complete
+photo/correction-to-move fixes; merge the solver first, then the reader. Preserve
+the unrelated publication-history PR #22.
+
+Ordinary no-joker turns now have a count-based exact partition path covering all
+65 groups and 264 runs, with mandatory table occurrences and optional rack
+occurrences. This preserves unlimited rearrangement, separate physical IDs,
+independent move validation and the existing work budget. Opening and joker
+positions retain their existing search paths. Exhaustion or cancellation remains
+incomplete; it never proves absence.
+
+Browser detection uses local perspective geometry and separates rack foreground
+from table background. OCR rectifies higher-resolution faces, checks printed
+digit structure and uses bounded illumination alternatives for unresolved glare.
+Unknown structure or unresolved readings produce editable errors, never a guessed
+value from table legality. The four new private reports retain all 227 physical
+occurrences and table meld boundaries. Desktop replay accepts 222 correct values
+and leaves five unreadable; two reports require one and four direct edits. The
+other two read completely. The prior 36 occurrences remain correct. Raw proposals
+and correction evidence stay separate; this does not certify general accuracy.
+
+All originals, crops, annotations and replay outputs stay outside Git, PRs and
+static packages. Only source, synthetic mechanism tests and aggregate findings
+are review artifacts. Bundled runtimes and the OCR model are public, pinned build-time
+inputs; no photo-derived templates or model weights are shipped. CSP and bundled
+local inference remain required. The larger bundle and 128 MiB initial vision
+heap need physical-iPhone memory/latency acceptance; no native/device success or
+offline reopening claim is added.

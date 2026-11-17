@@ -5,12 +5,15 @@ Original photos stay outside Git and are imported as file-picker bytes; no
 observations, solver replies or validation results are injected. Desktop only.
 """
 import argparse
-import base64
-import hashlib
 import json
 from pathlib import Path
 
 from playwright.sync_api import sync_playwright
+
+from photo_regression import (
+    asset_names, assert_expected_position, assert_reading, check_conservation,
+    flatten, load_report_samples,
+)
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--report', required=True, type=Path)
@@ -25,38 +28,8 @@ if args.expected_played < 1:
 root = args.preview_directory.resolve() if args.preview_directory else Path(__file__).resolve().parents[1] / 'phone/web'
 report = json.loads(args.report.read_text())
 expected = json.loads(args.expectations.read_text())
-assert report['kind'] == 'rummy-photo-reading-report' and report['version'] == 1, 'Unknown report format'
-assert set(report['photos']) == set(expected), 'Expected photo set changed'
-samples = {}
-for ident, photo in report['photos'].items():
-    truth = expected[ident]
-    zone = photo['zone']
-    assert zone in ('table', 'rack') and zone not in samples, 'One distinct photo per zone is required'
-    uri = photo['image']
-    assert uri.startswith('data:image/') and ';base64,' in uri, 'Report must contain original local image bytes'
-    mime, encoded = uri.split(';base64,', 1)
-    data = base64.b64decode(encoded, validate=True)
-    source = hashlib.sha256(data).hexdigest()
-    assert source == photo['source'] == truth['source'] and truth['zone'] == zone, 'Photo source/zone mismatch'
-    samples[zone] = {'source': source, 'data': data, 'mime': mime.removeprefix('data:'), 'truth': truth}
-assert set(samples) == {'table', 'rack'} and samples['table']['source'] != samples['rack']['source']
-
-
-def flatten(position):
-    return [piece for meld in position['table'] for piece in meld] + position['rack']
-
-
-def check_conservation(before, after, played):
-    original = {piece['id']: piece for piece in flatten(before)}
-    final = flatten(after)
-    assert len(original) == len(flatten(before)), 'Duplicate input physical ID'
-    assert len(final) == len(original) and {p['id'] for p in final} == set(original), 'A physical occurrence was lost or duplicated'
-    assert all(p['tile'] == original[p['id']]['tile'] for p in final), 'Physical tile value changed'
-    table_ids = {p['id'] for meld in after['table'] for p in meld}
-    assert {p['id'] for meld in before['table'] for p in meld} <= table_ids, 'Existing table tile returned to rack'
-    expected_played = {p['id'] for p in before['rack']} & table_ids
-    assert set(played) == expected_played and len(played) == len(expected_played), 'Played IDs do not match actual rack additions'
-    assert [p['id'] for p in after['rack']] == [p['id'] for p in before['rack'] if p['id'] not in expected_played]
+samples = load_report_samples(report, expected)
+allowed = asset_names(root)
 
 
 requested, errors, outcomes = [], [], []
@@ -69,6 +42,7 @@ with sync_playwright() as p:
         assert route.request.method == 'GET', 'Unexpected upload/request method'
         assert route.request.url.startswith(base), 'Unexpected external destination: ' + route.request.url
         name = route.request.url.removeprefix(base).split('?')[0] or 'index.html'
+        assert name in allowed, 'Unexpected app resource: ' + name
         target = root / name
         assert target.resolve().is_relative_to(root), 'Asset escaped package directory'
         requested.append(name)
@@ -101,16 +75,9 @@ with sync_playwright() as p:
         page.wait_for_function('({zone,source})=>sessions[zone]?.source===source', arg={'zone':zone,'source':sample['source']})
     observed = page.evaluate('rummyObservationReport()')
     for zone, sample in samples.items():
-        actual = [{'tile':o['candidates'][0]['tile'] if o['candidates'] else None,
-                   'meld':o['suggestedMeld'],'order':o['suggestedOrder']} for o in observed[zone]['observations']]
-        assert observed[zone]['source'] == sample['source'] and actual == sample['truth']['tiles'], ('Actual UI photo reading mismatch',zone,actual)
+        assert_reading(observed[zone], sample['truth'])
     position = page.evaluate('positionFromPhotos(sessions.table,sessions.rack)')
-    melds = {}
-    for piece in samples['table']['truth']['tiles']:
-        melds.setdefault(piece['meld'], []).append(piece)
-    assert [[p['tile'] for p in meld] for meld in position['table']] == [
-        [p['tile'] for p in sorted(melds[n],key=lambda p:p['order'])] for n in sorted(melds)]
-    assert [p['tile'] for p in position['rack']] == [p['tile'] for p in samples['rack']['truth']['tiles']]
+    assert_expected_position(position, samples)
 
     def solve(label, expect_move):
         count = page.evaluate('readingFlowCalls.length')

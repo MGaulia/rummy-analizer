@@ -26,9 +26,9 @@ commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(
 tree = subprocess.check_output(['git', 'rev-parse', 'HEAD^{tree}'], text=True).strip()
 if subprocess.check_output(['git', 'status', '--porcelain', '--untracked-files=no']):
     raise SystemExit('Commit tracked source changes before building a published preview.')
-assets = ['index.html', 'style.css', 'engine.js', 'photo-state.js', 'browser-reader.js', 'tile-art.js', 'table-view.js', 'app.js',
+assets = ['index.html', 'style.css', 'engine.js', 'photo-state.js', 'tile-geometry.js', 'browser-reader.js', 'tile-art.js', 'table-view.js', 'app.js',
           'engine/wasm_exec.js', 'engine/wasm_data.js', 'engine/GO-LICENSE.txt',
-          'recognition/reader-core.js', 'recognition/reader-data.js', 'recognition/READER-LICENSES.txt',
+          'recognition/reader-core.js', 'recognition/reader-data.js', 'recognition/vision-core.js', 'recognition/READER-LICENSES.txt',
           'tile-art/tiles-atlas.png', 'tile-art/tiles-atlas.json', 'tile-art/ATTRIBUTION.txt']
 for name in assets:
     target = destination / name
@@ -42,6 +42,7 @@ for zone in ['table', 'rack']:
 page = page.replace('<script defer src="browser-reader.js">',
                     '<script defer src="recognition/reader-core.js"></script>\n'
                     '<script defer src="recognition/reader-data.js"></script>\n'
+                    '<script defer src="recognition/vision-core.js"></script>\n'
                     '<script defer src="browser-reader.js">')
 for name in assets:
     if name.endswith(('.js', '.css')):

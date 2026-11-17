@@ -94,24 +94,36 @@ This tests manual correction and the actual solver, not recognition accuracy.
 
 ## Local browser reader
 
-`scripts/build-browser-reader.py` downloads the pinned Tesseract.js-core 6.1.2
-runtime and an upstream tessdata_fast English model **at build time**, verifying
-their checksums. The preview bundles the runtime, WebAssembly bytes, model and
-Apache-2.0 notices as local script assets. There is no runtime CDN/model request,
-worker, photo upload, or remote inference. CSP still blocks all connections.
-The Go engine and native Apple Vision adapter are unchanged. The model increases
-the initial page download; phone memory and latency still need measurement.
+`scripts/build-browser-reader.py` downloads checksum-pinned Tesseract.js-core
+6.1.2, the tessdata_fast English model and OpenCV.js 4.12.0-release.1 **at build
+time**. The preview bundles their code, embedded Wasm, model and Apache-2.0
+notices as local assets. The OpenCV build profile replaces generated dynamic
+JavaScript wrappers with ordinary closures and loads its embedded bytes without
+fetch. Production CSP still blocks runtime connections, workers, uploads and
+remote inference; no unsafe-eval permission is added. The Go engine and native
+Apple Vision adapter are separate from this browser-reader change.
 
-The reader bounds image size to 1400 pixels, finds ivory components, splits
-touching strips, crops ink away from the embossed logo, runs actual OCR, proposes
-colors (including cyan/teal as a blue candidate), and suggests meld rows. A
-face-like joker is only a low-confidence proposal. Scores are uncalibrated; no
-reading is treated as human-confirmed. Per the owner's updated preference, a
-single readable proposal is used immediately; unresolved values block search.
-Rotation, perspective, shadows, overlapping
-tiles, unusual fonts/backgrounds and joker designs can cause missed/wrong values.
-Use a clear, upright, close photo and review completeness. A failed reader shows
-an error and requires another photo; it cannot become a successfully empty table.
+Reader revision 5 detects convex ivory faces at 1400px, separates touching faces,
+suppresses overlapping proposals and distinguishes foreground rack tiles from
+background table pieces. It rectifies those faces from a 2800px image for OCR,
+handles quarter-turn table photos, balances local lighting and preserves faint
+numeral fragments. Partly hidden upright rack faces are not rotated merely
+because their exposed rectangle is wide. Meld grouping uses physical spacing,
+never inferred game legality. Duplicate tile values retain separate occurrences.
+
+An unrecognized digit structure stays unreadable even when OCR offers a plausible
+number. Conflicting readings can use three local illumination estimates; a
+fallback needs matching results from at least two estimates and no eligible
+conflict. These scores and agreements are uncalibrated. A face-like joker is
+still a low-confidence proposal. Readable proposals apply immediately; unresolved
+values show an error and block search until edited. There are no confirmation
+gates. A failed reader cannot become a successfully empty table.
+
+The additional vision script is approximately 10.9 MB before HTTP compression.
+Its heap is created on first reading (128 MiB initially); phone memory and latency
+remain unmeasured. Loading a page and reading locally in an existing tab do not
+establish offline reopening support. Glare, occlusion, different fonts, unusual
+backgrounds and joker designs remain sources of errors; review completeness.
 
 Reader revision 2 suppresses spatially nested regions inside a detected tile
 (such as the ivory area enclosed by a joker face). Separate physical tiles with
@@ -143,6 +155,15 @@ earlier 14 remain correct. These four-photo desktop regressions are not
 representative recognition evaluation or physical-iPhone acceptance. Very dark,
 mixed-lighting, low-contrast and differently framed scenes remain unmeasured.
 
+The later four privately supplied reports contain eight photos and 227
+independently labeled occurrences. Revision 5's desktop replays produce 222
+correct values and five explicit unreadable errors, with no accepted wrong
+values, missing faces or duplicates in this set. Two reports read fully; the
+other two need one and four direct edits respectively. All 36 earlier occurrences
+remain correct. The private originals, crops, labels and outputs are excluded
+from Git and static builds. This is bounded regression evidence, not a general
+accuracy claim or physical-iPhone acceptance.
+
 To export proposals for an accessible original photo without uploads:
 
 ```sh
@@ -166,13 +187,27 @@ Rerun the actual images from a report locally:
 python3 scripts/check-browser-reader.py --report /external/rummy-reading-report.json --output /external/rechecked.json
 ```
 
+For a complete file-picker-to-solver replay, use independently labeled originals
+and an independently established expected outcome:
+
+```sh
+python3 scripts/check-reading-reports.py --preview-directory /external/preview --report /external/report.json --expectations /external/expected.json --expected-status optimal --expected-played 1 --output /external/result.json
+```
+
+The optional `--corrections /external/corrections.json` exercises direct UI edits
+for explicitly unreadable observations. Each edit binds the original source hash,
+observation index, exact rectangle and independently labeled value. The checker
+rejects attempts to override accepted values, verifies search is blocked before
+editing, preserves raw readings and reports manual edit counts separately. This
+is correction-flow evidence, not automatic recognition of those tiles.
+
 The checker verifies embedded photo hashes and never follows remote image URLs.
 Add `--expectations /external/expected.json` to assert an exact private regression.
 The JSON maps each photo key to `source` (SHA256), `zone`, and an ordered `tiles`
 array containing `tile`, `meld` and `order` per occurrence. Label these from the
 photos independently of proposals; keep the report and labels outside Git.
-The truncation regression deliberately injects a high-scoring partial output in
-one OCR mode while other modes still run the real engine; this fault injection
+The structure/truncation regressions deliberately inject high-scoring invalid
+hypotheses in OCR modes while other modes still run the real engine; this fault injection
 tests the selection guard and is separate from actual-OCR fixture checks. Neither
 that test nor the synthetic images establish general photo accuracy.
 
