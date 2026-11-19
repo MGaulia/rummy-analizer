@@ -63,7 +63,7 @@ for(const zone of ['table','rack'])$(zone+'-file').onchange=async event=>{
     checkPhotoSource(zone,hash);
     const decoded=new Image();decoded.src=image;await decoded.decode();
     let result;
-    try{result=await RummyReader.read(decoded,{cancelled,progress:message=>{if(!cancelled())status(message)}});}
+    try{result=await RummyReader.read(decoded,{zone,cancelled,progress:message=>{if(!cancelled())status(message)}});}
     catch(error){if(cancelled())return;result={observations:[],readError:String(error?.message||error||'Try another photo.')};}
     if(!cancelled())installPhoto({zone,source:hash,...result},decoded);
   }catch(error){if(cancelled())return;$(zone+'-photo').replaceChildren(node('p',error.message,'reading-error'));status(error.message,true);}
