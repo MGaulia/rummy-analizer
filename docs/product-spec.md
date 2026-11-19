@@ -48,11 +48,11 @@ of the remaining acceptance work. Device/model/latency targets are not fixed.
 
 The owner selected iPhone first. The initial source integration targets iOS 17+
 using native camera/import/Vision proposals and the bundled Go/Wasm engine; this
-is not a measured final minimum device/OS or an accepted model choice. The local
-interface and actual Go bridge are tested on desktop; native compilation, real
-recognition, physical-device memory/latency, and the end-to-end offline workflow
-are unverified. There is no Mac build machine; a representative recognition
-dataset beyond the four shared photos remains unavailable. PRs #9–#16 are
+is not a measured final minimum device/OS or an accepted model choice. Desktop tests exercise
+the interface and Go bridge. Native compilation, Vision recognition and physical
+iPhone memory, latency and offline behavior remain unverified. A Mac build
+machine and a representative dataset beyond the twelve shared photos remain
+unavailable. PRs #9–#16 are
 merged into main. The owner authorized merging the remaining stack on
 2026-10-20; #12 → #13 → #14 → #15 → #16 landed in that order, each directly into
 main. Merged source and fresh verification are recorded in the implementation
@@ -64,11 +64,10 @@ raw/correction isolation and current photo-error behavior. They remove unused
 search allocations, avoid repeated photo decoding and preserve cancellation
 ownership when a request ID is reused. Combined verification and merge guidance
 are recorded in the implementation plan; native/device acceptance is unchanged.
-The public Pages build now publishes merged main
-`80d8a562f37ab7d0a6356edbb5f17094e4c27b58`, including #19–#21. Release commit
-`168c02f1af8fe178cd57cb1b92430305aab65993` contains only the tested static assets;
-all live manifest hashes match. Both original-photo flows passed on the downloaded
-live package. This remains desktop verification, with phone acceptance pending.
+The public Pages build includes the merged numbered-table search and local
+perspective reader at `6a8acf1c24ac515a85a331d33a6ffb496954a119`. The release
+record identifies the deployed asset hashes and desktop checks.
+[Release verification](implementation-plan.md#november-19-pages-release)
 
 The owner authorized a static GitHub Pages Safari preview and then requested
 automatic browser tile reading. The integrated browser reader
@@ -129,12 +128,9 @@ No user photos are used as artwork. The CLI SVG remains self-contained.
 
 ## Private-report regression follow-up
 
-The next independent review units are the numbered-table solver fix in
-[#23](https://github.com/MGaulia/rummy-analizer/pull/23) and browser reader revision
-5 in [#24](https://github.com/MGaulia/rummy-analizer/pull/24). The owner subsequently authorized
-merging all open PRs in the order #22 → #23 → #24. Their GitHub records provide
-current merge status and commits. Source merges do not publish GitHub Pages;
-apply both solver and reader fixes for the complete photo/correction-to-move flow.
+PRs #22, #23 and #24 merged into main in that order. The November 19 Pages
+build includes the updated solver and reader. [Numbered-table solver PR](https://github.com/MGaulia/rummy-analizer/pull/23) ·
+[Browser reader revision 5 PR](https://github.com/MGaulia/rummy-analizer/pull/24)
 
 Ordinary no-joker turns now have a count-based exact partition path covering all
 65 groups and 264 runs, with mandatory table occurrences and optional rack
