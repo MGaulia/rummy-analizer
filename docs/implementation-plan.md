@@ -1,5 +1,42 @@
 # Implementation status
 
+## November 19 Pages release
+
+On November 19, 2026, the numbered-table solver and browser tile reader fixes
+shipped together from main commit `6a8acf1c24ac515a85a331d33a6ffb496954a119`,
+tree `8e8351cca38a401382f05a6e413fac167dbbcc77`. The Pages commit is
+`e0d354525fe1002f2e5b873af0da716103f9fcbe`. All 19 assets served over HTTPS
+matched the SHA-256 hashes of the clean release build. The other two files are
+the manifest and the empty `.nojekyll` marker. The package audit found only
+the expected static files. [Pages deployment](https://github.com/MGaulia/rummy-analizer/actions/runs/44621914343) ·
+[Public asset manifest](https://mgaulia.github.io/rummy-analizer/preview-build.json?v=6a8acf1c24ac)
+
+The following commands passed with Go 1.27.2 linux/amd64, Node 24.19.0,
+Python 3.12.14 and Chromium 154.0.8037.57.
+
+```sh
+bash scripts/check.sh
+bash scripts/build-safari-preview.sh /workspace/rummy-review/release-nov19/package
+node scripts/check-phone-engine.cjs
+node scripts/check-photo-state.cjs
+python3 scripts/check-safari-preview.py /workspace/rummy-review/release-nov19/package
+```
+
+The Go checks covered uncached tests, vet, races, CLI behavior and rendering.
+The package check exercised local photo import, correction and a verified
+three-tile opening in desktop Chromium. At the public URL, Chromium loaded the
+expected source at a mobile viewport, initialized the solver and found both
+local recognition runtimes.
+
+The four private reports were replayed offline against the downloaded live files
+in desktop Chromium using the `check-reading-reports.py` commands below. Of 227
+tiles, 222 were read correctly and five required editing. The reader accepted
+zero incorrect values. Two reports needed one and four edits respectively.
+Three positions had proven optimal moves playing three, one and one rack tiles.
+Each move passed an independent legality and tile-conservation check. The
+remaining position had no legal opening. The native build and physical-iPhone
+memory, latency and offline checks still require device testing.
+
 ## Published merged cleanup build
 
 The owner requested publication of the latest main. A fresh clean checkout used
@@ -1306,7 +1343,7 @@ synthetic mechanism tests are labeled separately.
 
 ### Pending and unavailable acceptance work
 
-The owner authorized merging all open PRs (#22–#24); publication remains pending.
+The November 19 Pages release includes merged PRs #22–#24.
 Five glare-heavy readings require the supported correction flow; broader recognition accuracy
 needs representative additional captures, including difficult joker/occlusion
 cases. The added vision script is about 10.9 MB uncompressed and its initial heap

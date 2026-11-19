@@ -34,30 +34,14 @@ OCR reader; its separate actual-pixel checks are documented below.
 
 ## Safari preview
 
-Open the [Safari preview](https://mgaulia.github.io/rummy-analizer/?v=80d8a562f37a) on any network.
-GitHub's Pages API confirms a successful build of `gh-pages` commit
-`168c02f1af8fe178cd57cb1b92430305aab65993`, with HTTPS enforced, publishing
-source `80d8a562f37ab7d0a6356edbb5f17094e4c27b58`. All seventeen live HTTPS assets
-matched the tested package hashes. The downloaded package passed actual-photo
-import/read/solve/render and compact layout checks in desktop Chromium. Melds
-fit without internal scrollbars at 320, 390, 768 and 1200px; played tiles have
-contrasting amber outlines on light cards. Earlier startup/OCR checks are
-recorded with their exact source checkpoints in docs/implementation-plan.md.
-Physical Safari acceptance of this reader revision remains unverified. The owner
-authorized merging #12–#16 on 2026-10-20. They are now integrated into main in
-dependency order, with fresh merged-source checks recorded in the implementation
-plan. The current published build also includes merged cleanup PRs #19–#21:
-reduced search allocations, preserved cancellation ownership and single-decode
-photo import. Both original-photo workflows and layout checks passed again on
-the downloaded live files. See the latest release verification in the plan.
-The current preview uses a green felt table, ivory numbered tiles, a wooden
-rack, and the four tile colors. Assets include a source-version query parameter
-to refresh the styling after publication. The design adapts to phone and desktop
-widths. Readable local suggestions apply immediately; unreadable values and
-invalid drafts block search until edited. The solver is unchanged.
+The Safari app loads from GitHub Pages on any network. The public build includes
+the perspective-aware tile reader and the numbered-table search from PRs #23 and
+#24. It reads photos, accepts edits and checks moves locally. The release was
+verified in desktop Chromium. Physical iPhone memory use and Safari performance
+still need measurement. [Open the app](https://mgaulia.github.io/rummy-analizer/) ·
+[Release verification](../docs/implementation-plan.md#november-19-pages-release)
 
-The owner's publication and merge approvals do not establish native integration
-acceptance. Build from a clean, committed checkout with the same Go/Python
+Build from a clean, committed checkout with the same Go/Python
 prerequisites as above:
 
 ```sh
